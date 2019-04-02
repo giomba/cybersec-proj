@@ -1,0 +1,222 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+
+% Larger borders -- we do not want do waste paper, even if it is only paper on screen =)
+\usepackage[top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}
+% Remove auto indentation of paragraphs.
+\setlength\parindent{0pt}
+
+% Palatino font (nicer serif font: Times is for oldies)
+\renewcommand*\rmdefault{ppl}
+
+% Nested itemize list bullet style
+\renewcommand{\labelitemi}{$\bullet$}
+\renewcommand{\labelitemii}{$\circ$}
+\renewcommand{\labelitemiii}{--}
+
+% Math packages
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+% Graphic packages
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{adjustbox}
+\usepackage{tikz}
+\usepackage{forest,array}
+\usetikzlibrary{shadows}
+
+% Graphs styles
+\forestset{
+  giombatree/.style={
+    for tree={
+      grow = east,
+      parent anchor=east,
+      child anchor=west,
+      edge={rounded corners=2mm},
+      fill=violet!5,
+      drop shadow,
+      l sep=10mm,
+      edge path={
+        \noexpand\path [draw, \forestoption{edge}] (!u.parent anchor) -- +(5mm,0) -- (.child anchor)\forestoption{edge label};
+      }
+    }
+  }
+}
+\forestset{
+  qtree/.style={
+    for tree={
+      parent anchor=south,
+      child anchor=north,
+      align=center,
+      edge={rounded corners=2mm},
+      fill=violet!5,
+      drop shadow,
+      l sep=10mm,
+    }
+  }
+}
+
+
+% Hides ugly links from the index
+\usepackage[hidelinks]{hyperref}
+% Landscape format pdf pagess
+\usepackage{pdflscape}
+
+\title{Cybersecurity Project}
+\author{F. Barbarulo, G. B. Rolandi}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\clearpage
+
+\section{Protocol}
+Client must create a secure communication channel to connect to the server.
+% TODO more details on next lessons
+
+A \texttt{parola} is defined as a pure ASCII sequence which can match the following regular expression \texttt{[A-Za-z0-9\textbackslash.\_]*}.
+Different \texttt{parola}s can be separed by a whitespace.
+
+\subsection{Request commands}
+A request command is sent by the client to the server.
+
+Generic structure of a request command is:
+\begin{verbatim}
+COMM filename\n
+tag: value\n
+\n
+body
+\end{verbatim}
+
+Each line is terminated by a \texttt{LF} char, and each command is terminated by a \texttt{LF} char.
+It is important to send the line feed char because server will not parse the command until two trailing \texttt{LF}s are received.
+
+Note: a \texttt{LF} char is represented by a byte whose value is \texttt{0x0A}.
+\\
+A command is composed by the following parts:
+\begin{itemize}
+  \item \texttt{COMM} is a 4 char \texttt{parola} and represents the command to issue;
+  \item \texttt{filename} is the name of a file on which issue the command.
+  Filenames are composed by one \texttt{parola}.
+  Depending on the specific command, a filename is mandatory or forbidden;
+  \item \texttt{tag: value} is a pair of two \texttt{parola}s, composed by a \texttt{parola} immediately followed by a colon, a whitespace and another \texttt{parola}.
+  First \texttt{parola} represents the tag for an additional parameter of current command, while second one representes the actual value for the parameter; depending on the specific command, one or more parameters may be mandatory or forbidden;
+  \item \texttt{body} is a stream of bytes whose length must be specified in a command parameter; depending on the specific command, a body is mandatory or forbidden:
+\end{itemize}
+
+\subsection{Reply status}
+A reply status is sent by the server to the client.
+
+Generic structure of a reply status is:
+
+\begin{verbatim}
+DDD\n
+tag: value
+\n
+body
+\end{verbatim}
+
+A reply status is composed by the following parts:
+\begin{itemize}
+  \item \texttt{DDD} a 3 ASCII digits number representing the state of the previous request command;
+  \item \texttt{tag: value} is a pair to represent a parameter, with the same format of the request command parameter; depending on the specific command, one or more parameters may be mandatory or forbidden;
+  \item \texttt{body} is a stream of bytes whose length must be specified in a reply status parameter; depending on the specific command the reply refers to, a body is mandatory or forbidden;
+\end{itemize}
+
+\subsection{Request commands list}
+\subsubsection{ALLO}
+\texttt{ALLO filename}
+
+Request server to allocate a file called \emph{filename}.
+This command is useful to atomically:
+\begin{itemize}
+  \item test if a file exists on the remote server
+  \item create that file
+\end{itemize}
+and must be used before issuing a \texttt{STOR} command.
+
+Reply status:
+\begin{itemize}
+  \item \texttt{200}: ok
+  \item \texttt{201}: ok, file already exists
+  \item \texttt{452}: bad file
+\end{itemize}
+
+\subsubsection{DELE}
+\texttt{DELE filename}
+
+Reply status:
+\begin{itemize}
+  \item \texttt{200}: ok
+  \item \texttt{452}: bad file
+\end{itemize}
+
+\subsubsection{LIST}
+\texttt{LIST}
+
+Request the server to send a list of available files
+
+Reply status:
+\begin{itemize}
+  \item \texttt{200}: ok
+\end{itemize}
+
+\subsubsection{QUIT}
+\texttt{QUIT}
+
+Close connection with the server.
+
+Reply status:
+\begin{itemize}
+  \item \texttt{200}: ok
+\end{itemize}
+
+\subsubsection{RETR}
+\texttt{RETR filename}
+
+Retrieve a file from the server.
+
+Reply status:
+\begin{itemize}
+  \item success:
+\begin{verbatim}
+200\n
+Size: filesize\n
+\n
+body
+\end{verbatim}
+  \item failure:\\
+  \texttt{452}: bad file
+\end{itemize}
+
+\subsubsection{STOR}
+\begin{verbatim}
+STOR filename
+Size: filesize
+
+body
+\end{verbatim}
+
+Store a file on the remote server.
+This command can be issued only after an \texttt{ALLO} command.
+
+\begin{itemize}
+  \item \texttt{Size: filesize} is a parameter pair. \texttt{filesize} is the decimal ASCII representation of the file size in bytes;
+  \item \texttt{body} is the actual content of the file;
+\end{itemize}
+
+Reply status:
+\begin{itemize}
+  \item \texttt{200}: ok
+\end{itemize}
+
+\subsection{Generic return values}
+\begin{itemize}
+  \item \texttt{500}: syntax error
+\end{itemize}
+
+\end{document}
