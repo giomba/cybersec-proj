@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
     }
 
     int client_sd;
-    char buffer[] = "Hello world!";
+    char buffer[] = "Hello world!\n";
 
     while (1) {
         client_sd = accept(sd, (struct sockaddr*)&client_addr, &sizeof_addr);
