@@ -8,45 +8,20 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "../common/connection.h"
 #include "../common/debug.h"
+#include "server.h"
 
 int main(int argc, char** argv) {
-    int sd = 0;
-    struct sockaddr_in6 my_addr, client_addr;
-    socklen_t sizeof_addr;
 
-    sizeof_addr = sizeof(client_addr);
+    Server server = Server("::0", 4242);
 
-    sd = socket(AF_INET6, SOCK_STREAM, 0);
-
-    memset(&my_addr, 0, sizeof(my_addr));
-    my_addr.sin6_family = AF_INET6;
-    my_addr.sin6_port = htons(4242);
-    my_addr.sin6_flowinfo = 0;
-    my_addr.sin6_scope_id = 0;
-    inet_pton(AF_INET6, "::0", &my_addr.sin6_addr);
-
-
-    if ( bind(sd, (struct sockaddr*)&my_addr, sizeof(my_addr)) != 0 ) {
-        perror("bind()");
-        exit(1);
-    }
-    debug(INFO, "bind() ok");
-
-    if ( listen(sd, 10) != 0 ) {    // TODO: choose a proper number
-        perror("listen()");
-        exit(1);
-    }
-    debug(INFO, "listen() ok");
-
-    int client_sd;
-    char buffer[] = "Hello world!\n";
-
-    while (1) {
-        client_sd = accept(sd, (struct sockaddr*)&client_addr, &sizeof_addr);
-        send(client_sd, (void*)buffer, strlen(buffer), 0);
+    while (true) {
+        Connection client = server.accept();
+        // add client to list??
+        client.send("Hello world!", 12);
         debug(INFO, "data sent");
-        close(client_sd);
+        // close(client_sd); // TODO remember to implement socket close in the destructor of Connection
     }
 
     return 0;

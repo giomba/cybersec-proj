@@ -9,8 +9,9 @@
 #include "connection.h"
 
 
-Connection::Connection(int socket) {
-    this->sd = socket;
+Connection::Connection(int sd, struct sockaddr_in6 peer) {
+    this->sd = sd;
+    this->peer = peer;
 }
 
 Connection::Connection(const char* hostname, uint16_t port) {
