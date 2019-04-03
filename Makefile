@@ -1,5 +1,5 @@
 .POSIX:
-CC=gcc
+CXX=g++
 CFLAGS=-Wall -g
 LDFLAGS=-lpthread
 
