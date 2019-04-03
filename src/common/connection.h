@@ -20,9 +20,8 @@ class Connection {
         Connection(const char* hostname, uint16_t port);
         Connection(int socket);
         ~Connection();
-        int connect(void);
-        int send(const char* buffer, size_t len);
-        int recv(char* buffer, size_t len);
+        ssize_t send(const char* buffer, size_t len);
+        ssize_t recv(char* buffer, size_t len);
 };
 
 #endif

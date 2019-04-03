@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "../common/debug.h"
+
 int main(int argc, char** argv) {
     int sd = 0;
     struct sockaddr_in6 my_addr, client_addr;
@@ -29,11 +31,13 @@ int main(int argc, char** argv) {
         perror("bind()");
         exit(1);
     }
+    debug(INFO, "bind() ok");
 
     if ( listen(sd, 10) != 0 ) {    // TODO: choose a proper number
         perror("listen()");
         exit(1);
     }
+    debug(INFO, "listen() ok");
 
     int client_sd;
     char buffer[] = "Hello world!\n";
@@ -41,6 +45,7 @@ int main(int argc, char** argv) {
     while (1) {
         client_sd = accept(sd, (struct sockaddr*)&client_addr, &sizeof_addr);
         send(client_sd, (void*)buffer, strlen(buffer), 0);
+        debug(INFO, "data sent");
         close(client_sd);
     }
 

@@ -9,6 +9,7 @@ int main(int argc, char** argv) {
     Connection c = Connection("::1", 4242);
 
     c.recv(buffer, 5);
+    buffer[127] = '\0';
 
     cout << buffer << endl;
 
