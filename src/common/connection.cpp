@@ -8,7 +8,6 @@
 
 #include "connection.h"
 
-
 Connection::Connection(int sd, struct sockaddr_in6 peer) {
     this->sd = sd;
     this->peer = peer;
