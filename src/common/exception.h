@@ -20,6 +20,12 @@ class Ex {
 /* Network Exceptions */
 class ExNetwork : public Ex { using Ex::Ex; };
 class ExBind : public ExNetwork { using ExNetwork::ExNetwork; };
+class ExSend : public ExNetwork { using ExNetwork::ExNetwork; };
+class ExRecv : public ExNetwork { using ExNetwork::ExNetwork; };
+class ExListen : public ExNetwork { using ExNetwork::ExNetwork; };
+class ExSocket : public ExNetwork { using ExNetwork::ExNetwork; };
+class ExConnect : public ExNetwork { using ExNetwork::ExNetwork; };
+class ExPort : public ExNetwork { using ExNetwork::ExNetwork; };
 
 /* User Input Exception */
 class ExUserInput : public Ex { using Ex::Ex; };

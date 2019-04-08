@@ -31,8 +31,7 @@ Server::Server(const char* address, uint16_t port) {
     debug(INFO, "bind() ok");
 
     if ( listen(sd, 10) != 0 ) {    // TODO: choose a proper number
-        perror("listen()");
-        // throw
+        throw ExListen("listen()");
     }
     debug(INFO, "listen() ok");
 }
