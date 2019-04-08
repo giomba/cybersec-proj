@@ -66,7 +66,7 @@
 \usepackage{pdflscape}
 
 \title{Cybersecurity Project}
-\author{F. Barbarulo, G. B. Rolandi}
+\author{F. Barbarulo, G. B. Rolandi, Bruk T. Gurmesa}
 
 \begin{document}
 \maketitle
@@ -161,9 +161,12 @@ Reply status:
 Request the server to send a list of available files
 
 Reply status:
-\begin{itemize}
-  \item \texttt{200}: ok
-\end{itemize}
+\begin{verbatim}
+200\n
+Size: listsize\n
+\n
+body
+\end{verbatim}
 
 \subsubsection{QUIT}
 \texttt{QUIT}

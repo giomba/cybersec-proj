@@ -8,9 +8,9 @@
 
 #include "connection.h"
 
-
-Connection::Connection(int socket) {
-    this->sd = socket;
+Connection::Connection(int sd, struct sockaddr_in6 peer) {
+    this->sd = sd;
+    this->peer = peer;
 }
 
 Connection::Connection(const char* hostname, uint16_t port) {
@@ -31,19 +31,23 @@ Connection::Connection(const char* hostname, uint16_t port) {
 
 }
 
-int Connection::send(const char* buffer, size_t len) {
-    if (::send(this->sd, (void*)buffer, len, 0) == -1) {
+ssize_t Connection::send(const char* buffer, size_t len) {
+    ssize_t ret = ::send(this->sd, (void*)buffer, len, 0);
+    if (ret == -1) {
         perror("send()");
         // throw proper exception
     }
+    return ret;
 }
 
-int Connection::recv(char* buffer, size_t len) {
-    if (::recv(this->sd, (void*)buffer, len, 0) == -1) {
+ssize_t Connection::recv(char* buffer, size_t len) {
+    ssize_t ret = ::recv(this->sd, (void*)buffer, len, 0);
+    if (ret == -1) {
         std::cout << this->sd << std::endl;
         perror("recv()");
         // throw proper exception
     }
+    return ret;
 }
 
 Connection::~Connection() {
