@@ -16,3 +16,7 @@ void debug(DebugType type, const char* msg) {
 
     clog << msg << endl;
 }
+
+void debug(DebugType type, string msg) {
+    debug(type, msg.c_str());
+}

@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <errno.h>
+#include <iostream>
 #include <stdio.h>
 #include <netinet/in.h>
 #include <stdlib.h>
@@ -11,6 +12,8 @@
 
 #include "../common/connection.h"
 #include "../common/debug.h"
+#include "../common/exception.h"
+#include "check.h"
 #include "client.h"
 #include "server.h"
 
@@ -18,19 +21,31 @@ using namespace std;
 
 int main(int argc, char** argv) {
 
-    Server server = Server("::0", 4242);
+    try {
 
-    while (true) {
-        Client client = Client(server.accept());
+        if (argc != 2) throw ExUserInput("invalid number of arguments");
+        uint16_t port = atoi(argv[1]);
+        if (! checkPort(port)) throw ExUserInput("invalid port number");
 
-        // TODO: create a list of threads and answer them
-        thread t(&Client::execute, &client);
+        Server server = Server("::0", atoi(argv[1]));
+        // debug(INFO, string("Listening on port ")); debug(INFO);
 
-        debug(INFO, "thread created");
+        while (true) {
+            Client client = Client(server.accept());
 
-        t.detach();
+            // TODO: create a list of threads and answer them
+            thread t(&Client::execute, &client);
 
-        // TODO remember to implement socket close in the destructor of Connection
+            debug(INFO, "thread created");
+
+            t.detach();
+
+            // TODO remember to implement socket close in the destructor of Connection
+        }
+    } catch (ExNetwork e) {
+        cerr << "network: " << e << endl;
+    } catch (ExUserInput e) {
+        cerr << "invalid input: " << e << endl;
     }
 
     return 0;

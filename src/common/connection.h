@@ -6,9 +6,6 @@
 #include <netinet/in.h>
 #include <stdio.h>
 
-// Note: this is not the final interface!
-// Note: these methods _must_ throw exceptions
-
 class Connection {
     private:
         int sd;

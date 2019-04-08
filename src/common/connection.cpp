@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "connection.h"
+#include "exception.h"
 
 Connection::Connection(int sd, struct sockaddr_in6 peer) {
     this->sd = sd;
@@ -16,8 +17,7 @@ Connection::Connection(int sd, struct sockaddr_in6 peer) {
 Connection::Connection(const char* hostname, uint16_t port) {
     // do everything is needed to connect
     if ((this->sd = socket(AF_INET6, SOCK_STREAM, 0)) == -1) {
-        perror("socket()");
-        // throw
+        throw ExSocket("can not create socket() for new Connection()", errno);
     }
     memset(&peer, 0, sizeof(peer));
     peer.sin6_family = AF_INET6;
@@ -25,8 +25,7 @@ Connection::Connection(const char* hostname, uint16_t port) {
     inet_pton(AF_INET6, hostname, &peer.sin6_addr);
 
     if (::connect(this->sd, (struct sockaddr*)&peer, sizeof(peer)) == -1) {
-        perror("connect()");
-        // and throw exception
+        throw ExConnect("can not connect() for new Connection()", errno);
     };
 
 }
@@ -34,8 +33,7 @@ Connection::Connection(const char* hostname, uint16_t port) {
 ssize_t Connection::send(const char* buffer, size_t len) {
     ssize_t ret = ::send(this->sd, (void*)buffer, len, 0);
     if (ret == -1) {
-        perror("send()");
-        // throw proper exception
+        throw ExSend("can not send()");
     }
     return ret;
 }
@@ -43,9 +41,7 @@ ssize_t Connection::send(const char* buffer, size_t len) {
 ssize_t Connection::recv(char* buffer, size_t len) {
     ssize_t ret = ::recv(this->sd, (void*)buffer, len, 0);
     if (ret == -1) {
-        std::cout << this->sd << std::endl;
-        perror("recv()");
-        // throw proper exception
+        throw ExRecv("can not recv()");
     }
     return ret;
 }
