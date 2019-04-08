@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <errno.h>
+#include <cstring>
 #include <stdio.h>
 #include <netinet/in.h>
 #include <stdlib.h>
@@ -10,6 +11,7 @@
 
 #include "../common/debug.h"
 #include "../common/connection.h"
+#include "../common/exception.h"
 #include "server.h"
 
 socklen_t Server::sizeof_addr = sizeof(addr);
@@ -24,8 +26,7 @@ Server::Server(const char* address, uint16_t port) {
     inet_pton(AF_INET6, address, &addr.sin6_addr);
 
     if ( bind(sd, (struct sockaddr*)&addr, sizeof(addr)) != 0 ) {
-        perror("bind()");
-        // throw
+        throw ExBind("server creation", errno);
     }
     debug(INFO, "bind() ok");
 

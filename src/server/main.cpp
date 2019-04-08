@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <errno.h>
+#include <iostream>
 #include <stdio.h>
 #include <netinet/in.h>
 #include <stdlib.h>
@@ -11,6 +12,7 @@
 
 #include "../common/connection.h"
 #include "../common/debug.h"
+#include "../common/exception.h"
 #include "client.h"
 #include "server.h"
 
@@ -18,19 +20,24 @@ using namespace std;
 
 int main(int argc, char** argv) {
 
-    Server server = Server("::0", 4242);
+    try {
 
-    while (true) {
-        Client client = Client(server.accept());
+        Server server = Server("::0", 4242);
 
-        // TODO: create a list of threads and answer them
-        thread t(&Client::execute, &client);
+        while (true) {
+            Client client = Client(server.accept());
 
-        debug(INFO, "thread created");
+            // TODO: create a list of threads and answer them
+            thread t(&Client::execute, &client);
 
-        t.detach();
+            debug(INFO, "thread created");
 
-        // TODO remember to implement socket close in the destructor of Connection
+            t.detach();
+
+            // TODO remember to implement socket close in the destructor of Connection
+        }
+    } catch (ExBind e) {
+        cerr << e << endl;
     }
 
     return 0;
