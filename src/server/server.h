@@ -9,7 +9,7 @@ class Server {
         struct sockaddr_in6 addr;
     public:
         Server(const char* address, uint16_t port);
-        Connection accept(void);
+        Connection* accept(void);
         ~Server();
 };
 

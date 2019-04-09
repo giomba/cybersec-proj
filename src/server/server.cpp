@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <cstring>
 #include <stdio.h>
+#include <iostream>
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +14,8 @@
 #include "../common/connection.h"
 #include "../common/exception.h"
 #include "server.h"
+
+using namespace std;
 
 socklen_t Server::sizeof_addr = sizeof(addr);
 
@@ -36,10 +39,11 @@ Server::Server(const char* address, uint16_t port) {
     debug(INFO, "listen() ok");
 }
 
-Connection Server::accept() {
+Connection* Server::accept() {
     struct sockaddr_in6 client_addr;
     int client_sd = ::accept(sd, (struct sockaddr*)&client_addr, &sizeof_addr);
-    return Connection(client_sd, client_addr);
+    clog << "port: " << client_addr.sin6_port << endl;
+    return new Connection(client_sd, client_addr);
 }
 
 Server::~Server() {

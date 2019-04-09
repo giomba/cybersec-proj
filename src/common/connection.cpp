@@ -47,6 +47,7 @@ ssize_t Connection::recv(char* buffer, size_t len) {
 }
 
 Connection::~Connection() {
+    clog << "destroy " << sd << endl;
     // close connections and destroy created sockets, if necessary
     // (eg. if socket was created using this->connect() )
 }

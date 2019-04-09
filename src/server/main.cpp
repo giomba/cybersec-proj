@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <thread>
 #include <unistd.h>
+#include <vector>
 
 #include "../common/connection.h"
 #include "../common/debug.h"
@@ -30,17 +31,20 @@ int main(int argc, char** argv) {
         Server server = Server("::0", atoi(argv[1]));
         // debug(INFO, string("Listening on port ")); debug(INFO);
 
+        vector<Client*> clients;
+
         while (true) {
-            Client client = Client(server.accept());
+            Client* client = new Client(server.accept());
+            clients.push_back(client);
 
-            // TODO: create a list of threads and answer them
-            thread t(&Client::execute, &client);
+            thread t(&Client::execute, client);
 
-            debug(INFO, "thread created");
+            clog << "thread created for client " << client << endl;
 
             t.detach();
 
             // TODO remember to implement socket close in the destructor of Connection
+            // TODO remember to destroy these clients when they disconnect
         }
     } catch (ExNetwork e) {
         cerr << "network: " << e << endl;
