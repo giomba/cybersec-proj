@@ -1,6 +1,6 @@
 .POSIX:
 CXX=g++
-CFLAGS=-Wall -g
+CFLAGS=-Wall -g -std=c++11
 LDFLAGS=-lpthread
 
 # Header files
@@ -44,4 +44,3 @@ bin/client: $(CXX_A_OBJ) $(CXX_C_OBJ)
 
 clean:
 	rm -rf bin obj
-
