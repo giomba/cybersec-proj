@@ -1,12 +1,16 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
+#include <dirent.h>
+
 #include <cassert>
 #include <cstring>
-
-#include <dirent.h> /* directory management */
+#include <iostream>
+#include <sstream>
+#include <vector>
 
 #include "../common/connection.h"
+#include "../common/exception.h"
 
 const string OK                         = "200";
 const string SERVER_ERROR               = "500";
@@ -17,8 +21,8 @@ const string BAD_SEQUENCE_OF_COMMANDS   = "503";
 class Client {
     private:
         Connection* connection;
-        vector<string> arg;
-        vector<string> reply;
+        istringstream is;
+        ostringstream os;
 
         void recvCmd();
         void sendCmd();

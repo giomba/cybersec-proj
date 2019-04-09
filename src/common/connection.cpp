@@ -31,16 +31,16 @@ Connection::Connection(const char* hostname, uint16_t port) {
 }
 
 ssize_t Connection::send(const char* buffer, size_t len) {
-    ssize_t ret = ::send(this->sd, (void*)buffer, len, 0);
-    if (ret == -1) {
+    int ret = ::send(this->sd, (void*)buffer, len, 0);
+    if (ret <= 0) {
         throw ExSend("can not send()");
     }
     return ret;
 }
 
 ssize_t Connection::recv(char* buffer, size_t len) {
-    ssize_t ret = ::recv(this->sd, (void*)buffer, len, 0);
-    if (ret == -1) {
+    int ret = ::recv(this->sd, (void*)buffer, len, 0);
+    if (ret <= 0) {
         throw ExRecv("can not recv()");
     }
     return ret;

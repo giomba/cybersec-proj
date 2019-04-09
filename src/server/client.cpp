@@ -1,7 +1,3 @@
-#include <iostream>
-#include <sstream>
-#include <vector>
-
 #include "../common/connection.h"
 #include "../common/debug.h"
 
@@ -36,101 +32,93 @@ void Client::recvCmd() {
     }
     buffer[BUFFER_SIZE - 1] = '\0';
 
-    arg.clear();
-
-    istringstream stream;
-    stream.str(string(buffer));
-
-    string parola;
-    while (stream >> parola && stream.good()) {
-        arg.push_back(parola);
-    }
+    is.str(string(buffer));
 }
 
 void Client::sendCmd() {
-    // server must always reply with an odd number of parolas in the ReplyStatus
-    assert(reply.size() % 2 == 1);
+    string buffer = os.str();
 
-    connection->send(reply[0].c_str(), reply[0].length());
-    connection->send("\n", 1);
-
-    for (unsigned int i = 1; i < reply.size(); i += 2) {
-        connection->send(reply[i].c_str(), reply[i].length());
-        connection->send(" ", 1);
-        connection->send(reply[i + 1].c_str(), reply[i + 1].length());
-        connection->send("\n", 1);
-    }
-    connection->send("\n", 1);
+    connection->send(buffer.c_str(), buffer.length());
 }
 
 void Client::cmd_allo(void) {;}
 void Client::cmd_dele(void) {;}
 
 void Client::cmd_list(void) {
-    /* check for syntax errors */
-    if (arg.size() != 1) {
-        reply.push_back(SYNTAX_ERROR);
-        sendCmd();
-        return;
-    }
-
-    /* retrieve list of files and computer size */
-    vector<string> fileList;
-    size_t size = 0;
+    /* retrieve list of files */
+    ostringstream fileList;
     DIR* dd;
     dirent* de;
 
     dd = opendir(SERVER_ROOT);
     if (dd) {
         while ((de = readdir(dd)) != NULL) {
-            fileList.push_back(string(de->d_name));
-            size += (strlen(de->d_name) + 1);
+            if (strcmp(de->d_name, ".") && strcmp(de->d_name, "..")) { // if name is not . nor ..
+                fileList << de->d_name << endl;
+            }
         }
         closedir(dd);
     }
     else {
-        reply.push_back(SERVER_ERROR);
+        os << SERVER_ERROR << endl;
         sendCmd();
         return;
     }
 
     /* send back list of files */
-    reply.push_back(OK);
-    reply.push_back(string("Size: "));
-    reply.push_back(to_string(size));
+    string buffer = fileList.str();
+
+    os << OK << endl << "Size: " << buffer.length() << endl << endl;
     sendCmd();
 
-    for (string filename : fileList) {
-        connection->send(filename.c_str(), filename.length());
-        connection->send("\n", 1);
-    }
+    connection->send(buffer.c_str(), buffer.length());
+
 }
 
 void Client::cmd_quit(void) {;}
 void Client::cmd_retr(void) {;}
 void Client::cmd_stor(void) {;}
 void Client::cmd_unknown(void) {
-    reply.push_back(COMMAND_NOT_IMPLEMENTED);
+    os << COMMAND_NOT_IMPLEMENTED << endl;
     sendCmd();
 }
 
 bool Client::execute(void) {
-    for (;;) {
-        reply.clear();
+    string cmd;
 
-        recvCmd();
+    try {
 
-        if (arg.size() >= 1) {
-                 if (arg[0] == "ALLO") { cmd_allo(); }
-            else if (arg[0] == "DELE") { cmd_dele(); }
-            else if (arg[0] == "LIST") { cmd_list(); }
-            else if (arg[0] == "QUIT") { cmd_quit(); }
-            else if (arg[0] == "RETR") { cmd_retr(); }
-            else if (arg[0] == "STOR") { cmd_stor(); }
-            else cmd_unknown();
+        for (;;) {
+            /* Clear Input and Output streams */
+            is.ignore(BUFFER_SIZE);
+            is.clear();
+            os.str("");
+            os.clear();
+
+            /* Receive command and read first parola */
+            recvCmd();
+            is >> cmd;
+
+            /* Choose command function */
+            if (is.good()) {
+                     if (cmd == "ALLO") { cmd_allo(); }
+                else if (cmd == "DELE") { cmd_dele(); }
+                else if (cmd == "LIST") { cmd_list(); }
+                else if (cmd == "QUIT") { cmd_quit(); }
+                else if (cmd == "RETR") { cmd_retr(); }
+                else if (cmd == "STOR") { cmd_stor(); }
+                else { cmd_unknown(); }
+            }
         }
     }
+    catch (ExNetwork e) {
+        cerr << e << endl;
+    }
+    catch (Ex e) {
+        cerr << e << endl;
+    }
 
-    debug(DEBUG, "client execution end");
+    clog << "[II] client execution end " << this << endl;
     return true;
 }
+
