@@ -28,12 +28,12 @@ Server::Server(const char* address, uint16_t port) {
     addr.sin6_port = htons(port);
     inet_pton(AF_INET6, address, &addr.sin6_addr);
 
-    if ( bind(sd, (struct sockaddr*)&addr, sizeof(addr)) != 0 ) {
+    if ( ::bind(sd, (struct sockaddr*)&addr, sizeof(addr)) != 0 ) {
         throw ExBind("server creation", errno);
     }
     debug(INFO, "bind() ok");
 
-    if ( listen(sd, 10) != 0 ) {    // TODO: choose a proper number
+    if ( ::listen(sd, 10) != 0 ) {    // TODO: choose a proper number
         throw ExListen("listen()");
     }
     debug(INFO, "listen() ok");
