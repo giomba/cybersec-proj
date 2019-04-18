@@ -1,32 +1,89 @@
-/*
-#include "const.h"
-#include "cmd.h"
-*/
-#include "../common/connection.h"
-#include "../common/debug.h"
-#include "../common/exception.h"
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <string>
-#include <vector>
-#include <sstream>
-#include <unistd.h>
-
-#define DEFAULT_SIZE 64
+#include "client.h"
 
 using namespace std;
 
-char buffer[DEFAULT_SIZE];
-Connection *c;
+/****************************************/
+/*              SEND/RECV               */
+/****************************************/
 
-enum CommandType {
-    HELP, LIST, QUIT, RETR, STOR, DELE, BAD_REQ
-};
+void send_cmd(){
+    string str_cmd, filename;
+    is >> str_cmd >> filename;
+
+    CommandType cmd = str2cmd(str_cmd);
+
+    switch(cmd){
+        case HELP:   cmd_help(); break;
+        case QUIT:   cmd_quit(); break;
+        case L_LIST: cmd_local_list(); break;
+        case R_LIST: cmd_remote_list(); break;
+        case RETR:   cmd_retr(filename); break;
+        case STOR:   cmd_stor(filename); break;
+        case DELE:   cmd_dele(filename); break;
+        default:     cmd_unknown(str_cmd);
+    }
+}
+
+void recv_response(){
+    char buffer[BUFFER_SIZE];
+    int recvBytes;
+    char shiftRegister[2];
+
+    memset(buffer, 0, BUFFER_SIZE);
+    is.clear();
+
+    for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
+        recvBytes = connection->recv(buffer + i, 1);
+        if (recvBytes == 1) {
+            shiftRegister[0] = shiftRegister[1];
+            shiftRegister[1] = buffer[i];
+
+            // if all command and parameters have been received...
+            if (shiftRegister[0] == '\n' && shiftRegister[1] == '\n') {
+                buffer[i + 1] = '\0';
+                break;
+            }
+        }
+    }
+    buffer[BUFFER_SIZE - 1] = '\0';
+
+    is.str(string(buffer));
+}
+
+void recv_list(){
+    char buffer[BUFFER_SIZE];
+    int response;
+    string attr;
+    size_t msg_len;
+
+    is >> response;
+    if (response == OK){
+        is >> attr >> msg_len;
+
+        memset(buffer, 0, BUFFER_SIZE);
+        connection->recv(buffer, msg_len);
+
+        is.clear();
+        is.str(string(buffer));
+        string file;
+        while(is >> file){
+            cout << "   - 📄 " << file << endl;
+        }
+    }
+}
+
+void recv_file(){
+    cout << "Receiving file..." << endl;
+}
+
+/********************************/
+/*            UTILS             */
+/********************************/
 
 CommandType str2cmd(string str){
     if (str.compare("help") == 0)   { return HELP; }
-    if (str.compare("ls") == 0)     { return LIST; }
+    if (str.compare("lls") == 0)    { return L_LIST; }
+    if (str.compare("rls") == 0)    { return R_LIST; }
     if (str.compare("q") == 0)      { return QUIT; }
     if (str.compare("get") == 0)    { return RETR; }
     if (str.compare("put") == 0)    { return STOR; }
@@ -34,13 +91,18 @@ CommandType str2cmd(string str){
     return BAD_REQ;
 }
 
-void availableCommands(){
+/********************************/
+/*      PROTOCOL FUNCTIONS      */
+/********************************/
+
+void cmd_help(){
     cout << endl;
 
     cout << "sftp: secure file transfer for file up to 4 GB" << endl;
     cout << "Usage:" << endl;
     cout << " help           -- show this content" << endl;
-    cout << " ls             -- list all files available on the server" << endl;
+    cout << " rls            -- list all files available on the server" << endl;
+    cout << " lls [<path>]   -- list local files at the specified path" << endl;
     cout << " q              -- quit" << endl;
     cout << " get <filename> -- download the specified file" << endl;
     cout << " put <filename> -- upload the specified file" << endl;
@@ -49,84 +111,97 @@ void availableCommands(){
     cout << endl;
 }
 
-vector<string> split(string str, char delimeter){
-    stringstream ss(str);
-    string s;
-    vector<string> str_vector;
-    while (getline(ss, s, delimeter)){
-        str_vector.push_back(s);
+void cmd_local_list(){
+    if ( ::execve("/bin/ls", NULL, NULL) != 0 ){
+        perror("error:");
     }
-    return str_vector;
 }
 
-/********************************/
-/*      PROTOCOL FUNCTIONS      */
-/********************************/
-
-void list(){
+void cmd_remote_list(){
     string cmd = "LIST\n\n";
-    debug(INFO, "sending LIST request...");
-    c->send(cmd.c_str(), cmd.length());
+    connection->send(cmd.c_str(), cmd.length());
+    //debug(DEBUG, cmd);
+    recv_response();
+    recv_list();
 }
 
-void quit(){
-    string greetings = "Bye :(";
+void cmd_quit(){
     cout << greetings << endl;
     exit(0);
 }
 
-void retrieve(string filename){
+void cmd_allo(string filename){
     if (filename == ""){
-        debug(ERROR, "RETR <filename>");
+        cout << "usage: allo <filename>" << endl;
+        return;
+    }
+    string cmd = "ALLO " + filename + "\n\n";
+    debug(INFO, cmd.c_str());
+    connection->send(cmd.c_str(), cmd.length());
+}
+
+void cmd_retr(string filename){
+    if (filename == ""){
+        cout << "usage: get <filename>" << endl;
         return;
     }
     string cmd = "RETR " + filename + "\n\n";
     debug(INFO, cmd.c_str());
-    c->send(cmd.c_str(), filename.length());
+    connection->send(cmd.c_str(), cmd.length());
+
+    recv_response();
+    recv_file();
 }
 
-void store(string filename){
-    if (filename == ""){
-        debug(ERROR, "STOR <filename>");
+void cmd_stor(string filepath){
+    if (filepath == ""){
+        cout << "usage: put <filename>" << endl;
         return;
     }
-    //string cmd = "STOR " + filename + "\nSize: " + filesize + "\n\n";
-    string cmd = "STOR " + filename;
+
+    stringstream ss;
+    string filename;
+    string filesize;
+
+    /*
+        getting the filename from the filepath (es. /etc/hosts)
+        assuming that the user might store a file which is not
+        in the current dir
+    */
+    ss << filepath;
+    while(getline(ss, filename, '/'));
+
+    // clear stringstream
+    ss.clear();
+    ss.str("");
+
+    // getting the file size
+    ss << read(filepath);
+    filesize = ss.str();
+    string cmd = "STOR " + filename + "\nSize: " + filesize + "\n\n";
+
     debug(INFO, cmd.c_str());
-    c->send(cmd.c_str(), filename.length());
+    //connection->send(cmd.c_str(), cmd.length());
+    recv_response();
 }
 
-void deleteFile(string filename){
+void cmd_dele(string filename){
     if (filename == ""){
-        debug(ERROR, "DELE <filename>");
+        cout << "usage: rm <filename>" << endl;
         return;
     }
     string cmd = "DELE " + filename + "\n\n";
     debug(INFO, cmd.c_str());
-    c->send(cmd.c_str(), filename.length());
+    //connection->send(cmd.c_str(), cmd.length());
+
+    recv_response();
 }
 
-void parseCommand(string str){
-    vector<string> parsed_str = split(str, ' ');
-    /*
-    for (int i = 0; i < parsed_str.size(); i++){
-        cout << parsed_str[i] << endl;
-    }
-    */
-    CommandType cmd = str2cmd(parsed_str[0]);
-
-    switch(cmd){
-        case HELP: availableCommands(); break;
-        case LIST: cout << "LIST" << endl; list(); break;
-        case QUIT: cout << "QUIT" << endl; quit(); break;
-        case RETR: cout << "RETR" << endl; retrieve(parsed_str[1]); break;
-        case STOR: cout << "STOR" << endl; store(parsed_str[1]); break;
-        case DELE: cout << "DELE" << endl; deleteFile(parsed_str[1]); break;
-        default:   cout << "BAD_REQ" << endl;
-    }
+void cmd_unknown(string cmd){
+    cout << "error: '" << cmd << "' is an invalid command" << endl;
 }
 
-void read(const char *filename){
+size_t read(string filename){
     streampos size;
     char *memblock = 0;
 
@@ -135,46 +210,49 @@ void read(const char *filename){
     if (file.is_open()){
         size = file.tellg();
         cout << "Copying " << size << " bytes in memory\n";
-        memblock = new char [size];
-        file.seekg (0, ios::beg);
-        file.read (memblock, size);
+        memblock = new char[size];
+        file.seekg(0, ios::beg);
+        file.read(memblock, size);
         file.close();
-        cout << memblock;
+        cout << memblock << endl;
     } else {
         cout << "Unable to open file" << endl;
     }
+    return size;
 }
-
 
 /****************************************/
 /*                MAIN                  */
 /****************************************/
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[], char *envp[]) {
     if (argc < 3){
         cout << "./bin/client <ipserver> <serverport>" << endl;
         exit(0);
     }
 
     string line;
-    string banner = "Ciao Hello Salut Hallo Nihao";
 
-    char* sv_addr = argv[1];
-    int sv_port = atoi(argv[2]);
+    string sv_addr = argv[1];
+    uint16_t sv_port = atoi(argv[2]);
 
     try {
-        c = new Connection(sv_addr, sv_port);
-        cout << banner << endl;
+        connection = new Connection(sv_addr.c_str(), sv_port);
+
         while(1){
-            // pulizia buffer
+            // clear line, stringstream and input stream
             line.clear();
-            cout << ">";
-            // waiting for command
+            is.clear();
+            is.str("");
             cin.clear();
+
+            cout << cursor;
+            // waiting for command
             getline(cin, line);
+            is.str(line);
 
             if (!line.empty()){
-                parseCommand(line);
+                send_cmd();
             }
         }
     } catch(Ex e) {
