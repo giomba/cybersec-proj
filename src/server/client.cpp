@@ -38,7 +38,10 @@ void Client::recvCmd() {
 void Client::sendCmd() {
     string buffer = os.str();
 
-    connection->send(buffer.c_str(), buffer.length());
+    connection->send(buffer.data(), buffer.size());
+
+    os.str("");
+    os.clear();
 }
 
 void Client::cmd_allo(void) {;}
@@ -70,9 +73,8 @@ void Client::cmd_list(void) {
 
     os << OK << endl << "Size: " << buffer.length() << endl << endl;
     sendCmd();
-
-    connection->send(buffer.c_str(), buffer.length());
-
+    os.write(buffer.data(), buffer.size());
+    sendCmd();
 }
 
 void Client::cmd_quit(void) {;}
@@ -92,8 +94,6 @@ bool Client::execute(void) {
             /* Clear Input and Output streams */
             is.ignore(BUFFER_SIZE);
             is.clear();
-            os.str("");
-            os.clear();
 
             /* Receive command and read first parola */
             recvCmd();

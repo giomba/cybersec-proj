@@ -11,12 +11,7 @@
 
 #include "../common/connection.h"
 #include "../common/exception.h"
-
-const string OK                         = "200";
-const string SERVER_ERROR               = "500";
-const string SYNTAX_ERROR               = "501";
-const string COMMAND_NOT_IMPLEMENTED    = "502";
-const string BAD_SEQUENCE_OF_COMMANDS   = "503";
+#include "../common/protocol.h"
 
 class Client {
     private:
