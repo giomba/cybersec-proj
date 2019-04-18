@@ -6,7 +6,7 @@
 using namespace std;
 
 #define BUFFER_SIZE 4 * (1 << 10)
-#define SERVER_ROOT "root"
+const string SERVER_ROOT = "root";
 
 Client::Client(Connection* c) {
     connection = c;
@@ -16,6 +16,10 @@ void Client::recvCmd() {
     char buffer[BUFFER_SIZE];
     int recvBytes;
     char shiftRegister[2];
+
+    is.ignore(BUFFER_SIZE);
+    is.clear();
+
 
     for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
         recvBytes = connection->recv(buffer + i, 1);
@@ -37,11 +41,16 @@ void Client::recvCmd() {
 
 void Client::sendCmd() {
     string buffer = os.str();
+    if (buffer.size() != 0) {
+        connection->send(buffer.data(), buffer.size());
+    }
 
-    connection->send(buffer.c_str(), buffer.length());
+    os.str("");
+    os.clear();
 }
 
 void Client::cmd_allo(void) {;}
+
 void Client::cmd_dele(void) {;}
 
 void Client::cmd_list(void) {
@@ -50,7 +59,7 @@ void Client::cmd_list(void) {
     DIR* dd;
     dirent* de;
 
-    dd = opendir(SERVER_ROOT);
+    dd = opendir(SERVER_ROOT.c_str());
     if (dd) {
         while ((de = readdir(dd)) != NULL) {
             if (strcmp(de->d_name, ".") && strcmp(de->d_name, "..")) { // if name is not . nor ..
@@ -70,14 +79,62 @@ void Client::cmd_list(void) {
 
     os << OK << endl << "Size: " << buffer.length() << endl << endl;
     sendCmd();
-
-    connection->send(buffer.c_str(), buffer.length());
-
+    os.write(buffer.data(), buffer.size());
+    sendCmd();
 }
 
-void Client::cmd_quit(void) {;}
-void Client::cmd_retr(void) {;}
+void Client::cmd_quit(void) {
+    os << OK << endl << endl;
+    sendCmd();
+}
+
+void Client::cmd_retr(void) {
+    string filename;
+
+    is >> filename;
+
+    if (! regex_match(filename, parola)) {
+        clog << "[W] bad file name" << endl;
+        os << BAD_FILE << endl << endl;
+        sendCmd();
+        return;
+    }
+
+    string fullpath = SERVER_ROOT + "/" + filename;
+    clog << "[I] RETR file ->" << fullpath << "<-" << endl;
+    fstream file(fullpath, ios::in | ios::binary);
+
+    if (! file) {
+        clog << "[W] file can not be open" << endl;
+        os << BAD_FILE << endl << endl;
+        sendCmd();
+        return;
+    }
+
+    file.seekg(0, ios::end);
+    int size = file.tellg();
+
+    os << OK << endl << "Size: " << size << endl << endl;
+    sendCmd();
+
+    char c;
+    int count = 0;
+    file.seekg(ios::beg);
+    while (true) {
+        c = file.get();
+        if (! file.good()) break;
+        os << c;
+        if (count++ % BUFFER_SIZE == 0) {
+            sendCmd();
+        }
+    }
+    sendCmd();
+
+    file.close();
+}
+
 void Client::cmd_stor(void) {;}
+
 void Client::cmd_unknown(void) {
     os << COMMAND_NOT_IMPLEMENTED << endl;
     sendCmd();
@@ -89,12 +146,6 @@ bool Client::execute(void) {
     try {
 
         for (;;) {
-            /* Clear Input and Output streams */
-            is.ignore(BUFFER_SIZE);
-            is.clear();
-            os.str("");
-            os.clear();
-
             /* Receive command and read first parola */
             recvCmd();
             is >> cmd;
@@ -104,7 +155,7 @@ bool Client::execute(void) {
                      if (cmd == "ALLO") { cmd_allo(); }
                 else if (cmd == "DELE") { cmd_dele(); }
                 else if (cmd == "LIST") { cmd_list(); }
-                else if (cmd == "QUIT") { cmd_quit(); }
+                else if (cmd == "QUIT") { cmd_quit(); break; }
                 else if (cmd == "RETR") { cmd_retr(); }
                 else if (cmd == "STOR") { cmd_stor(); }
                 else { cmd_unknown(); }
@@ -112,13 +163,16 @@ bool Client::execute(void) {
         }
     }
     catch (ExNetwork e) {
-        cerr << e << endl;
+        cerr << "[E] network: " << e << endl;
     }
     catch (Ex e) {
-        cerr << e << endl;
+        cerr << "[E] " << e << endl;
     }
 
-    clog << "[II] client execution end " << this << endl;
+    clog << "[I] client execution end " << this << endl;
+
+    delete connection;
+
     return true;
 }
 

@@ -10,6 +10,7 @@
 #include "exception.h"
 
 Connection::Connection(int sd, struct sockaddr_in6 peer) {
+    clog << "[I] new connection " << this << endl;
     this->sd = sd;
     this->peer = peer;
 }
@@ -47,7 +48,8 @@ ssize_t Connection::recv(char* buffer, size_t len) {
 }
 
 Connection::~Connection() {
-    clog << "destroy " << sd << endl;
+    clog << "[I] destroyng connection " << this << " socket " << sd << endl;
+    close(sd);
     // close connections and destroy created sockets, if necessary
     // (eg. if socket was created using this->connect() )
 }

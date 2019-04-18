@@ -29,27 +29,22 @@ int main(int argc, char** argv) {
         if (! checkPort(port)) throw ExUserInput("invalid port number");
 
         Server server = Server("::0", atoi(argv[1]));
-        // debug(INFO, string("Listening on port ")); debug(INFO);
-
-        vector<Client*> clients;
 
         while (true) {
             Client* client = new Client(server.accept());
-            clients.push_back(client);
 
             thread t(&Client::execute, client);
 
-            clog << "thread created for client " << client << endl;
+            clog << "[I] thread created for client " << client << endl;
 
             t.detach();
 
-            // TODO remember to implement socket close in the destructor of Connection
             // TODO remember to destroy these clients when they disconnect
         }
     } catch (ExNetwork e) {
-        cerr << "network: " << e << endl;
+        cerr << "[E] network: " << e << endl;
     } catch (ExUserInput e) {
-        cerr << "invalid input: " << e << endl;
+        cerr << "[E] invalid input: " << e << endl;
     }
 
     return 0;
