@@ -72,14 +72,33 @@ void recv_list(){
     }
 }
 
-void recv_file(){
+void recv_file(string filename){
+    char buffer[BUFFER_SIZE];
     int response;
+    string attr;
+    size_t filesize;
+    size_t recvBytes = 0;
+    
     is >> response;
     if (response == OK){
-        cout << "Receiving file..." << endl;
-    } else {
+        is >> attr >> filesize;
+
+        while(recvBytes < filesize){
+            recvBytes += connection->recv(buffer + recvBytes, filesize);
+        }
+        
+        ofstream file;
+        file.open(CLIENT_ROOT + filename, ios::out|ios::binary);
+        if (file.is_open()){
+            file << buffer;
+            file.close();
+        }
+        
+        cout << "File '" << filename << "' saved successfully in " << CLIENT_ROOT << endl;
+    } else if (response == BAD_FILE) {
+        cout << filename << ": No such file" << endl;
+    } else
         cout << error << endl;
-    }
 }
 
 /********************************/
@@ -142,7 +161,7 @@ void cmd_local_list(string path){
 void cmd_remote_list(){
     string cmd = "LIST\n\n";
     connection->send(cmd.c_str(), cmd.length());
-    //debug(DEBUG, cmd);
+
     recv_response();
     recv_list();
 }
@@ -168,11 +187,10 @@ void cmd_retr(string filename){
         return;
     }
     string cmd = "RETR " + filename + "\n\n";
-    debug(INFO, cmd.c_str());
     connection->send(cmd.c_str(), cmd.length());
 
     recv_response();
-    recv_file();
+    recv_file(filename);
 }
 
 void cmd_stor(string filepath){

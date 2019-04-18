@@ -19,8 +19,10 @@
 #define BUFFER_SIZE     4 * KiB
 #define MAX_FILE_SIZE   1 * GiB // CHANGE IT !!
 
-const string cursor = "👉 ";
-const string greetings = "👋 Bye";
+#define CLIENT_ROOT "downloads/"
+
+const string cursor = "> ";
+const string greetings = "Bye :(";
 const string error = "Something went wrong. Retry later.";
 
 Connection *connection;
@@ -33,7 +35,7 @@ enum CommandType {
 void send_cmd();
 void recv_response();
 void recv_list();
-void recv_file();
+void recv_file(string);
 
 CommandType str2cmd(string);
 bool read(string, size_t&);
