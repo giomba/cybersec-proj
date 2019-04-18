@@ -1,0 +1,4 @@
+Hello, this is a plain text file.
+No strange chars, only printable ASCII text and some newlines,
+maybe some tabs or form feed, but nothing special.
+
