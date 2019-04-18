@@ -1,7 +1,7 @@
 .POSIX:
 CXX=g++
 CFLAGS=-Wall -g -std=c++11
-LDFLAGS=-lpthread
+LDFLAGS=-lpthread -lcrypto
 
 # Header files
 CXX_S_HDR=$(wildcard src/server/*.h)
