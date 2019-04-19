@@ -18,7 +18,7 @@
 
 #define cursor      "> "
 #define greetings   "Bye :("
-#define error       "Something went wrong. Retry later."
+#define error       "Something went wrong. Please retry later."
 
 Connection *connection;
 istringstream is;
@@ -28,14 +28,14 @@ enum CommandType {
 };
 
 void send_cmd(string);
-void send_file(string, string, uint64_t);
+void send_file(string, string, int64_t);
 void recv_response();
 void recv_list();
 void recv_file(string);
 
 CommandType str2cmd(string);
 void parse_cmd(string);
-bool check_and_get_file_size(string, uint64_t&);
+bool check_and_get_file_size(string, int64_t&);
 
 void cmd_help();
 void cmd_local_list(string);
