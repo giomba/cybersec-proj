@@ -135,13 +135,13 @@ void Client::cmd_retr(void) {
     }
 
     file.seekg(0, ios::end);
-    int size = file.tellg();
+    uint64_t size = file.tellg();
 
     os << OK << endl << "Size: " << size << endl << endl;
     sendCmd();
 
     char c;
-    int count = 0;
+    uint64_t count = 0;
     file.seekg(0, ios::beg);
     while (true) {
         c = file.get();
@@ -167,7 +167,7 @@ void Client::cmd_stor(void) {
     }
 
     string tag;
-    int size;
+    uint64_t size;
 
     is >> tag >> size;
 
@@ -193,7 +193,8 @@ void Client::cmd_stor(void) {
 
     char buffer[BUFFER_SIZE];
 
-    int fragmentSize, remaining, received = 0;
+    int fragmentSize;
+    uint64_t remaining, received = 0;
 
     while (received < size) {
         remaining = size - received;
