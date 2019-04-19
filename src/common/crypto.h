@@ -4,11 +4,11 @@
 class Crypto{
 private:
 	const char* key;
-	const char* iv;	
+	const char* iv;
 public:
 	Crypto(const char* key, const char* iv);
-	unsigned char* encrypt(const char* bufferName, size_t size);
-	unsigned char* decrypt(const char* bufferName, size_t size);
+	unsigned char* encrypt(const char* bufferName, int size);
+	unsigned char* decrypt(const char* bufferName, int size);
 };
 
 #endif

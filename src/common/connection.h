@@ -14,8 +14,8 @@ class Connection {
         Connection(const char* hostname, uint16_t port);
         Connection(int sd, sockaddr_in6 peer);
         ~Connection();
-        ssize_t send(const char* buffer, size_t len);
-        ssize_t recv(char* buffer, size_t len);
+        int send(const char* buffer, int len);
+        int recv(char* buffer, int len);
 };
 
 #endif

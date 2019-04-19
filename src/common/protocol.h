@@ -19,8 +19,8 @@ using namespace std;
 #define GiB (1UL << 30)
 
 /* max size */
-#define BUFFER_SIZE     4 * KiB
-#define MAX_FILE_SIZE   4 * GiB
+const int BUFFER_SIZE = 4 * KiB;
+const int64_t MAX_FILE_SIZE = 4 * GiB;
 
 extern regex parola;
 
