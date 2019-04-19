@@ -13,17 +13,12 @@
 #include "../common/exception.h"
 #include "../common/protocol.h"
 
-#define KiB (1 << 10)
-#define GiB (1 << 30)
-
-#define BUFFER_SIZE     4 * KiB
-#define MAX_FILE_SIZE   1 * GiB // CHANGE IT !!
 
 #define CLIENT_ROOT "downloads/"
 
-const string cursor = "> ";
-const string greetings = "Bye :(";
-const string error = "Something went wrong. Retry later.";
+#define cursor      "> "
+#define greetings   "Bye :("
+#define error       "Something went wrong. Retry later."
 
 Connection *connection;
 istringstream is;
@@ -33,14 +28,14 @@ enum CommandType {
 };
 
 void send_cmd(string);
-void send_file(string, string, size_t);
+void send_file(string, string, uint64_t);
 void recv_response();
 void recv_list();
 void recv_file(string);
 
 CommandType str2cmd(string);
 void parse_cmd(string);
-bool check_and_get_file_size(string, size_t&);
+bool check_and_get_file_size(string, uint64_t&);
 
 void cmd_help();
 void cmd_local_list(string);
