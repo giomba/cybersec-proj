@@ -238,7 +238,6 @@ void cmd_stor(string filepath){
 
     string cmd = "STOR " + filename + "\nSize: " + to_string(filesize) + "\n\n";
 
-    debug(INFO, cmd.c_str());
     send_cmd(cmd);
     recv_response();
 
@@ -258,14 +257,12 @@ void cmd_dele(string filename){
         return;
     }
     string cmd = "DELE " + filename + "\n\n";
-    debug(INFO, cmd.c_str());
-    //send_cmd(cmd);
-
-    //recv_response();
+    
+    send_cmd(cmd);
+    recv_response();
 
     int response;
     is >> response;
-    response = OK;
     if (response == OK){
         cout << "File '" << filename << "' deleted successfully" << endl;
     } else {
