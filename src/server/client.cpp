@@ -188,6 +188,9 @@ void Client::cmd_stor(void) {
         return;
     }
 
+    os << OK << endl << endl;
+    sendCmd();
+
     char buffer[BUFFER_SIZE];
 
     int fragmentSize, remaining, received = 0;
