@@ -11,8 +11,11 @@
 #include <vector>
 
 #include "../common/connection.h"
+#include "../common/debug.h"
 #include "../common/exception.h"
 #include "../common/protocol.h"
+
+using namespace std;
 
 class Client {
     private:

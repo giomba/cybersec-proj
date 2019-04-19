@@ -1,11 +1,5 @@
-#include "../common/connection.h"
-#include "../common/debug.h"
-
 #include "client.h"
 
-using namespace std;
-
-#define BUFFER_SIZE 4 * (1 << 10)
 const string SERVER_ROOT = "root";
 
 Client::Client(Connection* c) {
@@ -14,14 +8,13 @@ Client::Client(Connection* c) {
 
 void Client::recvCmd() {
     char buffer[BUFFER_SIZE];
-    int recvBytes;
+    unsigned int recvBytes;
     char shiftRegister[2];
 
     is.ignore(BUFFER_SIZE);
     is.clear();
 
-
-    for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
+    for (unsigned int i = 0; i < BUFFER_SIZE - 1; ++i) {
         recvBytes = connection->recv(buffer + i, 1);
         if (recvBytes == 1) {
             shiftRegister[0] = shiftRegister[1];
@@ -39,7 +32,7 @@ void Client::recvCmd() {
     is.str(string(buffer));
 }
 
-int Client::recvBodyFragment(char* buffer, int len) {
+int Client::recvBodyFragment(char* buffer, const int len) {
     return connection->recv(buffer, len);
 }
 
