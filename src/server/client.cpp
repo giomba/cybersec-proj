@@ -160,12 +160,19 @@ void Client::cmd_stor(void) {
     }
 
     string tag;
-    uint64_t size;
+    int64_t size;
 
     is >> tag >> size;
+    clog << "[D] " << size << endl;
 
     if (tag != "Size:") {
         os << SYNTAX_ERROR << endl << endl;
+        sendCmd();
+        return;
+    }
+
+    if (size > MAX_FILE_SIZE) {
+        os << COMMAND_NOT_IMPLEMENTED << endl << endl;
         sendCmd();
         return;
     }
@@ -186,8 +193,7 @@ void Client::cmd_stor(void) {
 
     char buffer[BUFFER_SIZE];
 
-    int fragmentSize;
-    uint64_t remaining, received = 0;
+    int64_t fragmentSize, remaining, received = 0;
 
     while (received < size) {
         remaining = size - received;

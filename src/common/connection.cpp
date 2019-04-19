@@ -31,7 +31,7 @@ Connection::Connection(const char* hostname, uint16_t port) {
 
 }
 
-ssize_t Connection::send(const char* buffer, size_t len) {
+int Connection::send(const char* buffer, int len) {
     int ret = ::send(this->sd, (void*)buffer, len, 0);
     if (ret <= 0) {
         throw ExSend("can not send()");
@@ -39,7 +39,7 @@ ssize_t Connection::send(const char* buffer, size_t len) {
     return ret;
 }
 
-ssize_t Connection::recv(char* buffer, size_t len) {
+int Connection::recv(char* buffer, int len) {
     int ret = ::recv(this->sd, (void*)buffer, len, 0);
     if (ret <= 0) {
         throw ExRecv("can not recv()");
