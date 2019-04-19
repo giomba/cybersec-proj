@@ -128,13 +128,13 @@ void Client::cmd_retr(void) {
     }
 
     file.seekg(0, ios::end);
-    uint64_t size = file.tellg();
+    int64_t size = file.tellg();
 
     os << OK << endl << "Size: " << size << endl << endl;
     sendCmd();
 
     char c;
-    uint64_t count = 0;
+    int64_t count = 0;
     file.seekg(0, ios::beg);
     while (true) {
         c = file.get();
