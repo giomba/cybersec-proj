@@ -39,6 +39,10 @@ void Client::recvCmd() {
     is.str(string(buffer));
 }
 
+int Client::recvBodyFragment(char* buffer, int len) {
+    return connection->recv(buffer, len);
+}
+
 void Client::sendCmd() {
     string buffer = os.str();
     if (buffer.size() != 0) {
@@ -49,14 +53,13 @@ void Client::sendCmd() {
     os.clear();
 }
 
-void Client::cmd_allo(void) {;}
-
 void Client::cmd_dele(void) {
     string filename;
     is >> filename;
 
     if (! regex_match(filename, parola)) {
         os << BAD_FILE << endl << endl;
+        sendCmd();
         return;
     }
 
@@ -139,7 +142,7 @@ void Client::cmd_retr(void) {
 
     char c;
     int count = 0;
-    file.seekg(ios::beg);
+    file.seekg(0, ios::beg);
     while (true) {
         c = file.get();
         if (! file.good()) break;
@@ -153,7 +156,51 @@ void Client::cmd_retr(void) {
     file.close();
 }
 
-void Client::cmd_stor(void) {;}
+void Client::cmd_stor(void) {
+    string filename;
+    is >> filename;
+
+    if (! regex_match(filename, parola)) {
+        os << BAD_FILE << endl << endl;
+        sendCmd();
+        return;
+    }
+
+    string tag;
+    int size;
+
+    is >> tag >> size;
+
+    if (tag != "Size:") {
+        os << SYNTAX_ERROR << endl << endl;
+        sendCmd();
+        return;
+    }
+
+    string fullpath = SERVER_ROOT + "/" + filename;
+    clog << "[I] STOR ->" << fullpath << "<-" << endl;
+
+    fstream file(fullpath, ios::out | ios::binary);
+    if (! file) {
+        clog << "[W] can not open " << filename << endl;
+        os << BAD_FILE << endl << endl;
+        sendCmd();
+        return;
+    }
+
+    char buffer[BUFFER_SIZE];
+
+    int fragmentSize, remaining, received = 0;
+
+    while (received < size) {
+        remaining = size - received;
+        fragmentSize = recvBodyFragment(buffer, (remaining > BUFFER_SIZE) ? BUFFER_SIZE : remaining);
+        file.write(buffer, fragmentSize);
+        received += fragmentSize;
+    }
+    clog << "[I] received " << received << " bytes for " << fullpath << endl;
+    file.close();
+}
 
 void Client::cmd_unknown(void) {
     os << COMMAND_NOT_IMPLEMENTED << endl;
@@ -172,8 +219,7 @@ bool Client::execute(void) {
 
             /* Choose command function */
             if (is.good()) {
-                     if (cmd == "ALLO") { cmd_allo(); }
-                else if (cmd == "DELE") { cmd_dele(); }
+                     if (cmd == "DELE") { cmd_dele(); }
                 else if (cmd == "LIST") { cmd_list(); }
                 else if (cmd == "QUIT") { cmd_quit(); break; }
                 else if (cmd == "RETR") { cmd_retr(); }

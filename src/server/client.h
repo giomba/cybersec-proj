@@ -21,6 +21,7 @@ class Client {
         ostringstream os;
 
         void recvCmd();
+        int  recvBodyFragment(char *, int len);
         void sendCmd();
 
         void cmd_allo(void);
