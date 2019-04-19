@@ -64,7 +64,7 @@ void Client::cmd_dele(void) {
     }
     else {
         clog << "[W] can not remove file ->" << fullpath << "<-" << endl;
-        os << BAD_FILE << endl;
+        os << BAD_FILE << endl << endl;
         sendCmd();
     }
 }
