@@ -32,13 +32,15 @@ enum CommandType {
     HELP, R_LIST, L_LIST, QUIT, RETR, STOR, DELE, BAD_REQ
 };
 
-void send_cmd();
+void send_cmd(string);
+void send_file(string, string, size_t);
 void recv_response();
 void recv_list();
 void recv_file(string);
 
 CommandType str2cmd(string);
-bool read(string, size_t&);
+void parse_cmd(string);
+bool check_and_get_file_size(string, size_t&);
 
 void cmd_help();
 void cmd_local_list(string);
