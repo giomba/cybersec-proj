@@ -10,7 +10,7 @@ void send_cmd(string cmd){
     connection->send(cmd.c_str(), cmd.length());
 }
 
-void send_file(string filepath, string filename, size_t size){
+void send_file(string filepath, string filename, uint64_t size){
     char buffer[BUFFER_SIZE];
     ifstream file;
     uint64_t remainingBytes = size;
@@ -64,7 +64,7 @@ void recv_list(){
     char buffer[BUFFER_SIZE];
     int response;
     string attr;
-    size_t msg_len;
+    uint64_t msg_len;
 
     is >> response;
     if (response == OK){
@@ -86,21 +86,22 @@ void recv_file(string filename){
     char buffer[BUFFER_SIZE];
     int response;
     string attr;
-    size_t filesize;
-    size_t recvBytes = 0;
+    uint64_t filesize;
+    uint64_t recvBytes = 0;
+    uint64_t currBytes;
     
     is >> response;
     if (response == OK){
         is >> attr >> filesize;
-
-        while(recvBytes < filesize){
-            recvBytes += connection->recv(buffer + recvBytes, filesize);
-        }
         
         ofstream file;
         file.open(CLIENT_ROOT + filename, ios::out | ios::binary);
         if (file.is_open()){
-            file.write(buffer, recvBytes);
+            while(recvBytes < filesize){
+                currBytes = connection->recv(buffer, BUFFER_SIZE);
+                file.write(buffer, currBytes);
+                recvBytes += currBytes;
+            }
             file.close();
             cout << "File '" << filename << "' saved successfully in " << CLIENT_ROOT << endl;
         } else {
@@ -221,7 +222,7 @@ void cmd_stor(string filepath){
 
     stringstream ss;
     string filename;
-    size_t filesize;
+    uint64_t filesize;
 
     /*
         getting the filename from the filepath (es. /etc/hosts)
@@ -274,7 +275,7 @@ void cmd_unknown(string cmd){
     cout << "error: '" << cmd << "' is an invalid command" << endl;
 }
 
-bool check_and_get_file_size(string filename, size_t &size){
+bool check_and_get_file_size(string filename, uint64_t &size){
     ifstream file;
     file.open(filename, ios::in | ios::binary | ios::ate);
     if (file.is_open()){
