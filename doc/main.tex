@@ -128,23 +128,6 @@ A reply status is composed by the following parts:
 \end{itemize}
 
 \subsection{Request commands list}
-\subsubsection{ALLO}
-\texttt{ALLO filename}
-
-Request server to allocate a file called \emph{filename}.
-This command is useful to atomically:
-\begin{itemize}
-  \item test if a file exists on the remote server
-  \item create that file
-\end{itemize}
-and must be used before issuing a \texttt{STOR} command.
-
-Reply status:
-\begin{itemize}
-  \item \texttt{200}: ok
-  \item \texttt{201}: ok, file already exists
-  \item \texttt{452}: bad file
-\end{itemize}
 
 \subsubsection{DELE}
 \texttt{DELE filename}
@@ -206,8 +189,7 @@ Size: filesize
 body
 \end{verbatim}
 
-Store a file on the remote server.
-This command can be issued only after an \texttt{ALLO} command.
+Store a file on the remote server, possibly overwriting an existing one.
 
 \begin{itemize}
   \item \texttt{Size: filesize} is a parameter pair. \texttt{filesize} is the decimal ASCII representation of the file size in bytes;
