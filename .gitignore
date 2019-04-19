@@ -1,4 +1,5 @@
 bin/
 root/
+downloads/
 *.o
 *.swp

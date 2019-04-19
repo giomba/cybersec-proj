@@ -7,19 +7,19 @@ using namespace std;
 /****************************************/
 
 void send_cmd(){
-    string str_cmd, filename;
-    is >> str_cmd >> filename;
+    string str_cmd, arg;
+    is >> str_cmd >> arg;
 
     CommandType cmd = str2cmd(str_cmd);
 
     switch(cmd){
         case HELP:   cmd_help(); break;
         case QUIT:   cmd_quit(); break;
-        case L_LIST: cmd_local_list(); break;
+        case L_LIST: cmd_local_list(arg); break;
         case R_LIST: cmd_remote_list(); break;
-        case RETR:   cmd_retr(filename); break;
-        case STOR:   cmd_stor(filename); break;
-        case DELE:   cmd_dele(filename); break;
+        case RETR:   cmd_retr(arg); break;
+        case STOR:   cmd_stor(arg); break;
+        case DELE:   cmd_dele(arg); break;
         default:     cmd_unknown(str_cmd);
     }
 }
@@ -67,13 +67,38 @@ void recv_list(){
         is.str(string(buffer));
         string file;
         while(is >> file){
-            cout << "   - 📄 " << file << endl;
+            cout << file << endl;
         }
     }
 }
 
-void recv_file(){
-    cout << "Receiving file..." << endl;
+void recv_file(string filename){
+    char buffer[BUFFER_SIZE];
+    int response;
+    string attr;
+    size_t filesize;
+    size_t recvBytes = 0;
+    
+    is >> response;
+    if (response == OK){
+        is >> attr >> filesize;
+
+        while(recvBytes < filesize){
+            recvBytes += connection->recv(buffer + recvBytes, filesize);
+        }
+        
+        ofstream file;
+        file.open(CLIENT_ROOT + filename, ios::out|ios::binary);
+        if (file.is_open()){
+            file << buffer;
+            file.close();
+        }
+        
+        cout << "File '" << filename << "' saved successfully in " << CLIENT_ROOT << endl;
+    } else if (response == BAD_FILE) {
+        cout << filename << ": No such file" << endl;
+    } else
+        cout << error << endl;
 }
 
 /********************************/
@@ -81,13 +106,13 @@ void recv_file(){
 /********************************/
 
 CommandType str2cmd(string str){
-    if (str.compare("help") == 0)   { return HELP; }
-    if (str.compare("lls") == 0)    { return L_LIST; }
-    if (str.compare("rls") == 0)    { return R_LIST; }
-    if (str.compare("q") == 0)      { return QUIT; }
-    if (str.compare("get") == 0)    { return RETR; }
-    if (str.compare("put") == 0)    { return STOR; }
-    if (str.compare("rm") == 0)     { return DELE; }
+    if (str == "help")   { return HELP; }
+    if (str == "lls")    { return L_LIST; }
+    if (str == "rls")    { return R_LIST; }
+    if (str == "q")      { return QUIT; }
+    if (str == "get")    { return RETR; }
+    if (str == "put")    { return STOR; }
+    if (str == "rm")     { return DELE; }
     return BAD_REQ;
 }
 
@@ -101,7 +126,7 @@ void cmd_help(){
     cout << "sftp: secure file transfer for file up to 4 GB" << endl;
     cout << "Usage:" << endl;
     cout << " help           -- show this content" << endl;
-    cout << " rls            -- list all files available on the server" << endl;
+    cout << " rls            -- list all files on the remote server" << endl;
     cout << " lls [<path>]   -- list local files at the specified path" << endl;
     cout << " q              -- quit" << endl;
     cout << " get <filename> -- download the specified file" << endl;
@@ -111,16 +136,32 @@ void cmd_help(){
     cout << endl;
 }
 
-void cmd_local_list(){
-    if ( ::execve("/bin/ls", NULL, NULL) != 0 ){
-        perror("error:");
+void cmd_local_list(string path){
+    /* retrieve list of files */
+    ostringstream fileList;
+    DIR* dd;
+    dirent* de;
+
+    if ( path.empty() ) path = ".";
+
+    dd = opendir(path.c_str());
+    if (dd) {
+        while ((de = readdir(dd)) != NULL) {
+            if (strcmp(de->d_name, ".") && strcmp(de->d_name, "..") /*&& strstr(de->d_name, ".") != de->d_name*/) { // if name is not . nor ..
+                fileList << de->d_name << endl;
+            }
+        }
+        closedir(dd);
+        cout << fileList.str();
+    } else {
+        cout << path << ": No such directory" << endl;
     }
 }
 
 void cmd_remote_list(){
     string cmd = "LIST\n\n";
     connection->send(cmd.c_str(), cmd.length());
-    //debug(DEBUG, cmd);
+
     recv_response();
     recv_list();
 }
@@ -131,7 +172,7 @@ void cmd_quit(){
 }
 
 void cmd_allo(string filename){
-    if (filename == ""){
+    if ( filename.empty() ){
         cout << "usage: allo <filename>" << endl;
         return;
     }
@@ -141,27 +182,26 @@ void cmd_allo(string filename){
 }
 
 void cmd_retr(string filename){
-    if (filename == ""){
+    if ( filename.empty() ){
         cout << "usage: get <filename>" << endl;
         return;
     }
     string cmd = "RETR " + filename + "\n\n";
-    debug(INFO, cmd.c_str());
     connection->send(cmd.c_str(), cmd.length());
 
     recv_response();
-    recv_file();
+    recv_file(filename);
 }
 
 void cmd_stor(string filepath){
-    if (filepath == ""){
+    if ( filepath.empty() ){
         cout << "usage: put <filename>" << endl;
         return;
     }
 
     stringstream ss;
     string filename;
-    string filesize;
+    size_t filesize;
 
     /*
         getting the filename from the filepath (es. /etc/hosts)
@@ -171,22 +211,30 @@ void cmd_stor(string filepath){
     ss << filepath;
     while(getline(ss, filename, '/'));
 
-    // clear stringstream
-    ss.clear();
-    ss.str("");
-
     // getting the file size
-    ss << read(filepath);
-    filesize = ss.str();
-    string cmd = "STOR " + filename + "\nSize: " + filesize + "\n\n";
+    bool ret;
+    if ( !(ret = read(filepath, filesize)) ){
+        return;
+    }
+
+    string cmd = "STOR " + filename + "\nSize: " + to_string(filesize) + "\n\n";
 
     debug(INFO, cmd.c_str());
     //connection->send(cmd.c_str(), cmd.length());
-    recv_response();
+    //recv_response();
+
+    int response;
+    is >> response;
+    response = OK;
+    if (response == OK){
+        cout << "File '" << filename << "' stored successfully" << endl;
+    } else {
+        cout << error << endl;
+    }
 }
 
 void cmd_dele(string filename){
-    if (filename == ""){
+    if ( filename.empty() ){
         cout << "usage: rm <filename>" << endl;
         return;
     }
@@ -194,38 +242,55 @@ void cmd_dele(string filename){
     debug(INFO, cmd.c_str());
     //connection->send(cmd.c_str(), cmd.length());
 
-    recv_response();
+    //recv_response();
+
+    int response;
+    is >> response;
+    response = OK;
+    if (response == OK){
+        cout << "File '" << filename << "' deleted successfully" << endl;
+    } else {
+        cout << error << endl;
+    }
 }
 
 void cmd_unknown(string cmd){
     cout << "error: '" << cmd << "' is an invalid command" << endl;
 }
 
-size_t read(string filename){
-    streampos size;
+bool read(string filename, size_t &size){
     char *memblock = 0;
 
     ifstream file;
     file.open(filename, ios::in|ios::binary|ios::ate);
     if (file.is_open()){
+        // get the size because the cursor is at the end by means of ios::ate
         size = file.tellg();
+
+        if (size > MAX_FILE_SIZE){
+            cout << filename << ": exceeded maximum dimension (4 GB)" << endl;
+            return false;
+        }
+
         cout << "Copying " << size << " bytes in memory\n";
         memblock = new char[size];
         file.seekg(0, ios::beg);
         file.read(memblock, size);
         file.close();
         cout << memblock << endl;
+        free(memblock);
     } else {
-        cout << "Unable to open file" << endl;
+        cout << filename << ": No such file" << endl;
+        return false;
     }
-    return size;
+    return true;
 }
 
 /****************************************/
 /*                MAIN                  */
 /****************************************/
 
-int main(int argc, char* argv[], char *envp[]) {
+int main(int argc, char* argv[]) {
     if (argc < 3){
         cout << "./bin/client <ipserver> <serverport>" << endl;
         exit(0);
