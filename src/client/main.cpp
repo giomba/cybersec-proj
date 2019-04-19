@@ -6,21 +6,31 @@ using namespace std;
 /*              SEND/RECV               */
 /****************************************/
 
-void send_cmd(){
-    string str_cmd, arg;
-    is >> str_cmd >> arg;
+void send_cmd(string cmd){
+    connection->send(cmd.c_str(), cmd.length());
+}
 
-    CommandType cmd = str2cmd(str_cmd);
-
-    switch(cmd){
-        case HELP:   cmd_help(); break;
-        case QUIT:   cmd_quit(); break;
-        case L_LIST: cmd_local_list(arg); break;
-        case R_LIST: cmd_remote_list(); break;
-        case RETR:   cmd_retr(arg); break;
-        case STOR:   cmd_stor(arg); break;
-        case DELE:   cmd_dele(arg); break;
-        default:     cmd_unknown(str_cmd);
+void send_file(string filepath, string filename, size_t size){
+    char buffer[BUFFER_SIZE];
+    ifstream file;
+    uint64_t remainingBytes = size;
+    
+    file.open(filepath, ios::in | ios::binary);
+    if (file.is_open()){
+        while( remainingBytes > 0 ){
+            if ( remainingBytes > BUFFER_SIZE ){
+                file.read(buffer, BUFFER_SIZE);
+                remainingBytes -= BUFFER_SIZE;
+            } else {
+                file.read(buffer, remainingBytes);
+                remainingBytes = 0;
+            }
+            connection->send(buffer, BUFFER_SIZE);
+        }
+        cout << "File '" << filename << "' stored successfully" << endl;
+        file.close();
+    } else {
+        cout << error << endl;
     }
 }
 
@@ -88,13 +98,14 @@ void recv_file(string filename){
         }
         
         ofstream file;
-        file.open(CLIENT_ROOT + filename, ios::out|ios::binary);
+        file.open(CLIENT_ROOT + filename, ios::out | ios::binary);
         if (file.is_open()){
-            file << buffer;
+            file.write(buffer, recvBytes);
             file.close();
+            cout << "File '" << filename << "' saved successfully in " << CLIENT_ROOT << endl;
+        } else {
+            cout << "error: dir '" << CLIENT_ROOT << "' does not exist" << endl;
         }
-        
-        cout << "File '" << filename << "' saved successfully in " << CLIENT_ROOT << endl;
     } else if (response == BAD_FILE) {
         cout << filename << ": No such file" << endl;
     } else
@@ -114,6 +125,24 @@ CommandType str2cmd(string str){
     if (str == "put")    { return STOR; }
     if (str == "rm")     { return DELE; }
     return BAD_REQ;
+}
+
+void parse_cmd(){
+    string str_cmd, arg;
+    is >> str_cmd >> arg;
+
+    CommandType cmd = str2cmd(str_cmd);
+
+    switch(cmd){
+        case HELP:   cmd_help(); break;
+        case QUIT:   cmd_quit(); break;
+        case L_LIST: cmd_local_list(arg); break;
+        case R_LIST: cmd_remote_list(); break;
+        case RETR:   cmd_retr(arg); break;
+        case STOR:   cmd_stor(arg); break;
+        case DELE:   cmd_dele(arg); break;
+        default:     cmd_unknown(str_cmd);
+    }
 }
 
 /********************************/
@@ -160,7 +189,7 @@ void cmd_local_list(string path){
 
 void cmd_remote_list(){
     string cmd = "LIST\n\n";
-    connection->send(cmd.c_str(), cmd.length());
+    send_cmd(cmd);
 
     recv_response();
     recv_list();
@@ -171,15 +200,6 @@ void cmd_quit(){
     exit(0);
 }
 
-void cmd_allo(string filename){
-    if ( filename.empty() ){
-        cout << "usage: allo <filename>" << endl;
-        return;
-    }
-    string cmd = "ALLO " + filename + "\n\n";
-    debug(INFO, cmd.c_str());
-    connection->send(cmd.c_str(), cmd.length());
-}
 
 void cmd_retr(string filename){
     if ( filename.empty() ){
@@ -187,7 +207,7 @@ void cmd_retr(string filename){
         return;
     }
     string cmd = "RETR " + filename + "\n\n";
-    connection->send(cmd.c_str(), cmd.length());
+    send_cmd(cmd);
 
     recv_response();
     recv_file(filename);
@@ -212,22 +232,21 @@ void cmd_stor(string filepath){
     while(getline(ss, filename, '/'));
 
     // getting the file size
-    bool ret;
-    if ( !(ret = read(filepath, filesize)) ){
+    if ( !check_and_get_file_size(filepath, filesize) ){
         return;
     }
 
     string cmd = "STOR " + filename + "\nSize: " + to_string(filesize) + "\n\n";
 
     debug(INFO, cmd.c_str());
-    //connection->send(cmd.c_str(), cmd.length());
-    //recv_response();
+    send_cmd(cmd);
+    recv_response();
 
     int response;
     is >> response;
     response = OK;
     if (response == OK){
-        cout << "File '" << filename << "' stored successfully" << endl;
+        send_file(filepath, filename, filesize);
     } else {
         cout << error << endl;
     }
@@ -240,7 +259,7 @@ void cmd_dele(string filename){
     }
     string cmd = "DELE " + filename + "\n\n";
     debug(INFO, cmd.c_str());
-    //connection->send(cmd.c_str(), cmd.length());
+    //send_cmd(cmd);
 
     //recv_response();
 
@@ -258,11 +277,9 @@ void cmd_unknown(string cmd){
     cout << "error: '" << cmd << "' is an invalid command" << endl;
 }
 
-bool read(string filename, size_t &size){
-    char *memblock = 0;
-
+bool check_and_get_file_size(string filename, size_t &size){
     ifstream file;
-    file.open(filename, ios::in|ios::binary|ios::ate);
+    file.open(filename, ios::in | ios::binary | ios::ate);
     if (file.is_open()){
         // get the size because the cursor is at the end by means of ios::ate
         size = file.tellg();
@@ -272,13 +289,7 @@ bool read(string filename, size_t &size){
             return false;
         }
 
-        cout << "Copying " << size << " bytes in memory\n";
-        memblock = new char[size];
-        file.seekg(0, ios::beg);
-        file.read(memblock, size);
         file.close();
-        cout << memblock << endl;
-        free(memblock);
     } else {
         cout << filename << ": No such file" << endl;
         return false;
@@ -317,7 +328,7 @@ int main(int argc, char* argv[]) {
             is.str(line);
 
             if (!line.empty()){
-                send_cmd();
+                parse_cmd();
             }
         }
     } catch(Ex e) {
