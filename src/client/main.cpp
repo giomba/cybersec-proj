@@ -10,10 +10,10 @@ void send_cmd(string cmd){
     connection->send(cmd.c_str(), cmd.length());
 }
 
-void send_file(string filepath, string filename, uint64_t size){
+void send_file(string filepath, string filename, int64_t size){
     char buffer[BUFFER_SIZE];
     ifstream file;
-    uint64_t remainingBytes = size;
+    int64_t remainingBytes = size;
     
     file.open(filepath, ios::in | ios::binary);
     if (file.is_open()){
@@ -64,20 +64,21 @@ void recv_list(){
     char buffer[BUFFER_SIZE];
     int response;
     string attr;
-    uint64_t msg_len;
+    int64_t msg_len;
+    int64_t recvBytes = 0;
 
     is >> response;
     if (response == OK){
         is >> attr >> msg_len;
 
-        memset(buffer, 0, BUFFER_SIZE);
-        connection->recv(buffer, msg_len);
-
-        is.clear();
-        is.str(string(buffer));
-        string file;
-        while(is >> file){
-            cout << file << endl;
+        while( recvBytes < msg_len){
+            recvBytes += connection->recv(buffer, BUFFER_SIZE);
+            is.clear();
+            is.str(string(buffer));
+            string file;
+            while(is >> file){
+                cout << file << endl;
+            }
         }
     }
 }
@@ -86,9 +87,9 @@ void recv_file(string filename){
     char buffer[BUFFER_SIZE];
     int response;
     string attr;
-    uint64_t filesize;
-    uint64_t recvBytes = 0;
-    uint64_t currBytes;
+    int64_t filesize;
+    int64_t recvBytes = 0;
+    int64_t currBytes;
     
     is >> response;
     if (response == OK){
@@ -177,7 +178,7 @@ void cmd_local_list(string path){
     dd = opendir(path.c_str());
     if (dd) {
         while ((de = readdir(dd)) != NULL) {
-            if (strcmp(de->d_name, ".") && strcmp(de->d_name, "..") /*&& strstr(de->d_name, ".") != de->d_name*/) { // if name is not . nor ..
+            if (strcmp(de->d_name, ".") && strcmp(de->d_name, "..")) { // if name is not . nor ..
                 fileList << de->d_name << endl;
             }
         }
@@ -222,7 +223,7 @@ void cmd_stor(string filepath){
 
     stringstream ss;
     string filename;
-    uint64_t filesize;
+    int64_t filesize;
 
     /*
         getting the filename from the filepath (es. /etc/hosts)
@@ -266,6 +267,8 @@ void cmd_dele(string filename){
     is >> response;
     if (response == OK){
         cout << "File '" << filename << "' deleted successfully" << endl;
+    } else if (response == BAD_FILE) {
+        cout << filename << ": No such file on the server" << endl;
     } else {
         cout << error << endl;
     }
@@ -275,7 +278,7 @@ void cmd_unknown(string cmd){
     cout << "error: '" << cmd << "' is an invalid command" << endl;
 }
 
-bool check_and_get_file_size(string filename, uint64_t &size){
+bool check_and_get_file_size(string filename, int64_t &size){
     ifstream file;
     file.open(filename, ios::in | ios::binary | ios::ate);
     if (file.is_open()){
@@ -329,7 +332,10 @@ int main(int argc, char* argv[]) {
                 parse_cmd();
             }
         }
-    } catch(Ex e) {
-        cerr << e;
+    } catch(ExRecv e) {
+        cout << "error: Unable to connect to server" << endl;
+        cout << "info: You have been disconnected" << endl;
+    } catch (Ex e) {
+        cerr << e << endl;
     }
 }
