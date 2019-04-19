@@ -51,7 +51,27 @@ void Client::sendCmd() {
 
 void Client::cmd_allo(void) {;}
 
-void Client::cmd_dele(void) {;}
+void Client::cmd_dele(void) {
+    string filename;
+    is >> filename;
+
+    if (! regex_match(filename, parola)) {
+        os << BAD_FILE << endl << endl;
+        return;
+    }
+
+    string fullpath = SERVER_ROOT + "/" + filename;
+
+    if (remove(fullpath.c_str()) == 0) {
+        os << OK << endl << endl;
+        sendCmd();
+    }
+    else {
+        clog << "[W] can not remove file ->" << fullpath << "<-" << endl;
+        os << BAD_FILE << endl;
+        sendCmd();
+    }
+}
 
 void Client::cmd_list(void) {
     /* retrieve list of files */
