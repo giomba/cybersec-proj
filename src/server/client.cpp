@@ -8,13 +8,13 @@ Client::Client(Connection* c) {
 
 void Client::recvCmd() {
     char buffer[BUFFER_SIZE];
-    unsigned int recvBytes;
+    int recvBytes;
     char shiftRegister[2];
 
     is.ignore(BUFFER_SIZE);
     is.clear();
 
-    for (unsigned int i = 0; i < BUFFER_SIZE - 1; ++i) {
+    for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
         recvBytes = connection->recv(buffer + i, 1);
         if (recvBytes == 1) {
             shiftRegister[0] = shiftRegister[1];
@@ -206,6 +206,7 @@ void Client::cmd_stor(void) {
 }
 
 void Client::cmd_unknown(void) {
+    clog << "[W] client issued not implemented command" << endl;
     os << COMMAND_NOT_IMPLEMENTED << endl << endl;
     sendCmd();
 }
@@ -227,7 +228,10 @@ bool Client::execute(void) {
                 else if (cmd == "QUIT") { cmd_quit(); break; }
                 else if (cmd == "RETR") { cmd_retr(); }
                 else if (cmd == "STOR") { cmd_stor(); }
-                else { cmd_unknown(); }
+                else { clog << "[W] ->" << cmd << "<-" << endl; cmd_unknown(); }
+            }
+            else {
+                clog << "[W] bad input stream" << endl;
             }
         }
     }
