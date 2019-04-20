@@ -238,6 +238,8 @@ void cmd_help(){
 void cmd_local_list(string path){
     /* retrieve list of files */
     ostringstream fileList;
+    string type;
+    string pwd;
     DIR* dd;
     dirent* de;
 
@@ -246,8 +248,10 @@ void cmd_local_list(string path){
     dd = opendir(path.c_str());
     if (dd) {
         while ((de = readdir(dd)) != NULL) {
+            pwd = path + "/" + string(de->d_name);
             if (strcmp(de->d_name, ".") && strcmp(de->d_name, "..")) { // if name is not . nor ..
-                fileList << de->d_name << endl;
+                type = (is_file(pwd.c_str())) ? "-" : "d"; 
+                fileList << type << " " << de->d_name << endl;
             }
         }
         closedir(dd);
