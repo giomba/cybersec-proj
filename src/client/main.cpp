@@ -7,7 +7,6 @@ using namespace std;
 /****************************************/
 
 void send_cmd(string cmd){
-    debug(DEBUG, cmd);
     connection->send(cmd.c_str(), cmd.length());
 }
 
@@ -47,7 +46,6 @@ void recv_response(){
 
     for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
         recvBytes = connection->recv(buffer + i, 1);
-        debug(DEBUG, string(buffer));
         if (recvBytes == 1) {
             shiftRegister[0] = shiftRegister[1];
             shiftRegister[1] = buffer[i];
@@ -185,6 +183,38 @@ void parse_cmd(){
     }
 }
 
+bool is_file(string file){
+    struct stat stats;
+    stat(file.c_str(), &stats);
+    return S_ISREG(stats.st_mode);
+}
+
+bool check_and_get_file_size(string filename, int64_t &size){
+    if (!is_file(filename)){
+        cout << filename << ": No such file" << endl;
+        return false;
+    }
+    
+    ifstream file;
+    file.open(filename, ios::in | ios::binary | ios::ate);
+    
+    if (file.is_open()){
+        // get the size because the cursor is at the end by means of ios::ate
+        size = file.tellg();
+
+        if (size > MAX_FILE_SIZE){
+            cout << filename << ": exceeded maximum dimension (4 GB)" << endl;
+            return false;
+        }
+
+        file.close();
+    } else {
+        cout << filename << ": Unable to open" << endl;
+        return false;
+    }
+    return true;
+}
+
 /********************************/
 /*      PROTOCOL FUNCTIONS      */
 /********************************/
@@ -314,26 +344,6 @@ void cmd_dele(string filename){
 
 void cmd_unknown(string cmd){
     cout << "error: '" << cmd << "' is an invalid command" << endl;
-}
-
-bool check_and_get_file_size(string filename, int64_t &size){
-    ifstream file;
-    file.open(filename, ios::in | ios::binary | ios::ate);
-    if (file.is_open()){
-        // get the size because the cursor is at the end by means of ios::ate
-        size = file.tellg();
-
-        if (size > MAX_FILE_SIZE){
-            cout << filename << ": exceeded maximum dimension (4 GB)" << endl;
-            return false;
-        }
-
-        file.close();
-    } else {
-        cout << filename << ": No such file" << endl;
-        return false;
-    }
-    return true;
 }
 
 /****************************************/

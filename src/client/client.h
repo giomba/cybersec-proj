@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include <dirent.h>
+#include <sys/stat.h>
 
 #include "../common/connection.h"
 #include "../common/debug.h"
@@ -36,6 +37,7 @@ void recv_file(string);
 
 CommandType str2cmd(string);
 void parse_cmd(string);
+bool is_file(string);
 bool check_and_get_file_size(string, int64_t&);
 
 void cmd_help();
