@@ -27,6 +27,7 @@ void send_file(string filepath, string filename, int64_t size){
             file.read(buffer, fragment);
             send_fragment(buffer, fragment);
             remainingBytes -= fragment;
+            show_progress((double)(size-remainingBytes)/size);
         }
         cout << "File '" << filename << "' stored successfully" << endl;
         file.close();
@@ -138,6 +139,7 @@ void recv_file(string filename){
                 currBytes = connection->recv(buffer, BUFFER_SIZE);
                 file.write(buffer, currBytes);
                 recvBytes += currBytes;
+                show_progress((double)recvBytes/filesize);
             }
             file.close();
             cout << "File '" << filename << "' saved successfully in " << CLIENT_ROOT << endl;
@@ -163,6 +165,15 @@ CommandType str2cmd(string str){
     if (str == "put")    { return STOR; }
     if (str == "rm")     { return DELE; }
     return BAD_REQ;
+}
+
+void show_progress(double ratio){
+    int perc = ratio * 100.0;
+    for (unsigned int i = 0; i < to_string(perc).length() + 1; i++)
+        cout << "\b";
+    cout << perc << "%" << flush;
+    if (perc == 100) 
+        cout << endl;
 }
 
 void parse_cmd(){

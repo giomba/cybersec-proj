@@ -36,6 +36,7 @@ void recv_list();
 void recv_file(string);
 
 CommandType str2cmd(string);
+void show_progress(double);
 void parse_cmd(string);
 bool is_file(string);
 bool check_and_get_file_size(string, int64_t&);
