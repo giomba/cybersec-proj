@@ -85,7 +85,7 @@ void Client::cmd_list(void) {
         closedir(dd);
     }
     else {
-        os << SERVER_ERROR << endl;
+        os << SERVER_ERROR << endl << endl;
         sendCmd();
         return;
     }
@@ -206,7 +206,7 @@ void Client::cmd_stor(void) {
 }
 
 void Client::cmd_unknown(void) {
-    os << COMMAND_NOT_IMPLEMENTED << endl;
+    os << COMMAND_NOT_IMPLEMENTED << endl << endl;
     sendCmd();
 }
 
