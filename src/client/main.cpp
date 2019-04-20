@@ -7,30 +7,32 @@ using namespace std;
 /****************************************/
 
 void send_cmd(string cmd){
+    debug(DEBUG, cmd);
     connection->send(cmd.c_str(), cmd.length());
+}
+
+void send_fragment(const char *buffer, const int len){
+    connection->send(buffer, len);
 }
 
 void send_file(string filepath, string filename, int64_t size){
     char buffer[BUFFER_SIZE];
     ifstream file;
+    int fragment;
     int64_t remainingBytes = size;
     
     file.open(filepath, ios::in | ios::binary);
     if (file.is_open()){
         while( remainingBytes > 0 ){
-            if ( remainingBytes > BUFFER_SIZE ){
-                file.read(buffer, BUFFER_SIZE);
-                remainingBytes -= BUFFER_SIZE;
-            } else {
-                file.read(buffer, remainingBytes);
-                remainingBytes = 0;
-            }
-            connection->send(buffer, BUFFER_SIZE);
+            fragment = (remainingBytes > BUFFER_SIZE) ? BUFFER_SIZE : remainingBytes;
+            file.read(buffer, fragment);
+            send_fragment(buffer, fragment);
+            remainingBytes -= fragment;
         }
         cout << "File '" << filename << "' stored successfully" << endl;
         file.close();
     } else {
-        cout << error << endl;
+        cerr << error << endl;
     }
 }
 
@@ -41,9 +43,11 @@ void recv_response(){
 
     memset(buffer, 0, BUFFER_SIZE);
     is.clear();
+    is.str("");
 
     for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
         recvBytes = connection->recv(buffer + i, 1);
+        debug(DEBUG, string(buffer));
         if (recvBytes == 1) {
             shiftRegister[0] = shiftRegister[1];
             shiftRegister[1] = buffer[i];
@@ -63,37 +67,71 @@ void recv_response(){
 void recv_list(){
     char buffer[BUFFER_SIZE];
     int response;
-    string attr;
+    string tag;
     int64_t msg_len;
     int64_t recvBytes = 0;
 
     is >> response;
     if (response == OK){
-        is >> attr >> msg_len;
-
-        while( recvBytes < msg_len){
+        is >> tag;
+        
+        if (tag != "Size:"){
+            cerr << error << endl;
+            return;
+        }
+        
+        is >> msg_len;
+        
+        if (msg_len < 0){
+            cerr << error << endl;
+            return;
+        }
+        
+        is.clear();
+        is.str("");
+        memset(buffer, 0, BUFFER_SIZE);
+        
+        while(recvBytes < msg_len){
             recvBytes += connection->recv(buffer, BUFFER_SIZE);
-            is.clear();
             is.str(string(buffer));
             string file;
             while(is >> file){
                 cout << file << endl;
             }
         }
+    } else {
+        cerr << error << endl;
     }
 }
 
 void recv_file(string filename){
     char buffer[BUFFER_SIZE];
     int response;
-    string attr;
+    string tag;
     int64_t filesize;
     int64_t recvBytes = 0;
     int64_t currBytes;
     
     is >> response;
     if (response == OK){
-        is >> attr >> filesize;
+        is >> tag;
+        
+        if (tag != "Size:"){
+            cerr << error << endl;
+            return;
+        }
+        
+        is >> filesize;
+        
+        if (filesize < 0){
+            cerr << error << endl;
+            return;
+        }
+        
+        is.clear();
+        is.str("");
+        memset(buffer, 0, BUFFER_SIZE);
+            
         
         ofstream file;
         file.open(CLIENT_ROOT + filename, ios::out | ios::binary);
@@ -111,7 +149,7 @@ void recv_file(string filename){
     } else if (response == BAD_FILE) {
         cout << filename << ": No such file" << endl;
     } else
-        cout << error << endl;
+        cerr << error << endl;
 }
 
 /********************************/
@@ -249,7 +287,7 @@ void cmd_stor(string filepath){
     if (response == OK){
         send_file(filepath, filename, filesize);
     } else {
-        cout << error << endl;
+        cerr << error << endl;
     }
 }
 
@@ -270,7 +308,7 @@ void cmd_dele(string filename){
     } else if (response == BAD_FILE) {
         cout << filename << ": No such file on the server" << endl;
     } else {
-        cout << error << endl;
+        cerr << error << endl;
     }
 }
 

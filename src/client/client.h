@@ -28,6 +28,7 @@ enum CommandType {
 };
 
 void send_cmd(string);
+void send_fragment(const char*, const int);
 void send_file(string, string, int64_t);
 void recv_response();
 void recv_list();
