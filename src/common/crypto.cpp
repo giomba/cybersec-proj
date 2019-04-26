@@ -1,56 +1,47 @@
-#include <openssl/conf.h>
-#include <openssl/evp.h>
-#include <openssl/err.h>
-
 #include "crypto.h"
 
 using namespace std;
 
-Crypto::Crypto(const char* key, const char * iv){
-	this->key = key;
-	this->iv = iv;
-}
-
-unsigned char* Crypto::encrypt(const char* bufferName, int size){
-	//allocate the memory for the ciphetext
-	unsigned char* ciphertext = (unsigned char*)malloc(size + 16);
-	int len;
-
-	//create and initialize context
-	EVP_CIPHER_CTX *ctx;
-	ctx = EVP_CIPHER_CTX_new();
+Crypto::Crypto(const unsigned char* key_e, const unsigned char* key_d, const unsigned char * iv) {
+    //create and initialize context
+	ctx_e = EVP_CIPHER_CTX_new();
 
 	//Initialize the encryption setting
-	EVP_EncryptInit(ctx, EVP_aes_128_cbc(), (const unsigned char*)key, (const unsigned char*)iv);
+	EVP_EncryptInit(ctx_e, EVP_aes_128_cfb8(), key_e, iv);
 
-	//Encrypt and return the buffer
-	EVP_EncryptUpdate(ctx, ciphertext, &len, (const unsigned char*)bufferName, size);
-
-	EVP_EncryptFinal(ctx, ciphertext+len, &len);
-
-	EVP_CIPHER_CTX_free(ctx);
-
-	return ciphertext;
+    ctx_d = EVP_CIPHER_CTX_new();
+    EVP_DecryptInit(ctx_d, EVP_aes_128_cfb8(), key_d, iv);
 }
 
-unsigned char* Crypto::decrypt(const char* bufferName, int size){
-	//allocate the memory for the ciphetext
-	unsigned char* decryptedtext = (unsigned char*)malloc(size);
-	int len;
-
-	//create and initialize context
-	EVP_CIPHER_CTX *ctx;
-	ctx = EVP_CIPHER_CTX_new();
-
-	//Initialize the encryption setting
-	EVP_DecryptInit(ctx, EVP_aes_128_cbc(), (const unsigned char*)key, (const unsigned char*)iv);
+int Crypto::encrypt(char* d_buffer, const char* s_buffer, int size){
+	int len, r;
 
 	//Encrypt and return the buffer
-	EVP_DecryptUpdate(ctx, decryptedtext, &len, (const unsigned char*)bufferName, size);
+	if ((r = EVP_EncryptUpdate(ctx_e, (unsigned char*)d_buffer, &len, (const unsigned char*)s_buffer, size)) == 0) {
+        // TODO -- throw some exception
+    }
 
+	return r;
+}
+
+int Crypto::decrypt(char* d_buffer, const char* s_buffer, int size){
+	int len, r;
+
+	//Encrypt and return the buffer
+	if ((r = EVP_DecryptUpdate(ctx_d, (unsigned char*)d_buffer, &len, (const unsigned char*)s_buffer, size)) == 0) {
+        // TODO -- throw some exception
+    }
+
+	return r;
+}
+
+Crypto::~Crypto() {
+    /* TODO -- this should not be needed */
+    /*
+	EVP_EncryptFinal(ctx_e, ciphertext+len, &len);
 	EVP_DecryptFinal(ctx, decryptedtext+len, &len);
+    */
 
-	EVP_CIPHER_CTX_free(ctx);
-
-	return decryptedtext;
+    EVP_CIPHER_CTX_free(ctx_e);
+	EVP_CIPHER_CTX_free(ctx_d);
 }

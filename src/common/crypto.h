@@ -1,14 +1,19 @@
 #ifndef CIPHER_H
 #define CIPHER_H
 
-class Crypto{
+#include <openssl/conf.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
+
+class Crypto {
 private:
-	const char* key;
-	const char* iv;
+    EVP_CIPHER_CTX* ctx_e;    /* context will be the same for all session */
+    EVP_CIPHER_CTX* ctx_d;
 public:
-	Crypto(const char* key, const char* iv);
-	unsigned char* encrypt(const char* bufferName, int size);
-	unsigned char* decrypt(const char* bufferName, int size);
+	Crypto(const unsigned char* key_e, const unsigned char* key_d, const unsigned char* iv);
+    ~Crypto();
+	int encrypt(char* d_buffer, const char* s_buffer, int size);
+	int decrypt(char* d_buffer, const char* s_buffer, int size);
 };
 
 #endif
