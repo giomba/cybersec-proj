@@ -32,6 +32,8 @@ void Client::recvCmd() {
     }
     buffer[BUFFER_SIZE - 1] = '\0';
 
+    // BIO_dump_fp(stdout, (const char*)buffer, strlen(buffer));
+
     is.str(string(buffer));
 }
 
@@ -40,7 +42,15 @@ int Client::recvBodyFragment(char* buffer, const int len) {
     int r;
 
     r = connection->recv(ciphertext, len);
-    crypto.decrypt(buffer, ciphertext, len);
+    // clog << "[D] Received a fragment of " << r << " bytes" << endl;
+    crypto.decrypt(buffer, ciphertext, r);
+
+    /*
+    clog << "[D] ciphertext" << endl;
+    BIO_dump_fp(stdout, (const char*)ciphertext, (r > 32) ? 32 : r);
+    clog << "[D] plaintext" << endl;
+    BIO_dump_fp(stdout, (const char*)buffer, (r > 32) ? 32 : r);
+    */
 
     return r;
 //    return connection->recv(buffer, len);
@@ -78,6 +88,7 @@ void Client::cmd_dele(void) {
     string fullpath = SERVER_ROOT + "/" + filename;
 
     if (remove(fullpath.c_str()) == 0) {
+        clog << "[I] delete file ->" << fullpath << "<-" << endl;
         os << OK << endl << endl;
         sendCmd();
     }
