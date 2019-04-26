@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "../common/connection.h"
+#include "../common/crypto.h"
 #include "../common/debug.h"
 #include "../common/exception.h"
 #include "../common/protocol.h"
@@ -20,6 +21,7 @@ using namespace std;
 class Client {
     private:
         Connection* connection;
+        Crypto crypto;
         istringstream is;
         ostringstream os;
 

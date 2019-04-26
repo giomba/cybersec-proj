@@ -2,12 +2,13 @@
 
 const string SERVER_ROOT = "root";
 
-Client::Client(Connection* c) {
+Client::Client(Connection* c) : crypto((const unsigned char*)"0123456789abcdef", (const unsigned char*)"fedcba9876543210", (const unsigned char*)"0000000000000000") {
     connection = c;
 }
 
 void Client::recvCmd() {
     char buffer[BUFFER_SIZE];
+    char ciphertext;
     int recvBytes;
     char shiftRegister[2];
 
@@ -15,7 +16,9 @@ void Client::recvCmd() {
     is.clear();
 
     for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
-        recvBytes = connection->recv(buffer + i, 1);
+        recvBytes = connection->recv(&ciphertext, 1);
+        crypto.decrypt(buffer + i, &ciphertext, 1);
+        //recvBytes = connection->recv(buffer + i, 1);
         if (recvBytes == 1) {
             shiftRegister[0] = shiftRegister[1];
             shiftRegister[1] = buffer[i];
@@ -33,18 +36,29 @@ void Client::recvCmd() {
 }
 
 int Client::recvBodyFragment(char* buffer, const int len) {
-    return connection->recv(buffer, len);
+    char ciphertext[BUFFER_SIZE];
+    int r;
+
+    r = connection->recv(ciphertext, len);
+    crypto.decrypt(buffer, ciphertext, len);
+
+    return r;
+//    return connection->recv(buffer, len);
 }
 
 void Client::sendCmd() {
     string buffer = os.str();
     if (buffer.size() != 0) {
 
-        // length = encrypt(plaintext)
-        // send htonl(length)
-        // send ciphertext
+        // compute sequence number
+        // compute hmac
 
-        connection->send(buffer.data(), buffer.size());
+        string ciphertext;
+        ciphertext.resize(buffer.size());
+
+        crypto.encrypt(&ciphertext[0], &buffer[0], buffer.size());
+
+        connection->send(ciphertext.data(), ciphertext.size());
     }
 
     os.str("");
@@ -75,6 +89,7 @@ void Client::cmd_dele(void) {
 }
 
 void Client::cmd_list(void) {
+    clog << "[I] Sending directory list" << endl;
     /* retrieve list of files */
     ostringstream fileList;
     DIR* dd;
