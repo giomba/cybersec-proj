@@ -54,6 +54,7 @@ void recv_response(){
     char shiftRegister[2];
 
     memset(buffer, 0, BUFFER_SIZE);
+    memset(d_buffer, 0, BUFFER_SIZE);
     is.clear();
     is.str("");
 
@@ -79,12 +80,12 @@ void recv_response(){
 
 int recv_fragment(char* buffer, const int len){
     int recvBytes;
-    char *d_buffer = new char[len];
+    char *e_buffer = new char[len];
     
-    recvBytes = connection->recv(buffer, len);
-    crypto->decrypt(d_buffer, buffer, len);
+    recvBytes = connection->recv(e_buffer, len);
+    crypto->decrypt(buffer, e_buffer, len);
     
-    delete(d_buffer);
+    delete(e_buffer);
     
     return recvBytes;
 }
