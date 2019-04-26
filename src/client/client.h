@@ -13,6 +13,7 @@
 #include "../common/debug.h"
 #include "../common/exception.h"
 #include "../common/protocol.h"
+#include "../common/crypto.h"
 
 
 #define CLIENT_ROOT "downloads/"
@@ -23,6 +24,7 @@
 
 Connection *connection;
 istringstream is;
+Crypto *crypto;
 
 enum CommandType {
     HELP, R_LIST, L_LIST, QUIT, RETR, STOR, DELE, BAD_REQ
@@ -31,6 +33,7 @@ enum CommandType {
 void send_cmd(string);
 void send_fragment(const char*, const int);
 void send_file(string, string, int64_t);
+int recv_fragment(char*, const int);
 void recv_response();
 void recv_list();
 void recv_file(string);
