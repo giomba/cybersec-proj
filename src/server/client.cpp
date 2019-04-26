@@ -39,6 +39,11 @@ int Client::recvBodyFragment(char* buffer, const int len) {
 void Client::sendCmd() {
     string buffer = os.str();
     if (buffer.size() != 0) {
+
+        // length = encrypt(plaintext)
+        // send htonl(length)
+        // send ciphertext
+
         connection->send(buffer.data(), buffer.size());
     }
 
@@ -234,6 +239,8 @@ bool Client::execute(void) {
                 clog << "[W] bad input stream" << endl;
             }
         }
+
+        clog << "[I] client " << this << " quit" << endl;
     }
     catch (ExNetwork e) {
         cerr << "[E] network: " << e << endl;
@@ -241,8 +248,6 @@ bool Client::execute(void) {
     catch (Ex e) {
         cerr << "[E] " << e << endl;
     }
-
-    clog << "[I] client execution end " << this << endl;
 
     delete connection;
 

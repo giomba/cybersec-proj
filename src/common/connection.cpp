@@ -32,7 +32,7 @@ Connection::Connection(const char* hostname, uint16_t port) {
 }
 
 int Connection::send(const char* buffer, int len) {
-    int ret = ::send(this->sd, (void*)buffer, len, 0);
+    int ret = ::send(this->sd, (void*)buffer, len, MSG_NOSIGNAL);
     if (ret <= 0) {
         throw ExSend("can not send()");
     }
