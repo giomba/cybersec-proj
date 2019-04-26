@@ -7,21 +7,22 @@ using namespace std;
 /****************************************/
 
 void send_cmd(string cmd){
-    char *enc_cmd = new char[cmd.length()];
+    int size = strlen(cmd.c_str());
+    char *ciphertext = new char[size];
     
-    crypto->encrypt(enc_cmd, cmd.c_str(), cmd.length());
-    connection->send(enc_cmd, strlen(enc_cmd));
+    crypto->encrypt(ciphertext, cmd.c_str(), size);
+    connection->send(ciphertext, size);
     
-    delete(enc_cmd);
+    delete(ciphertext);
 }
 
 void send_fragment(const char *buffer, const int len){
-    char *e_buffer = new char[len];
+    char *ciphertext = new char[len];
     
-    crypto->encrypt(e_buffer, buffer, len);
-    connection->send(e_buffer, len);
+    crypto->encrypt(ciphertext, buffer, len);
+    connection->send(ciphertext, len);
     
-    delete(e_buffer);
+    delete(ciphertext);
 }
 
 void send_file(string filepath, string filename, int64_t size){
@@ -80,12 +81,12 @@ void recv_response(){
 
 int recv_fragment(char* buffer, const int len){
     int recvBytes;
-    char *e_buffer = new char[len];
+    char *ciphertext = new char[len];
     
-    recvBytes = connection->recv(e_buffer, len);
-    crypto->decrypt(buffer, e_buffer, len);
+    recvBytes = connection->recv(ciphertext, len);
+    crypto->decrypt(buffer, ciphertext, len);
     
-    delete(e_buffer);
+    delete(ciphertext);
     
     return recvBytes;
 }
