@@ -200,12 +200,24 @@ CommandType str2cmd(string str){
 }
 
 void show_progress(double ratio){
+    ostringstream os;
+    cout << "\b\b\b\b\b\b\b";
+
     int perc = ratio * 100.0;
-    for (unsigned int i = 0; i < to_string(perc).length() + 1; i++)
-        cout << "\b";
-    cout << perc << "%" << flush;
-    if (perc == 100) 
-        cout << endl;
+    os << perc << "%";
+    if (perc >= 100) 
+        os << "   " <<  endl;
+    else {
+	os << " [";
+	switch(perc % 4){
+	    case 0: os << "|"; break;
+	    case 1: os << "/"; break;
+	    case 2: os << "-"; break;
+	    case 3: os << "\\"; break;
+	}
+	os << "]";
+    }
+    cout << os.str() << flush;    
 }
 
 void parse_cmd(){
@@ -313,6 +325,9 @@ void cmd_remote_list(){
 }
 
 void cmd_quit(){
+    string cmd = "QUIT\n\n";
+    send_cmd(cmd);
+
     cout << greetings << endl;
     exit(0);
 }
