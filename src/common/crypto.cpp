@@ -35,16 +35,6 @@ int Crypto::decrypt(char* d_buffer, const char* s_buffer, int size){
 	return r;
 }
 
-// int Crypto::encapsulate(char* d_buffer, const char* s_buffer, int size) {
-//    SpaceCraft* spacecraft = (SpaceCraft*)(d_buffer);
-//    spacecraft->length = htonl(size);
-//    spacecraft->sequence_number = sequence_number_o++;
-//    spacecraft->hmac = 0xcafebabe;  /* TODO -- compute hmac */
-
-//    encrypt(d_buffer + sizeof(SpaceCraft), s_buffer, size);
-
-//}
-
 int Crypto::send(Connection* connection, const char* buffer, int size) {
     SpaceCraft spacecraft;
     char payload[BUFFER_SIZE];
@@ -123,8 +113,8 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
 
 Crypto::~Crypto() {
     /* It is not needed to call EVP_*cryptFinal because no padding is inserted
-	    EVP_EncryptFinal(ctx_e, ...);
-    	EVP_DecryptFinal(ctx_d, ...);
+        EVP_EncryptFinal(ctx_e, ...);
+        EVP_DecryptFinal(ctx_d, ...);
     */
 
     EVP_CIPHER_CTX_free(ctx_e);
