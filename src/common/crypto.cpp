@@ -16,9 +16,9 @@ Crypto::Crypto(const unsigned char* key_e, const unsigned char* key_d, const uns
 int Crypto::encrypt(char* d_buffer, const char* s_buffer, int size){
 	int len, r;
 
-	//Encrypt and return the buffer
+    /* Encrypt and update the buffer */
 	if ((r = EVP_EncryptUpdate(ctx_e, (unsigned char*)d_buffer, &len, (const unsigned char*)s_buffer, size)) == 0) {
-        // TODO -- throw some exception
+        throw ExEVPUpdate("can not EVP_EncryptUpdate");
     }
 
 	return r;
@@ -27,9 +27,9 @@ int Crypto::encrypt(char* d_buffer, const char* s_buffer, int size){
 int Crypto::decrypt(char* d_buffer, const char* s_buffer, int size){
 	int len, r;
 
-	//Encrypt and return the buffer
+	/* Decrypt and update the buffer */
 	if ((r = EVP_DecryptUpdate(ctx_d, (unsigned char*)d_buffer, &len, (const unsigned char*)s_buffer, size)) == 0) {
-        // TODO -- throw some exception
+        throw ExEVPUpdate("can not EVP_DecryptUpdate");
     }
 
 	return r;
@@ -40,15 +40,15 @@ int Crypto::send(Connection* connection, const char* buffer, int size) {
     char payload[BUFFER_SIZE];
 
     spacecraft.length = htonl(size);
-    spacecraft.sequence_number = sequence_number_o++;
+    spacecraft.sequence_number = htonl(sequence_number_o++);
     spacecraft.hmac = 0xcafebabe;
 
     encrypt(payload, buffer, size);
 
     debug(DEBUG, "[D] === Crypto::send() ===" << endl);
-    debug(DEBUG, "[D] PlainText:  "); hexdump(DEBUG, buffer, (size < 32) ? size : 32);
-    debug(DEBUG, "[D] SpaceCraft: "); hexdump(DEBUG, (const char*)&spacecraft, sizeof(SpaceCraft));
-    debug(DEBUG, "[D] CypherText: "); hexdump(DEBUG, payload, (size < 32) ? size : 32);
+    debug(DEBUG, "[D] PlainText:  " << endl); hexdump(DEBUG, buffer, (size < 32) ? size : 32);
+    debug(DEBUG, "[D] SpaceCraft: " << endl); hexdump(DEBUG, (const char*)&spacecraft, sizeof(SpaceCraft));
+    debug(DEBUG, "[D] CypherText: " << endl); hexdump(DEBUG, payload, (size < 32) ? size : 32);
 
     int r1, r2;
 
@@ -66,42 +66,49 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
 
     char encrypted_payload[BUFFER_SIZE];
     SpaceCraft spacecraft;
+    bool error = false;
 
     if (remaining == 0) {
         debug(DEBUG, "[D] Crypto::recv() -- feeding from TCP" << endl);
         connection->recv((char*)&spacecraft, sizeof(SpaceCraft));
 
-        debug(DEBUG, "[D] SpaceCraft: "); hexdump(DEBUG, (const char*)&spacecraft, sizeof(SpaceCraft));
+        debug(DEBUG, "[D] SpaceCraft: " << endl); hexdump(DEBUG, (const char*)&spacecraft, sizeof(SpaceCraft));
 
         /* check spacecraft length */
         spacecraft.length = ntohl(spacecraft.length);
-        if (spacecraft.length > BUFFER_SIZE) { // TODO -- error: too long
+        if (spacecraft.length > BUFFER_SIZE) {
+            debug(WARNING, "[W] spacecraft exceeds buffer size" << endl);
+            error = true;
         }
 
         /* check spacecraft sequence number */
         spacecraft.sequence_number = ntohl(spacecraft.sequence_number);
         if (spacecraft.sequence_number != sequence_number_i++) {
-            // TODO -- error: bad sequence number
+            debug(WARNING, "[W] bad sequence number " << spacecraft.sequence_number << endl);
+            error = true;
         }
 
         connection->recv(encrypted_payload, spacecraft.length);
 
-        debug(DEBUG, "[D] CypherText: "); hexdump(DEBUG, encrypted_payload, (spacecraft.length < 32) ? spacecraft.length : 32);
+        debug(DEBUG, "[D] CypherText: " << endl); hexdump(DEBUG, encrypted_payload, (spacecraft.length < 32) ? spacecraft.length : 32);
 
         // check spacecraft hmac
-        if (spacecraft.hmac != 0xcafebabe) {
-            // TODO
+        if (spacecraft.hmac != 0xcafebabe) {    // TODO
+            debug(WARNING, "[W] bad hmac" << endl);
+            error = true;
         }
 
-        /* TODO -- in all these error cases redo handshake */
+        if (! error) {  /* if everything is good, then decrypt */
+            decrypt(payload, encrypted_payload, spacecraft.length);
 
-        /* if everything is good, then decrypt */
-        decrypt(payload, encrypted_payload, spacecraft.length);
+            debug(DEBUG, "[D] PlainText:  " << endl); hexdump(DEBUG, payload, (spacecraft.length < 32) ? spacecraft.length : 32);
 
-        debug(DEBUG, "[D] PlainText:  "); hexdump(DEBUG, payload, spacecraft.length);
-
-        remaining = spacecraft.length;
-        index = 0;
+            remaining = spacecraft.length;
+            index = 0;
+        } else {
+            /* TODO -- redo handshake and re-init secure protocol */
+            return -1;
+        }
     }
 
     int r = (remaining < size) ? remaining : size;

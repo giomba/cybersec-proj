@@ -30,4 +30,8 @@ class ExPort : public ExNetwork { using ExNetwork::ExNetwork; };
 /* User Input Exception */
 class ExUserInput : public Ex { using Ex::Ex; };
 
+/* Crypto Exceptions */
+class ExCrypto : public Ex { using Ex::Ex; };
+class ExEVPUpdate : public ExCrypto { using ExCrypto::ExCrypto; };
+
 #endif

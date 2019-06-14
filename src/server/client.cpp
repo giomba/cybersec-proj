@@ -33,8 +33,6 @@ void Client::recvCmd() {
     }
     buffer[BUFFER_SIZE - 1] = '\0';
 
-    // BIO_dump_fp(stdout, (const char*)buffer, strlen(buffer));
-
     is.str(string(buffer));
 }
 
