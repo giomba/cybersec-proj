@@ -1,8 +1,11 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+#include <iostream>
 #include <string>
 using namespace std;
+
+#include <openssl/conf.h>
 
 enum DebugType {
     DEBUG,

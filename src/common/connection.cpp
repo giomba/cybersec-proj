@@ -7,7 +7,6 @@
 #include <unistd.h>
 
 #include "connection.h"
-#include "exception.h"
 
 Connection::Connection(int sd, struct sockaddr_in6 peer) {
     clog << "[I] new connection " << this << endl;
@@ -32,6 +31,9 @@ Connection::Connection(const char* hostname, uint16_t port) {
 }
 
 int Connection::send(const char* buffer, int len) {
+    clog << "=== Connection::send() ===" << endl;   // TODO -- proper debug
+    BIO_dump_fp(stderr, buffer, len);
+
     int ret = ::send(this->sd, (void*)buffer, len, MSG_NOSIGNAL);
     if (ret <= 0) {
         throw ExSend("can not send()");
@@ -40,6 +42,8 @@ int Connection::send(const char* buffer, int len) {
 }
 
 int Connection::recv(char* buffer, int len) {
+    clog << "=== Connection::recv() ===" << endl;
+
     int ret = ::recv(this->sd, (void*)buffer, len, 0);
     if (ret <= 0) {
         throw ExRecv("can not recv()");

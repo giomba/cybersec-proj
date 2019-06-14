@@ -8,21 +8,24 @@ using namespace std;
 
 void send_cmd(string cmd){
     int size = strlen(cmd.c_str());
-    char *ciphertext = new char[size];
-    
-    crypto->encrypt(ciphertext, cmd.c_str(), size);
-    connection->send(ciphertext, size);
-    
-    delete(ciphertext);
+    //char *ciphertext = new char[size];
+
+//    crypto->encrypt(ciphertext, cmd.c_str(), size);
+//    connection->send(ciphertext, size);
+
+    crypto->send(connection, cmd.c_str(), size);
+
+    //delete(ciphertext);
 }
 
 void send_fragment(const char *buffer, const int len){
-    char *ciphertext = new char[len];
-    
-    crypto->encrypt(ciphertext, buffer, len);
-    connection->send(ciphertext, len);
-    
-    delete(ciphertext);
+//    char *ciphertext = new char[len];
+
+//    crypto->encrypt(ciphertext, buffer, len);
+//    connection->send(ciphertext, len);
+    crypto->send(connection, buffer, len);
+
+    //delete(ciphertext);
 }
 
 void send_file(string filepath, string filename, int64_t size){
@@ -30,7 +33,7 @@ void send_file(string filepath, string filename, int64_t size){
     ifstream file;
     int fragment;
     int64_t remainingBytes = size;
-    
+
     file.open(filepath, ios::in | ios::binary);
     if (file.is_open()){
         while( remainingBytes > 0 ){
@@ -49,45 +52,47 @@ void send_file(string filepath, string filename, int64_t size){
 
 void recv_response(){
     char buffer[BUFFER_SIZE];
-    char d_buffer[BUFFER_SIZE];
-    
+//    char d_buffer[BUFFER_SIZE];
+
     int recvBytes;
     char shiftRegister[2];
 
     memset(buffer, 0, BUFFER_SIZE);
-    memset(d_buffer, 0, BUFFER_SIZE);
+//    memset(d_buffer, 0, BUFFER_SIZE);
     is.clear();
     is.str("");
 
     for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
-        recvBytes = connection->recv(buffer + i, 1);
-        crypto->decrypt(d_buffer + i, buffer + i, 1);
-        
+        recvBytes = crypto->recv(connection, buffer + i, 1); //connection->recv(buffer + i, 1);
+//        crypto->decrypt(d_buffer + i, buffer + i, 1);
+
         if (recvBytes == 1) {
             shiftRegister[0] = shiftRegister[1];
-            shiftRegister[1] = d_buffer[i];
+            shiftRegister[1] = buffer[i];
 
             // if all command and parameters have been received...
             if (shiftRegister[0] == '\n' && shiftRegister[1] == '\n') {
-                d_buffer[i + 1] = '\0';
+                buffer[i + 1] = '\0';
                 break;
             }
         }
     }
-    d_buffer[BUFFER_SIZE - 1] = '\0';
+    buffer[BUFFER_SIZE - 1] = '\0';
 
-    is.str(string(d_buffer));
+    is.str(string(buffer));
 }
 
 int recv_fragment(char* buffer, const int len){
     int recvBytes;
-    char *ciphertext = new char[len];
-    
-    recvBytes = connection->recv(ciphertext, len);
-    crypto->decrypt(buffer, ciphertext, len);
-    
-    delete(ciphertext);
-    
+//    char *ciphertext = new char[len];
+
+/*    recvBytes = connection->recv(ciphertext, len);
+    crypto->decrypt(buffer, ciphertext, len);*/
+
+    recvBytes = crypto->recv(connection, buffer, len);
+
+//    delete(ciphertext);
+
     return recvBytes;
 }
 
@@ -102,23 +107,23 @@ void recv_list(){
     is >> response;
     if (response == OK){
         is >> tag;
-        
+
         if (tag != "Size:"){
             cerr << error << endl;
             return;
         }
-        
+
         is >> msg_len;
-        
+
         if (msg_len < 0){
             cerr << error << endl;
             return;
         }
-        
+
         is.clear();
         is.str("");
         memset(buffer, 0, BUFFER_SIZE);
-        
+
         while(recvBytes < msg_len){
             fragment = ((msg_len - recvBytes) > BUFFER_SIZE) ? BUFFER_SIZE : (msg_len - recvBytes);
             recvBytes += recv_fragment(buffer, fragment);
@@ -141,28 +146,28 @@ void recv_file(string filename){
     int64_t recvBytes = 0;
     int64_t currBytes;
     int fragment;
-    
+
     is >> response;
     if (response == OK){
         is >> tag;
-        
+
         if (tag != "Size:"){
             cerr << error << endl;
             return;
         }
-        
+
         is >> filesize;
-        
+
         if (filesize < 0){
             cerr << error << endl;
             return;
         }
-        
+
         is.clear();
         is.str("");
         memset(buffer, 0, BUFFER_SIZE);
-            
-        
+
+
         ofstream file;
         file.open(CLIENT_ROOT + filename, ios::out | ios::binary);
         if (file.is_open()){
@@ -205,7 +210,7 @@ void show_progress(double ratio){
 
     int perc = ratio * 100.0;
     os << perc << "%";
-    if (perc >= 100) 
+    if (perc >= 100)
         os << "   " <<  endl;
     else {
 	os << " [";
@@ -217,7 +222,7 @@ void show_progress(double ratio){
 	}
 	os << "]";
     }
-    cout << os.str() << flush;    
+    cout << os.str() << flush;
 }
 
 void parse_cmd(){
@@ -249,10 +254,10 @@ bool check_and_get_file_size(string filename, int64_t &size){
         cout << filename << ": No such file" << endl;
         return false;
     }
-    
+
     ifstream file;
     file.open(filename, ios::in | ios::binary | ios::ate);
-    
+
     if (file.is_open()){
         // get the size because the cursor is at the end by means of ios::ate
         size = file.tellg();
@@ -305,7 +310,7 @@ void cmd_local_list(string path){
         while ((de = readdir(dd)) != NULL) {
             pwd = path + "/" + string(de->d_name);
             if (strcmp(de->d_name, ".") && strcmp(de->d_name, "..")) { // if name is not . nor ..
-                type = (is_file(pwd.c_str())) ? "-" : "d"; 
+                type = (is_file(pwd.c_str())) ? "-" : "d";
                 fileList << type << " " << de->d_name << endl;
             }
         }
@@ -389,7 +394,7 @@ void cmd_dele(string filename){
         return;
     }
     string cmd = "DELE " + filename + "\n\n";
-    
+
     send_cmd(cmd);
     recv_response();
 

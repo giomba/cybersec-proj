@@ -1,10 +1,15 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
+#include <arpa/inet.h>
 #include <cstdlib>
 #include <cstdint>
 #include <netinet/in.h>
 #include <stdio.h>
+
+#include "debug.h"
+#include "exception.h"
+#include "protocol.h"
 
 class Connection {
     private:

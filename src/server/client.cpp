@@ -8,7 +8,7 @@ Client::Client(Connection* c) : crypto((const unsigned char*)"0123456789abcdef",
 
 void Client::recvCmd() {
     char buffer[BUFFER_SIZE];
-    char ciphertext;
+//    char ciphertext;
     int recvBytes;
     char shiftRegister[2];
 
@@ -16,8 +16,9 @@ void Client::recvCmd() {
     is.clear();
 
     for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
-        recvBytes = connection->recv(&ciphertext, 1);
-        crypto.decrypt(buffer + i, &ciphertext, 1);
+        recvBytes = crypto.recv(connection, buffer + i, 1);
+        //recvBytes = connection->recv(&ciphertext, 1);
+        //crypto.decrypt(buffer + i, &ciphertext, 1);
         //recvBytes = connection->recv(buffer + i, 1);
         if (recvBytes == 1) {
             shiftRegister[0] = shiftRegister[1];
@@ -38,12 +39,12 @@ void Client::recvCmd() {
 }
 
 int Client::recvBodyFragment(char* buffer, const int len) {
-    char ciphertext[BUFFER_SIZE];
+//    char ciphertext[BUFFER_SIZE];
     int r;
 
-    r = connection->recv(ciphertext, len);
+    r = crypto.recv(connection, buffer, len);
     // clog << "[D] Received a fragment of " << r << " bytes" << endl;
-    crypto.decrypt(buffer, ciphertext, r);
+    // crypto.decrypt(buffer, ciphertext, r);
 
     /*
     clog << "[D] ciphertext" << endl;
@@ -53,7 +54,6 @@ int Client::recvBodyFragment(char* buffer, const int len) {
     */
 
     return r;
-//    return connection->recv(buffer, len);
 }
 
 void Client::sendCmd() {
@@ -63,12 +63,13 @@ void Client::sendCmd() {
         // compute sequence number
         // compute hmac
 
-        string ciphertext;
-        ciphertext.resize(buffer.size());
+/*        string ciphertext;
+        ciphertext.resize(buffer.size());*/
 
-        crypto.encrypt(&ciphertext[0], &buffer[0], buffer.size());
+        crypto.send(connection, &buffer[0], buffer.size());
 
-        connection->send(ciphertext.data(), ciphertext.size());
+//        crypto.encrypt(&ciphertext[0], &buffer[0], buffer.size());
+//        connection->send(ciphertext.data(), ciphertext.size());
     }
 
     os.str("");
