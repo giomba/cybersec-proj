@@ -55,12 +55,10 @@ int Crypto::send(Connection* connection, const char* buffer, int size) {
 
     encrypt(payload, buffer, size);
 
-    if (1) {    /* TODO -- add a sort of debugger */
-        clog << "=== Crypto::send() ===" << endl;
-        BIO_dump_fp(stderr, buffer, size);
-        BIO_dump_fp(stderr, (const char*)&spacecraft, sizeof(SpaceCraft));
-        BIO_dump_fp(stderr, payload, size);
-    }
+    debug(DEBUG, "[D] === Crypto::send() ===" << endl);
+    debug(DEBUG, "[D] PlainText:  "); hexdump(DEBUG, buffer, (size < 32) ? size : 32);
+    debug(DEBUG, "[D] SpaceCraft: "); hexdump(DEBUG, (const char*)&spacecraft, sizeof(SpaceCraft));
+    debug(DEBUG, "[D] CypherText: "); hexdump(DEBUG, payload, (size < 32) ? size : 32);
 
     int r1, r2;
 
@@ -79,15 +77,11 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
     char encrypted_payload[BUFFER_SIZE];
     SpaceCraft spacecraft;
 
-    clog << "=== Crypto::recv() ===" << endl;
-
     if (remaining == 0) {
-        clog << "[D] feeding from TCP" << endl;
+        debug(DEBUG, "[D] Crypto::recv() -- feeding from TCP" << endl);
         connection->recv((char*)&spacecraft, sizeof(SpaceCraft));
 
-        if (1) { // TODO -- debug
-            BIO_dump_fp(stderr, (const char*)&spacecraft, sizeof(SpaceCraft));
-        }
+        debug(DEBUG, "[D] SpaceCraft: "); hexdump(DEBUG, (const char*)&spacecraft, sizeof(SpaceCraft));
 
         /* check spacecraft length */
         spacecraft.length = ntohl(spacecraft.length);
@@ -102,9 +96,7 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
 
         connection->recv(encrypted_payload, spacecraft.length);
 
-        if (1) { // TODO -- debug
-            BIO_dump_fp(stderr, encrypted_payload, spacecraft.length);
-        }
+        debug(DEBUG, "[D] CypherText: "); hexdump(DEBUG, encrypted_payload, (spacecraft.length < 32) ? spacecraft.length : 32);
 
         // check spacecraft hmac
         if (spacecraft.hmac != 0xcafebabe) {
@@ -116,9 +108,7 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
         /* if everything is good, then decrypt */
         decrypt(payload, encrypted_payload, spacecraft.length);
 
-        if (1) {
-            BIO_dump_fp(stderr, payload, spacecraft.length);
-        }
+        debug(DEBUG, "[D] PlainText:  "); hexdump(DEBUG, payload, spacecraft.length);
 
         remaining = spacecraft.length;
         index = 0;
@@ -128,9 +118,6 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
     memcpy(buffer, payload + index, r);
     index += r;
     remaining -= r;
-
-    BIO_dump_fp(stderr, buffer, r); // TODO -- debug
-
     return r;
 }
 

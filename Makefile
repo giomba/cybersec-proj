@@ -1,7 +1,16 @@
 .POSIX:
 CXX=g++
-CFLAGS=-Wall -Wextra -g -std=c++11
+CXXFLAGS=-Wall -Wextra -std=c++11
 LDFLAGS=-lpthread -lcrypto
+
+# To debug add
+# 	DBGFLAGS=-DdebugLevel=x
+# where x is
+# 	FATAL	0
+# 	ERROR	1
+# 	WARNING	2
+# 	INFO	3
+# 	DEBUG	4
 
 # Header files
 CXX_S_HDR=$(wildcard src/server/*.h)
@@ -28,19 +37,19 @@ environment:
 	mkdir -p bin obj
 
 obj/c_a_%.o: src/common/%.cpp $(CXX_A_HDR)
-	$(CXX) -c $(CFLAGS) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) $(DBGFLAGS) -o $@ $<
 
 obj/c_s_%.o: src/server/%.cpp $(CXX_S_HDR) $(CXX_A_HDR)
-	$(CXX) -c $(CFLAGS) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) $(DBGFLAGS) -o $@ $<
 
 obj/c_c_%.o: src/client/%.cpp $(CXX_C_HDR) $(CXX_A_HDR)
-	$(CXX) -c $(CFLAGS) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) $(DBGFLAGS) -o $@ $<
 
 bin/server: $(CXX_A_OBJ) $(CXX_S_OBJ)
-	$(CXX) $(CFLAGS) -o bin/server obj/c_s_*.o obj/c_a_*.o $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(DBG_FLAGS) -o bin/server obj/c_s_*.o obj/c_a_*.o $(LDFLAGS)
 
 bin/client: $(CXX_A_OBJ) $(CXX_C_OBJ)
-	$(CXX) $(CFLAGS) -o bin/client obj/c_c_*.o obj/c_a_*.o $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(DBG_FLAGS) -o bin/client obj/c_c_*.o obj/c_a_*.o $(LDFLAGS)
 
 clean:
 	rm -rf bin obj

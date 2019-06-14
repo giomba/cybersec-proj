@@ -31,18 +31,18 @@ Server::Server(const char* address, uint16_t port) {
     if ( ::bind(sd, (struct sockaddr*)&addr, sizeof(addr)) != 0 ) {
         throw ExBind("server creation", errno);
     }
-    debug(INFO, "bind() ok");
+    debug(INFO, "bind() ok" << endl);
 
     if ( ::listen(sd, 10) != 0 ) {    // TODO: choose a proper number
         throw ExListen("listen()");
     }
-    debug(INFO, "listen() ok");
+    debug(INFO, "listen() ok" << endl);
 }
 
 Connection* Server::accept() {
     struct sockaddr_in6 client_addr;
     int client_sd = ::accept(sd, (struct sockaddr*)&client_addr, &sizeof_addr);
-    clog << "[I] remote TCP port: " << client_addr.sin6_port << endl;
+    debug(INFO, "[I] remote TCP port: " << client_addr.sin6_port << endl);
     return new Connection(client_sd, client_addr);
 }
 

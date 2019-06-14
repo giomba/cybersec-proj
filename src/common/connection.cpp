@@ -9,7 +9,7 @@
 #include "connection.h"
 
 Connection::Connection(int sd, struct sockaddr_in6 peer) {
-    clog << "[I] new connection " << this << endl;
+    debug(INFO, "[I] new connection " << this << endl);
     this->sd = sd;
     this->peer = peer;
 }
@@ -31,8 +31,8 @@ Connection::Connection(const char* hostname, uint16_t port) {
 }
 
 int Connection::send(const char* buffer, int len) {
-    clog << "=== Connection::send() ===" << endl;   // TODO -- proper debug
-    BIO_dump_fp(stderr, buffer, len);
+    debug(DEBUG, "=== Connection::send()" << endl);
+    hexdump(DEBUG, buffer, len);
 
     int ret = ::send(this->sd, (void*)buffer, len, MSG_NOSIGNAL);
     if (ret <= 0) {
@@ -42,8 +42,6 @@ int Connection::send(const char* buffer, int len) {
 }
 
 int Connection::recv(char* buffer, int len) {
-    clog << "=== Connection::recv() ===" << endl;
-
     int ret = ::recv(this->sd, (void*)buffer, len, 0);
     if (ret <= 0) {
         throw ExRecv("can not recv()");
@@ -52,7 +50,7 @@ int Connection::recv(char* buffer, int len) {
 }
 
 Connection::~Connection() {
-    clog << "[I] destroyng connection " << this << " socket " << sd << endl;
+    debug(INFO, "[I] destroyng connection " << this << " socket " << sd << endl);
     close(sd);
     // close connections and destroy created sockets, if necessary
     // (eg. if socket was created using this->connect() )

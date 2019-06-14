@@ -39,19 +39,12 @@ void Client::recvCmd() {
 }
 
 int Client::recvBodyFragment(char* buffer, const int len) {
-//    char ciphertext[BUFFER_SIZE];
     int r;
 
     r = crypto.recv(connection, buffer, len);
-    // clog << "[D] Received a fragment of " << r << " bytes" << endl;
-    // crypto.decrypt(buffer, ciphertext, r);
 
-    /*
-    clog << "[D] ciphertext" << endl;
-    BIO_dump_fp(stdout, (const char*)ciphertext, (r > 32) ? 32 : r);
-    clog << "[D] plaintext" << endl;
-    BIO_dump_fp(stdout, (const char*)buffer, (r > 32) ? 32 : r);
-    */
+    debug(DEBUG, "[D] fragment plaintext" << endl);
+    hexdump(DEBUG, (const char*)buffer, (r > 32) ? 32 : r);
 
     return r;
 }
@@ -59,17 +52,7 @@ int Client::recvBodyFragment(char* buffer, const int len) {
 void Client::sendCmd() {
     string buffer = os.str();
     if (buffer.size() != 0) {
-
-        // compute sequence number
-        // compute hmac
-
-/*        string ciphertext;
-        ciphertext.resize(buffer.size());*/
-
         crypto.send(connection, &buffer[0], buffer.size());
-
-//        crypto.encrypt(&ciphertext[0], &buffer[0], buffer.size());
-//        connection->send(ciphertext.data(), ciphertext.size());
     }
 
     os.str("");
@@ -89,19 +72,19 @@ void Client::cmd_dele(void) {
     string fullpath = SERVER_ROOT + "/" + filename;
 
     if (remove(fullpath.c_str()) == 0) {
-        clog << "[I] delete file ->" << fullpath << "<-" << endl;
+        debug(INFO, "[I] delete file ->" << fullpath << "<-" << endl);
         os << OK << endl << endl;
         sendCmd();
     }
     else {
-        clog << "[W] can not remove file ->" << fullpath << "<-" << endl;
+        debug(WARNING, "[W] can not remove file ->" << fullpath << "<-" << endl);
         os << BAD_FILE << endl << endl;
         sendCmd();
     }
 }
 
 void Client::cmd_list(void) {
-    clog << "[I] Sending directory list" << endl;
+    debug(INFO, "[I] Sending directory list" << endl);
     /* retrieve list of files */
     ostringstream fileList;
     DIR* dd;
@@ -142,18 +125,18 @@ void Client::cmd_retr(void) {
     is >> filename;
 
     if (! regex_match(filename, parola)) {
-        clog << "[W] bad file name" << endl;
+        debug(WARNING, "[W] bad file name" << endl);
         os << BAD_FILE << endl << endl;
         sendCmd();
         return;
     }
 
     string fullpath = SERVER_ROOT + "/" + filename;
-    clog << "[I] RETR file ->" << fullpath << "<-" << endl;
+    debug(INFO, "[I] RETR file ->" << fullpath << "<-" << endl);
     fstream file(fullpath, ios::in | ios::binary);
 
     if (! file) {
-        clog << "[W] file can not be open" << endl;
+        debug(WARNING, "[W] file can not be open" << endl);
         os << BAD_FILE << endl << endl;
         sendCmd();
         return;
@@ -195,7 +178,7 @@ void Client::cmd_stor(void) {
     int64_t size;
 
     is >> tag >> size;
-    clog << "[D] " << size << endl;
+    debug(DEBUG, "[D] " << size << endl);
 
     if (tag != "Size:") {
         os << SYNTAX_ERROR << endl << endl;
@@ -210,11 +193,11 @@ void Client::cmd_stor(void) {
     }
 
     string fullpath = SERVER_ROOT + "/" + filename;
-    clog << "[I] STOR ->" << fullpath << "<-" << endl;
+    debug(INFO, "[I] STOR ->" << fullpath << "<-" << endl);
 
     fstream file(fullpath, ios::out | ios::binary);
     if (! file) {
-        clog << "[W] can not open " << filename << endl;
+        debug(WARNING, "[W] can not open " << filename << endl);
         os << BAD_FILE << endl << endl;
         sendCmd();
         return;
@@ -233,12 +216,12 @@ void Client::cmd_stor(void) {
         file.write(buffer, fragmentSize);
         received += fragmentSize;
     }
-    clog << "[I] received " << received << " bytes for " << fullpath << endl;
+    debug(INFO, "[I] received " << received << " bytes for " << fullpath << endl);
     file.close();
 }
 
 void Client::cmd_unknown(void) {
-    clog << "[W] client issued not implemented command" << endl;
+    debug(WARNING, "[W] client issued not implemented command" << endl);
     os << COMMAND_NOT_IMPLEMENTED << endl << endl;
     sendCmd();
 }
@@ -260,14 +243,14 @@ bool Client::execute(void) {
                 else if (cmd == "QUIT") { cmd_quit(); break; }
                 else if (cmd == "RETR") { cmd_retr(); }
                 else if (cmd == "STOR") { cmd_stor(); }
-                else { clog << "[W] ->" << cmd << "<-" << endl; cmd_unknown(); }
+                else { debug(WARNING, "[W] ->" << cmd << "<-" << endl); cmd_unknown(); }
             }
             else {
-                clog << "[W] bad input stream" << endl;
+                debug(WARNING, "[W] bad input stream" << endl);
             }
         }
 
-        clog << "[I] client " << this << " quit" << endl;
+        debug(INFO, "[I] client " << this << " quit" << endl);
     }
     catch (ExNetwork e) {
         cerr << "[E] network: " << e << endl;

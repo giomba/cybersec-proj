@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
 
             thread t(&Client::execute, client);
 
-            clog << "[I] thread created for client " << client << endl;
+            debug(INFO, "[I] thread created for client " << client << endl);
 
             t.detach();
 
