@@ -41,7 +41,7 @@ int Crypto::send(Connection* connection, const char* buffer, int size) {
 
     spacecraft.length = htonl(size);
     spacecraft.sequence_number = htonl(sequence_number_o++);
-    spacecraft.hmac = 0xcafebabe;
+    spacecraft.hmac = 0xcafebabe;   // TODO -- properly compute hmac
 
     encrypt(payload, buffer, size);
 
