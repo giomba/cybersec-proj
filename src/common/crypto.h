@@ -10,9 +10,14 @@ using namespace std;
 
 #include "connection.h"
 
+struct Rocket {
+    uint32_t length;
+    uint32_t sequence_number;
+    uint32_t hmac;  /* TODO -- choose a proper size */
+};
+
 struct SpaceCraft {
     uint32_t hmac;  /* TODO -- choose a proper size */
-    uint32_t length;
     uint32_t sequence_number;
 };
 
