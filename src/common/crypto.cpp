@@ -19,7 +19,7 @@ int Crypto::encrypt(char* d_buffer, const char* s_buffer, int size){
 
     /* Encrypt and update the buffer */
 	if ((r = EVP_EncryptUpdate(ctx_e, (unsigned char*)d_buffer, &len, (const unsigned char*)s_buffer, size)) == 0) {
-        throw ExEVPUpdate("can not EVP_EncryptUpdate");
+        throw ExCryptoComputation("can not EVP_EncryptUpdate");
     }
 
 	return r;
@@ -30,7 +30,7 @@ int Crypto::decrypt(char* d_buffer, const char* s_buffer, int size){
 
 	/* Decrypt and update the buffer */
 	if ((r = EVP_DecryptUpdate(ctx_d, (unsigned char*)d_buffer, &len, (const unsigned char*)s_buffer, size)) == 0) {
-        throw ExEVPUpdate("can not EVP_DecryptUpdate");
+        throw ExCryptoComputation("can not EVP_DecryptUpdate");
     }
 
 	return r;
@@ -40,7 +40,7 @@ int Crypto::hmac(unsigned char* digest, const Rocket& rocket) {
     unsigned int len;
 
     HMAC_CTX* ctx = HMAC_CTX_new();
-    if (ctx == NULL) return -1;
+    if (ctx == NULL) throw ExCryptoComputation("Crypto::hmac() out of memory");
 
     bool pass =
         HMAC_Init_ex(ctx, auth_key, EVP_MD_size(EVP_sha256()), EVP_sha256(), NULL) &&
@@ -51,14 +51,14 @@ int Crypto::hmac(unsigned char* digest, const Rocket& rocket) {
     HMAC_CTX_free(ctx);
 
     if (pass) return len;
-    else return -1;
+    else throw ExCryptoComputation("Crypto::hmac() can not compute");
 }
 
 int Crypto::hmac(unsigned char* digest, const SpaceCraft& spacecraft, const unsigned char* encrypted_payload, int size) {
     unsigned int len;
 
     HMAC_CTX* ctx = HMAC_CTX_new();
-    if (ctx == NULL) return -1;
+    if (ctx == NULL) throw ExCryptoComputation("Crypto::hmac() out of memory");
 
     bool pass =
         HMAC_Init_ex(ctx, auth_key, EVP_MD_size(EVP_sha256()), EVP_sha256(), NULL) &&
@@ -69,7 +69,7 @@ int Crypto::hmac(unsigned char* digest, const SpaceCraft& spacecraft, const unsi
     HMAC_CTX_free(ctx);
 
     if (pass) return len;
-    else return -1;
+    else throw ExCryptoComputation("Crypto::hmac() can not compute");
 }
 
 int Crypto::send(Connection* connection, const char* plaintext, int size) {
@@ -102,7 +102,7 @@ int Crypto::send(Connection* connection, const char* plaintext, int size) {
     r3 = connection->send(encrypted_payload, size);
 
     if (r1 >= 0 && r2 >= 0 && r3 >= 0) return r1 + r2 + r3;
-    else return -1;
+    else throw ExSend("can not Crypto::send()");
 }
 
 int Crypto::recv(Connection* connection, char* buffer, int size) {
@@ -119,8 +119,7 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
         debug(DEBUG, "[D] Crypto::recv() -- feeding from TCP" << endl);
 
         /* --- Rocket --- */
-        connection->recv((char*)&rocket, sizeof(Rocket));
-
+        if (connection->recv((char*)&rocket, sizeof(Rocket)) != sizeof(Rocket)) throw ExRecv("can not Crypto::recv() rocket");
         debug(DEBUG, "[D] Rocket: " << endl); hexdump(DEBUG, (const char*)&rocket, sizeof(Rocket));
 
         /* Rocket HMAC verification */
@@ -129,27 +128,26 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
         r = CRYPTO_memcmp(rocket_computed_hmac, (const char*)&rocket.hmac, EVP_MD_size(EVP_sha256()));
         delete[] rocket_computed_hmac;
         if (r != 0) {
-            // TODO -- drop packet, renegotiate?? do something insomma -- throw
-            debug(WARNING, "[W] rocket: invalid hmac" << endl);
-            return -1;
+            debug(WARNING, "[W] rocket: bad hmac" << endl);
+            throw ExBadHMAC("rocket: bad hmac");
         } else debug(DEBUG, "[D] rocket: valid hmac" << endl);
 
         rocket.length = ntohl(rocket.length);
         if (rocket.length > BUFFER_SIZE) {
             debug(WARNING, "[W] rocket: too long " << rocket.length << endl);
-            return -1; // TODO -- throw
+            throw ExBadProtocol("rocket: too long");
         }
 
         rocket.sequence_number = ntohl(rocket.sequence_number);
         if (rocket.sequence_number != sequence_number_i++) {
             debug(WARNING, "[W] rocket: bad sequence number " << rocket.sequence_number << endl);
-            return -1; // TODO -- throw
+            throw ExBadSeqNum("rocket: bad sequence number");
         }
 
         /* --- SpaceCraft --- */
-        connection->recv((char*)&spacecraft, sizeof(SpaceCraft));
+        if (connection->recv((char*)&spacecraft, sizeof(SpaceCraft)) != sizeof(SpaceCraft)) throw ExRecv("can not Crypto::recv() spacecraft");
         debug(DEBUG, "[D] SpaceCraft: " << endl); hexdump(DEBUG, (const char*)&spacecraft, sizeof(SpaceCraft));
-        connection->recv(encrypted_payload, rocket.length);
+        if (connection->recv(encrypted_payload, rocket.length) != (int)rocket.length) throw ExRecv("can not Crypto::recv() encrypted_payload");
         debug(DEBUG, "[D] CypherText: " << endl); hexdump(DEBUG, encrypted_payload, rocket.length);
 
         /* SpaceCraft HMAC verification */
@@ -157,16 +155,16 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
         hmac(spacecraft_computed_hmac, spacecraft, (unsigned char*)encrypted_payload, rocket.length);
         r = CRYPTO_memcmp(spacecraft_computed_hmac, (const char*)&spacecraft.hmac, EVP_MD_size(EVP_sha256()));
         delete[] spacecraft_computed_hmac;
-        if (r != 0) {   // TODO -- throw
+        if (r != 0) {
             debug(WARNING, "[W] spacecraft: invalid hmac" << endl);
-            return -1;
+            throw ExBadHMAC("spacecraft: bad hmac");
         } else debug(DEBUG, "[D] spacecraft: valid hmac" << endl);
 
         /* check spacecraft sequence number */
         spacecraft.sequence_number = ntohl(spacecraft.sequence_number);
         if (spacecraft.sequence_number != sequence_number_i++) {
             debug(WARNING, "[W] spacecraft: bad sequence number " << spacecraft.sequence_number << endl);
-            return -1;
+            throw ExBadSeqNum("spacecraft: bad sequence number");
         }
 
         /* if everything is good, finally decrypt */

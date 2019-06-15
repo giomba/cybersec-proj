@@ -32,6 +32,9 @@ class ExUserInput : public Ex { using Ex::Ex; };
 
 /* Crypto Exceptions */
 class ExCrypto : public Ex { using Ex::Ex; };
-class ExEVPUpdate : public ExCrypto { using ExCrypto::ExCrypto; };
+class ExCryptoComputation : public ExCrypto { using ExCrypto::ExCrypto; };
+class ExBadSeqNum : public ExCrypto { using ExCrypto::ExCrypto; };
+class ExBadHMAC : public ExCrypto { using ExCrypto::ExCrypto; };
+class ExBadProtocol : public ExCrypto { using ExCrypto::ExCrypto; };
 
 #endif
