@@ -42,7 +42,7 @@ int Client::recvBodyFragment(char* buffer, const int len) {
     r = crypto.recv(connection, buffer, len);
 
     debug(DEBUG, "[D] fragment plaintext" << endl);
-    hexdump(DEBUG, (const char*)buffer, (r > 32) ? 32 : r);
+    hexdump(DEBUG, (const char*)buffer, r);
 
     return r;
 }

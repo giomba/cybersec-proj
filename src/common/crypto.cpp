@@ -89,10 +89,10 @@ int Crypto::send(Connection* connection, const char* plaintext, int size) {
 
     /* Debug output */
     debug(DEBUG, "[D] === Crypto::send() ===" << endl);
-    debug(DEBUG, "[D] PlainText:  " << endl); hexdump(DEBUG, plaintext, (size < 32) ? size : 32);
+    debug(DEBUG, "[D] PlainText:  " << endl); hexdump(DEBUG, plaintext, size);
     debug(DEBUG, "[D] Rocket:     " << endl); hexdump(DEBUG, (const char*)&rocket, sizeof(Rocket));
     debug(DEBUG, "[D] SpaceCraft: " << endl); hexdump(DEBUG, (const char*)&spacecraft, sizeof(SpaceCraft));
-    debug(DEBUG, "[D] CypherText: " << endl); hexdump(DEBUG, encrypted_payload, (size < 32) ? size : 32);
+    debug(DEBUG, "[D] CypherText: " << endl); hexdump(DEBUG, encrypted_payload, size);
 
     /* TCP transmission */
     int r1, r2, r3;
@@ -150,7 +150,7 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
         connection->recv((char*)&spacecraft, sizeof(SpaceCraft));
         debug(DEBUG, "[D] SpaceCraft: " << endl); hexdump(DEBUG, (const char*)&spacecraft, sizeof(SpaceCraft));
         connection->recv(encrypted_payload, rocket.length);
-        debug(DEBUG, "[D] CypherText: " << endl); hexdump(DEBUG, encrypted_payload, (rocket.length < 32) ? rocket.length : 32);
+        debug(DEBUG, "[D] CypherText: " << endl); hexdump(DEBUG, encrypted_payload, rocket.length);
 
         /* SpaceCraft HMAC verification */
         unsigned char* spacecraft_computed_hmac = new unsigned char[EVP_MD_size(EVP_sha256())];
@@ -172,7 +172,7 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
         /* if everything is good, finally decrypt */
         decrypt(payload, encrypted_payload, rocket.length);
 
-        debug(DEBUG, "[D] PlainText:  " << endl); hexdump(DEBUG, payload, (rocket.length < 32) ? rocket.length : 32);
+        debug(DEBUG, "[D] PlainText:  " << endl); hexdump(DEBUG, payload, rocket.length);
 
         remaining = rocket.length;
         index = 0;

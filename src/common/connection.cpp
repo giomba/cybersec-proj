@@ -32,7 +32,7 @@ Connection::Connection(const char* hostname, uint16_t port) {
 
 int Connection::send(const char* buffer, int len) {
     debug(DEBUG, "=== Connection::send()" << endl);
-    hexdump(DEBUG, buffer, (len < 32) ? len : 32);
+    hexdump(DEBUG, buffer, len);
 
     int ret = ::send(this->sd, (void*)buffer, len, MSG_NOSIGNAL);
     if (ret <= 0) {
