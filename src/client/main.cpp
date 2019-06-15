@@ -441,7 +441,9 @@ int main(int argc, char* argv[]) {
 
             cout << cursor;
             // waiting for command
-            getline(cin, line);
+            if (!getline(cin, line))
+		line = "q";
+
             is.str(line);
 
             if (!line.empty()){
