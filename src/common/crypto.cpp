@@ -1,7 +1,5 @@
 #include "crypto.h"
 
-using namespace std;
-
 Crypto::Crypto(const unsigned char* session_key, const unsigned char* auth_key, const unsigned char * iv) {
     //create and initialize context for encryption and decryption
 	ctx_e = EVP_CIPHER_CTX_new();
