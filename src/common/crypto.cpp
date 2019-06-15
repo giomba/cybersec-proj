@@ -193,6 +193,8 @@ Crypto::~Crypto() {
         EVP_DecryptFinal(ctx_d, ...);
     */
 
+    delete[] auth_key;
+
     EVP_CIPHER_CTX_free(ctx_e);
 	EVP_CIPHER_CTX_free(ctx_d);
 }
