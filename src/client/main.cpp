@@ -430,7 +430,7 @@ int main(int argc, char* argv[]) {
 
     try {
         connection = new Connection(sv_addr.c_str(), sv_port);
-        crypto = new Crypto((unsigned char*)"fedcba9876543210", (unsigned char*)"0123456789abcdef", (unsigned char*)"0000000000000000");
+        crypto = new Crypto((unsigned char*)"0123456789abcdef", (unsigned char*)"fedcba9876543210", (unsigned char*)"0000000000000000");
 
         while(1){
             // clear line, stringstream and input stream

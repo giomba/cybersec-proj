@@ -2,13 +2,16 @@
 
 using namespace std;
 
-Crypto::Crypto(const unsigned char* key_e, const unsigned char* key_d, const unsigned char * iv) {
+Crypto::Crypto(const unsigned char* session_key, const unsigned char* auth_key, const unsigned char * iv) {
     //create and initialize context for encryption and decryption
 	ctx_e = EVP_CIPHER_CTX_new();
-	EVP_EncryptInit(ctx_e, EVP_aes_128_cfb8(), key_e, iv);
+	EVP_EncryptInit(ctx_e, EVP_aes_128_cfb8(), session_key, iv);
 
     ctx_d = EVP_CIPHER_CTX_new();
-    EVP_DecryptInit(ctx_d, EVP_aes_128_cfb8(), key_d, iv);
+    EVP_DecryptInit(ctx_d, EVP_aes_128_cfb8(), session_key, iv);
+
+    this->auth_key = new unsigned char[EVP_MD_size(EVP_sha256())];
+    memcpy(this->auth_key, auth_key, EVP_MD_size(EVP_sha256()));
 
     sequence_number_i = sequence_number_o = 0;  /* TODO -- is it ok to always initialize to 0? */
 }
@@ -35,26 +38,65 @@ int Crypto::decrypt(char* d_buffer, const char* s_buffer, int size){
 	return r;
 }
 
+int Crypto::hmac(unsigned char* digest, const Rocket& rocket) {
+    unsigned int len;
+
+    HMAC_CTX* ctx = HMAC_CTX_new();
+    if (ctx == NULL) return -1;
+
+    bool pass =
+        HMAC_Init_ex(ctx, auth_key, EVP_MD_size(EVP_sha256()), EVP_sha256(), NULL) &&
+        HMAC_Update(ctx, (const unsigned char*)&rocket.length, sizeof(rocket.length)) &&
+        HMAC_Update(ctx, (const unsigned char*)&rocket.sequence_number, sizeof(rocket.sequence_number)) &&
+        HMAC_Final(ctx, digest, &len);
+
+    HMAC_CTX_free(ctx);
+
+    if (pass) return len;
+    else return -1;
+}
+
+int Crypto::hmac(unsigned char* digest, const SpaceCraft& spacecraft, const unsigned char* encrypted_payload, int size) {
+    unsigned int len;
+
+    HMAC_CTX* ctx = HMAC_CTX_new();
+    if (ctx == NULL) return -1;
+
+    bool pass =
+        HMAC_Init_ex(ctx, auth_key, EVP_MD_size(EVP_sha256()), EVP_sha256(), NULL) &&
+        HMAC_Update(ctx, (const unsigned char*)&spacecraft.sequence_number, sizeof(spacecraft.sequence_number)) &&
+        HMAC_Update(ctx, encrypted_payload, size) &&
+        HMAC_Final(ctx, digest, &len);
+
+    HMAC_CTX_free(ctx);
+
+    if (pass) return len;
+    else return -1;
+}
+
 int Crypto::send(Connection* connection, const char* plaintext, int size) {
     SpaceCraft spacecraft;
     Rocket rocket;
     char encrypted_payload[BUFFER_SIZE];
 
+    /* Rocket preparation */
     rocket.length = htonl(size);
     rocket.sequence_number = htonl(sequence_number_o++);
-    rocket.hmac = 0xdeadbeef;   // TODO -- properly compute hmac on rocket.length and rocket.seq-no
+    hmac((unsigned char*)&rocket.hmac, rocket); /* computes Rocket hmac */
 
-    encrypt(encrypted_payload, plaintext, size);
-
+    /* Spacecraft preparation */
+    encrypt(encrypted_payload, plaintext, size);    /* Payload encryption */
     spacecraft.sequence_number = htonl(sequence_number_o++);
-    spacecraft.hmac = 0xcafebabe;   // TODO -- properly compute on spacecraft.sequence_number + encrypted_payload
+    hmac((unsigned char*)&spacecraft.hmac, spacecraft, (unsigned char*)encrypted_payload, size); /* computes SpaceCraft hmac */
 
+    /* Debug output */
     debug(DEBUG, "[D] === Crypto::send() ===" << endl);
     debug(DEBUG, "[D] PlainText:  " << endl); hexdump(DEBUG, plaintext, (size < 32) ? size : 32);
     debug(DEBUG, "[D] Rocket:     " << endl); hexdump(DEBUG, (const char*)&rocket, sizeof(Rocket));
     debug(DEBUG, "[D] SpaceCraft: " << endl); hexdump(DEBUG, (const char*)&spacecraft, sizeof(SpaceCraft));
     debug(DEBUG, "[D] CypherText: " << endl); hexdump(DEBUG, encrypted_payload, (size < 32) ? size : 32);
 
+    /* TCP transmission */
     int r1, r2, r3;
 
     r1 = connection->send((const char*)&rocket, sizeof(Rocket));
@@ -75,6 +117,7 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
     Rocket rocket;
 
     if (remaining == 0) {
+        int r;
         debug(DEBUG, "[D] Crypto::recv() -- feeding from TCP" << endl);
 
         /* --- Rocket --- */
@@ -82,11 +125,22 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
 
         debug(DEBUG, "[D] Rocket: " << endl); hexdump(DEBUG, (const char*)&rocket, sizeof(Rocket));
 
-        // compute hmac TODO
-        if (rocket.hmac != 0xdeadbeef) return -1;
+        /* Rocket HMAC verification */
+        unsigned char* rocket_computed_hmac = new unsigned char[EVP_MD_size(EVP_sha256())];
+        hmac(rocket_computed_hmac, rocket);
+        r = CRYPTO_memcmp(rocket_computed_hmac, (const char*)&rocket.hmac, EVP_MD_size(EVP_sha256()));
+        delete[] rocket_computed_hmac;
+        if (r != 0) {
+            // TODO -- drop packet, renegotiate?? do something insomma -- throw
+            debug(WARNING, "[W] rocket: invalid hmac" << endl);
+            return -1;
+        } else debug(DEBUG, "[D] rocket: valid hmac" << endl);
 
         rocket.length = ntohl(rocket.length);
-        if (rocket.length > BUFFER_SIZE) return -1; // TODO -- throw
+        if (rocket.length > BUFFER_SIZE) {
+            debug(WARNING, "[W] rocket: too long " << rocket.length << endl);
+            return -1; // TODO -- throw
+        }
 
         rocket.sequence_number = ntohl(rocket.sequence_number);
         if (rocket.sequence_number != sequence_number_i++) {
@@ -96,15 +150,20 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
 
         /* --- SpaceCraft --- */
         connection->recv((char*)&spacecraft, sizeof(SpaceCraft));
-
         debug(DEBUG, "[D] SpaceCraft: " << endl); hexdump(DEBUG, (const char*)&spacecraft, sizeof(SpaceCraft));
-
         connection->recv(encrypted_payload, rocket.length);
-
-        // compute hmac TODO
-        if (spacecraft.hmac != 0xcafebabe) return -1;
-
         debug(DEBUG, "[D] CypherText: " << endl); hexdump(DEBUG, encrypted_payload, (rocket.length < 32) ? rocket.length : 32);
+
+        /* SpaceCraft HMAC verification */
+        unsigned char* spacecraft_computed_hmac = new unsigned char[EVP_MD_size(EVP_sha256())];
+        hmac(spacecraft_computed_hmac, spacecraft, (unsigned char*)encrypted_payload, rocket.length);
+        r = CRYPTO_memcmp(spacecraft_computed_hmac, (const char*)&spacecraft.hmac, EVP_MD_size(EVP_sha256()));
+        delete[] spacecraft_computed_hmac;
+        if (r != 0) {   // TODO -- throw
+            debug(WARNING, "[W] spacecraft: invalid hmac" << endl);
+            return -1;
+        } else debug(DEBUG, "[D] spacecraft: valid hmac" << endl);
+
         /* check spacecraft sequence number */
         spacecraft.sequence_number = ntohl(spacecraft.sequence_number);
         if (spacecraft.sequence_number != sequence_number_i++) {
@@ -112,7 +171,7 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
             return -1;
         }
 
-        /* if everything is good, then decrypt */
+        /* if everything is good, finally decrypt */
         decrypt(payload, encrypted_payload, rocket.length);
 
         debug(DEBUG, "[D] PlainText:  " << endl); hexdump(DEBUG, payload, (rocket.length < 32) ? rocket.length : 32);
