@@ -275,6 +275,15 @@ bool check_and_get_file_size(string filename, int64_t &size){
     return true;
 }
 
+void quit(){
+	delete ca;
+	delete connection;
+	delete crypto;
+	
+	cout << greetings << endl;
+    exit(0);	
+}
+
 /********************************/
 /*      PROTOCOL FUNCTIONS      */
 /********************************/
@@ -332,9 +341,7 @@ void cmd_remote_list(){
 void cmd_quit(){
     string cmd = "QUIT\n\n";
     send_cmd(cmd);
-
-    cout << greetings << endl;
-    exit(0);
+	quit();
 }
 
 
@@ -418,18 +425,19 @@ void cmd_unknown(string cmd){
 /****************************************/
 
 int main(int argc, char* argv[]) {
-    if (argc < 3){
-        cout << "./bin/client <ipserver> <serverport>" << endl;
+    if (argc < 4){
+        cout << "./bin/client <ipserver> <serverport> <certname>" << endl;
         exit(0);
     }
 
     string line;
-
     string sv_addr = argv[1];
     uint16_t sv_port = atoi(argv[2]);
+	string cert_name = argv[3];
 
     try {
         connection = new Connection(sv_addr.c_str(), sv_port);
+		ca = new CertificationAuthority(cert_name);
         crypto = new Crypto((unsigned char*)"0123456789abcdef", (unsigned char*)"fedcba9876543210", (unsigned char*)"0000000000000000");
 
         while(1){
@@ -442,7 +450,7 @@ int main(int argc, char* argv[]) {
             cout << cursor;
             // waiting for command
             if (!getline(cin, line))
-		line = "q";
+				line = "q";
 
             is.str(line);
 
@@ -453,7 +461,9 @@ int main(int argc, char* argv[]) {
     } catch(ExRecv e) {
         cout << "error: Unable to connect to server" << endl;
         cout << "info: You have been disconnected" << endl;
+        quit();
     } catch (Ex e) {
         cerr << e << endl;
+        quit();
     }
 }
