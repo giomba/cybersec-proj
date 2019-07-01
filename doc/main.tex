@@ -16,6 +16,7 @@
 \renewcommand{\labelitemiii}{--}
 
 % Math packages
+\usepackage{mathtools}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
@@ -58,6 +59,18 @@
     }
   }
 }
+
+% BAN logic macros
+\newcommand{\believes}{\mid\equiv}
+\newcommand{\sees}{\triangleleft}
+\newcommand{\oncesaid}{\mid\sim}
+\newcommand{\controls}{\Rightarrow}
+\newcommand{\fresh}[1]{\#(#1)}
+\newcommand{\combine}[2]{{\langle #1 \rangle}_{#2}}
+\newcommand{\encrypt}[2]{{ \{ #1 \} }_{#2}}
+\newcommand{\sharekey}[1]{\xleftrightarrow{#1}}
+\newcommand{\pubkey}[1]{\xmapsto{#1}}
+\newcommand{\secret}[1]{\xleftrightharpoons{#1}}
 
 
 % Hides ugly links from the index
@@ -209,4 +222,57 @@ Reply status:
   \item \texttt{503}: bad sequence of commands
 \end{itemize}
 
+\section{Key exchange protocol}
+
+% -- TODO -- draw
+
+\subsubsection{Objectives}
+
+\[A \believes A \sharekey{k_s} B \]
+\[B \believes A \sharekey{k_s} B \]
+\[A \believes \fresh{A \sharekey{k_s} B} \]
+
+
+\subsubsection{Assumptions}
+
+\paragraph{Keys}
+
+\[A \believes \pubkey{CA^+} CA \]
+\[B \believes \pubkey{CA^+} CA \]
+
+\paragraph{Trust}
+
+\[A \believes B \controls A \sharekey{k_s} B \]
+\[A \believes B \controls \fresh{A \sharekey{k_s} B} \]
+\[A \believes CA \controls (cert_A, cert_B) \]
+\[B \believes CA \controls (cert_A, cert_B) \]
+
+\paragraph{Freshness}
+
+\[A \believes \fresh{R_A} \]
+\[B \believes \fresh{R_B} \]
+\[B \controls \fresh{A \sharekey{k_s} B} \]
+
+\subsubsection{Proof}
+
+By postulate 1
+\[\frac{A \believes \pubkey{CA^+} CA, A \sees \encrypt{cert_B}{CA^-}}{A \believes CA \oncesaid cert_B}\]
+
+By postulate 3
+\[\frac{A \believes CA \believes cert_B, A \believes CA \controls cert_B}{A \believes cert_B}\]
+
+$A \believes cert_B$ is equal to $A \believes \pubkey{B^+} B$.
+
+By postulate 1
+\[\frac{A \believes \pubkey{B^+} B, A \sees \encrypt{payload_{M2}}{B^-}}{A \believes B \oncesaid payload_{M2}}\]
+
+By postulate 2
+\[\frac{A \believes \fresh{payload_{M2}, A \believes B \oncesaid payload_{M2}}}{A \believes B \believes payload_{M2}}\]
+
+$\fresh{payload_{M2}}$ is due to the fact that it contains $R_A$.
+
+By postulate 3
+\[\frac{A \believes B \believes payload_{M2}, A \believes B \controls payload_{M2}}{A \believes payload_{M2}}\]
+
+This means that $A \believes A \sharekey{k_s} B$.
 \end{document}
