@@ -14,7 +14,7 @@ const string CERT_PATH = "cert/";
 
 class CertificationAuthority {
     private:
-	X509* cert;
+	    X509* cert;
         X509_STORE* store;
     public:
         CertificationAuthority(string);

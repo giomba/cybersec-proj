@@ -18,16 +18,18 @@
 #include "debug.h"
 #include "exception.h"
 #include "protocol.h"
+#include "ca.h"
 
 class Connection {
     private:
         int sd;
         struct sockaddr_in6 peer;
+        CertificationAuthority *ca;
         int handshakeServer(void);
         int handshakeClient(void);
     public:
         Connection(const char* hostname, uint16_t port);
-        Connection(int sd, sockaddr_in6 peer);
+        Connection(int sd, sockaddr_in6 peer, const CertificationAuthority* ca);
         ~Connection();
         int send(const char* buffer, int len);
         int recv(char* buffer, int len);

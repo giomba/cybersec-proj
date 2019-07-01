@@ -1,21 +1,4 @@
-#include <arpa/inet.h>
-#include <errno.h>
-#include <cstring>
-#include <stdio.h>
-#include <iostream>
-#include <netinet/in.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include "../common/debug.h"
-#include "../common/connection.h"
-#include "../common/exception.h"
 #include "server.h"
-
-using namespace std;
 
 socklen_t Server::sizeof_addr = sizeof(addr);
 
@@ -37,13 +20,15 @@ Server::Server(const char* address, uint16_t port) {
         throw ExListen("listen()");
     }
     debug(INFO, "listen() ok" << endl);
+
+    this->ca = new CertificationAuthority("server");
 }
 
 Connection* Server::accept() {
     struct sockaddr_in6 client_addr;
     int client_sd = ::accept(sd, (struct sockaddr*)&client_addr, &sizeof_addr);
     debug(INFO, "[I] remote TCP port: " << client_addr.sin6_port << endl);
-    return new Connection(client_sd, client_addr);
+    return new Connection(client_sd, client_addr, this->ca);
 }
 
 Server::~Server() {

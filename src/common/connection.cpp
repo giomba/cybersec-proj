@@ -1,9 +1,10 @@
 #include "connection.h"
 
-Connection::Connection(int sd, struct sockaddr_in6 peer) {
+Connection::Connection(int sd, struct sockaddr_in6 peer, const CertificationAuthority* ca) {
     debug(INFO, "[I] new connection " << this << endl);
     this->sd = sd;
     this->peer = peer;
+    this->ca = ca;
 }
 
 Connection::Connection(const char* hostname, uint16_t port) {
@@ -22,6 +23,22 @@ Connection::Connection(const char* hostname, uint16_t port) {
 }
 
 int Connection::handshakeServer() {
+    /* === --- M1 --- === */
+    /* receive M1 */
+    M1 m1;
+    this->recv((char*)&m1, sizeof(m1));
+
+    m1.certLen = ntohl(m1.certLen);
+    m1.signLen = ntohl(m1.signLen);
+
+    unsigned char* serialized_client_certificate = new unsigned char[m1.certLen];
+    this->recv(serialized_client_certificate, m1.certLen);
+
+    /* deserialize certificate */
+    X509* client_certificate = d2i_X509(NULL, serialized_client_certificate, m1.certLen);
+    if (!this->ca->cert_verification(client_certificate)) { debug(ERROR, "client is not authenticated from TrustedCA" << endl); return -1;}
+
+    debug(INFO, "client on socket " << this->sd << " is authenticated" << endl);
 }
 
 int Connection::handshakeClient() {
