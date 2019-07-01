@@ -26,7 +26,7 @@ class Connection {
         struct sockaddr_in6 peer;
         CertificationAuthority *ca;
     public:
-        Connection(const char* hostname, uint16_t port);
+        Connection(const char* hostname, uint16_t port, CertificationAuthority* ca);
         Connection(int sd, sockaddr_in6 peer, CertificationAuthority* ca);
         ~Connection();
         int handshakeServer(void);

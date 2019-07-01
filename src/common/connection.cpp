@@ -7,7 +7,7 @@ Connection::Connection(int sd, struct sockaddr_in6 peer, CertificationAuthority*
     this->ca = ca;
 }
 
-Connection::Connection(const char* hostname, uint16_t port) {
+Connection::Connection(const char* hostname, uint16_t port, CertificationAuthority* ca) {
     // do everything is needed to connect
     if ((this->sd = socket(AF_INET6, SOCK_STREAM, 0)) == -1) {
         throw ExSocket("can not create socket() for new Connection()", errno);
@@ -20,6 +20,8 @@ Connection::Connection(const char* hostname, uint16_t port) {
     if (::connect(this->sd, (struct sockaddr*)&peer, sizeof(peer)) == -1) {
         throw ExConnect("can not connect() for new Connection()", errno);
     };
+
+    this->ca = ca;
 }
 
 int Connection::handshakeServer() {
@@ -36,7 +38,7 @@ int Connection::handshakeServer() {
 
     /* deserialize certificate */
     X509* client_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_client_certificate, m1.certLen);
-    if (!this->ca->cert_verification(client_certificate, "")) { debug(ERROR, "client is not authenticated from TrustedCA" << endl); return -1;}
+    if (this->ca->cert_verification(client_certificate, "") == -1) { debug(ERROR, "client is not authenticated by TrustedCA" << endl); throw ExCertificate("client is not authenticated by TrustedCA"); }
 
     debug(INFO, "client on socket " << this->sd << " is authenticated" << endl);
 }
@@ -53,7 +55,7 @@ int Connection::handshakeClient() {
     fclose(file);
     */
 
-    
+
     /* serialize certificate */
     X509* client_certificate = ca->getCert();
     int client_certificate_len;
@@ -67,7 +69,7 @@ int Connection::handshakeClient() {
     if (RAND_poll() != 1) { cerr << "[E] can not initialize PRNG" << endl; return -1; }
     RAND_bytes((unsigned char*)&nonce, sizeof(nonce));
 
-    /* load priv key from file 
+    /* load priv key from file
     EVP_PKEY* key;
     file = fopen("client.priv.pem", "r");
 
@@ -82,7 +84,7 @@ int Connection::handshakeClient() {
     /* sign nonce */
     char signature[BUFFER_SIZE];
     int signatureLen;
-    /* 
+    /*
     EVP_MD_CTX* ctx = EVP_MD_CTX_new();
     EVP_SignInit(ctx, EVP_sha256());
     EVP_SignUpdate(ctx, (unsigned char*)&nonce, sizeof(nonce));
@@ -108,12 +110,14 @@ int Connection::handshakeClient() {
 
     /* === --- M2 --- === */
     /* receive M2 */
+    /*
     M2 m2;
     this->recv((char*)&m2, sizeof(m2));
 
     m2.certLen = ntohl(m2.certLen);
     m2.signLen = ntohl(m2.signLen);
-    /* 
+    */
+    /*
     unsigned char *server_certificate = new unsigned char[m2.certLen];
 
     // TODO -- I AM HERE

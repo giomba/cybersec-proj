@@ -2,8 +2,10 @@
 
 const string SERVER_ROOT = "root";
 
-Client::Client(Connection* c) : crypto((const unsigned char*)"0123456789abcdef", (const unsigned char*)"fedcba9876543210", (const unsigned char*)"0000000000000000") {
+Client::Client(Connection* c) {
     connection = c;
+    connection->handshakeServer();
+    this->crypto = new Crypto((const unsigned char*)"0123456789abcdef", (const unsigned char*)"fedcba9876543210", (const unsigned char*)"0000000000000000");
 }
 
 void Client::recvCmd() {
@@ -16,7 +18,7 @@ void Client::recvCmd() {
     is.clear();
 
     for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
-        recvBytes = crypto.recv(connection, buffer + i, 1);
+        recvBytes = crypto->recv(connection, buffer + i, 1);
         //recvBytes = connection->recv(&ciphertext, 1);
         //crypto.decrypt(buffer + i, &ciphertext, 1);
         //recvBytes = connection->recv(buffer + i, 1);
@@ -39,7 +41,7 @@ void Client::recvCmd() {
 int Client::recvBodyFragment(char* buffer, const int len) {
     int r;
 
-    r = crypto.recv(connection, buffer, len);
+    r = crypto->recv(connection, buffer, len);
 
     debug(DEBUG, "[D] fragment plaintext" << endl);
     hexdump(DEBUG, (const char*)buffer, r);
@@ -50,7 +52,7 @@ int Client::recvBodyFragment(char* buffer, const int len) {
 void Client::sendCmd() {
     string buffer = os.str();
     if (buffer.size() != 0) {
-        crypto.send(connection, &buffer[0], buffer.size());
+        crypto->send(connection, &buffer[0], buffer.size());
     }
 
     os.str("");

@@ -37,4 +37,7 @@ class ExBadSeqNum : public ExCrypto { using ExCrypto::ExCrypto; };
 class ExBadHMAC : public ExCrypto { using ExCrypto::ExCrypto; };
 class ExBadProtocol : public ExCrypto { using ExCrypto::ExCrypto; };
 
+/* Certificate Exceptions */
+class ExCertificate : public Ex { using Ex::Ex; };
+
 #endif

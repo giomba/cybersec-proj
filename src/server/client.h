@@ -21,7 +21,7 @@ using namespace std;
 class Client {
     private:
         Connection* connection;
-        Crypto crypto;
+        Crypto* crypto;
         istringstream is;
         ostringstream os;
 

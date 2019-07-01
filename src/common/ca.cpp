@@ -1,7 +1,7 @@
 #include "ca.h"
 
 CertificationAuthority::CertificationAuthority(string cert_name){
-	// read CA certificate	
+	// read CA certificate
 	X509* CA_cert;
 	FILE* file = fopen((CERT_PATH + "TrustedCA_cert.pem").c_str(), "r");
     if (!file) { debug(FATAL, "cannot open CA_cert.pem" << endl); exit(-1); }
@@ -23,10 +23,10 @@ CertificationAuthority::CertificationAuthority(string cert_name){
     if (X509_STORE_add_cert(this->store, CA_cert) != 1) { debug(FATAL, "cannot add CA_cert to store" << endl); exit(-1); }
     if (X509_STORE_add_crl(this->store, crl) != 1) { debug(FATAL, "cannot add CRL to store" << endl); exit(-1); }
     X509_STORE_set_flags(this->store, X509_V_FLAG_CRL_CHECK);
-	
+
 	debug(INFO, "CA store created successfully" << endl);
 
-	// read my certificate	
+	// read my certificate
 	file = fopen((CERT_PATH + cert_name + "_cert.pem").c_str(), "r");
     if (!file) { debug(FATAL, "cannot open " + cert_name + ".pem" << endl); exit(-1); }
     this->cert = PEM_read_X509(file, NULL, NULL, NULL);
@@ -59,7 +59,7 @@ int CertificationAuthority::cert_verification(X509* cert, string name){
 		if (str != name) { debug(FATAL, "server name does not match" << endl); return -1; }
 		free(subject_name);
 	}
-	
-	debug(INFO, "cert verification succeded");
+
+	debug(INFO, "cert verification succeded" << endl);
 	return 0;
 }

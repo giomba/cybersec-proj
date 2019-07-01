@@ -279,9 +279,9 @@ void quit(){
 	delete ca;
 	delete connection;
 	delete crypto;
-	
+
 	cout << greetings << endl;
-    exit(0);	
+    exit(0);
 }
 
 /********************************/
@@ -436,8 +436,10 @@ int main(int argc, char* argv[]) {
 	string cert_name = argv[3];
 
     try {
-        connection = new Connection(sv_addr.c_str(), sv_port);
 		ca = new CertificationAuthority(cert_name);
+        // if (!ca) { debug(FATAL, "[F] cannot create Certificate Manager" << endl); exit(1); }
+
+        connection = new Connection(sv_addr.c_str(), sv_port, ca);
 
         // handshake
         if (connection->handshakeClient() == -1) exit(-1); // -- TODO

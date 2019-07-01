@@ -31,15 +31,21 @@ int main(int argc, char** argv) {
         Server server = Server("::0", atoi(argv[1]));
 
         while (true) {
-            Client* client = new Client(server.accept());
+            try {
+                Client* client = new Client(server.accept());
+                thread t(&Client::execute, client);
 
-            thread t(&Client::execute, client);
+                debug(INFO, "[I] thread created for client " << client << endl);
 
-            debug(INFO, "[I] thread created for client " << client << endl);
+                t.detach();
 
-            t.detach();
+                // TODO remember to destroy these clients when they disconnect
+            }
+            catch (ExCertificate e) {
+                debug(ERROR, "[E] certificate: " << e << endl);
+                continue;
+            }
 
-            // TODO remember to destroy these clients when they disconnect
         }
     } catch (ExNetwork e) {
         cerr << "[E] network: " << e << endl;
