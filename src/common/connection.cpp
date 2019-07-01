@@ -1,11 +1,3 @@
-#include <arpa/inet.h>
-#include <cstring>
-#include <errno.h>
-#include <iostream>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-
 #include "connection.h"
 
 Connection::Connection(int sd, struct sockaddr_in6 peer) {
@@ -27,7 +19,94 @@ Connection::Connection(const char* hostname, uint16_t port) {
     if (::connect(this->sd, (struct sockaddr*)&peer, sizeof(peer)) == -1) {
         throw ExConnect("can not connect() for new Connection()", errno);
     };
+}
 
+int Connection::handshakeServer() {
+}
+
+int Connection::handshakeClient() {
+    /* === --- M1 --- === */
+
+    /* load certificate from file */
+    X509* client_certificate;
+    FILE* file = fopen("client.cert.pem", "r");
+    if (!file) { cerr << "[E] can not open client certificate" << endl; return -1; }
+    client_certificate = PEM_read_X509(file, NULL, NULL, NULL);
+    if (! client_certificate) { cerr << "[E] can not read X509 PEM certificate" << endl; return -1; }
+    fclose(file);
+
+    /* serialize certificate */
+    int client_certificate_len;
+    unsigned char* serialized_client_certificate;
+
+    if ((client_certificate_len = i2d_X509(client_certificate, &serialized_client_certificate)) < 0) { cerr << "[E] can not serialize client certificate" << endl; return -1; }
+
+    /* generate nonce */
+    uint32_t nonce;
+
+    if (RAND_poll() != 1) { cerr << "[E] can not initialize PRNG" << endl; return -1; }
+    RAND_bytes((unsigned char*)&nonce, sizeof(nonce));
+
+    /* load priv key from file */
+    EVP_PKEY* key;
+    file = fopen("client.priv.pem", "r");
+
+    if (!file) { cerr << "[E] can not open client private key" << endl; return -1; }
+
+    key = PEM_read_PrivateKey(file, NULL, NULL, NULL);
+
+    fclose(file);
+
+    if (! key) { cerr << "[E] can not read key from file" << endl; return -1; }
+
+    /* sign nonce */
+    char signature[BUFFER_SIZE];
+    int signatureLen;
+
+    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    EVP_SignInit(ctx, EVP_sha256());
+    EVP_SignUpdate(ctx, (unsigned char*)&nonce, sizeof(nonce));
+    EVP_SignFinal(ctx, (unsigned char*)signature, (unsigned int*)&signatureLen, key);
+    EVP_MD_CTX_free(ctx);
+
+    EVP_PKEY_free(key);
+    OPENSSL_free(serialized_client_certificate);
+
+    /* prepare M1 */
+    M1 m1;
+    m1.certLen = htonl(client_certificate_len);
+    m1.signLen = htonl(signatureLen);
+    m1.nonceC = nonce;
+
+    /* send M1 */
+    this->send((const char*)&m1, sizeof(m1));
+    this->send((const char*)serialized_client_certificate, client_certificate_len);
+
+    debug(DEBUG, "[D] M1 + Payload" << endl);
+    hexdump(DEBUG, &m1, sizeof(m1));
+    hexdump(DEBUG, serialized_client_certificate, client_certificate_len);
+
+    /* === --- M2 --- === */
+    /* receive M2 */
+    M2 m2;
+    this->recv((char*)&m2, sizeof(m2));
+
+    m2.certLen = ntohl(m2.certLen);
+    m2.signLen = ntohl(m2.signLen);
+
+    unsigned char server_certificate = new unsigned char[certLen];
+
+    // TODO -- I AM HERE
+
+
+
+    this->recv((char*)serialized_server_certificate, server_certificate_len);
+
+    /* */
+
+    free(server_certificate);
+
+    return 0;
 }
 
 int Connection::send(const char* buffer, int len) {

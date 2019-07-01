@@ -130,7 +130,7 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
         if (r != 0) {
             debug(WARNING, "[W] rocket: bad hmac" << endl);
             throw ExBadHMAC("rocket: bad hmac");
-        } else debug(DEBUG, "[D] rocket: valid hmac" << endl);
+        } else { debug(DEBUG, "[D] rocket: valid hmac" << endl); }
 
         rocket.length = ntohl(rocket.length);
         if (rocket.length > BUFFER_SIZE) {
@@ -158,7 +158,7 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
         if (r != 0) {
             debug(WARNING, "[W] spacecraft: invalid hmac" << endl);
             throw ExBadHMAC("spacecraft: bad hmac");
-        } else debug(DEBUG, "[D] spacecraft: valid hmac" << endl);
+        } else { debug(DEBUG, "[D] spacecraft: valid hmac" << endl); }
 
         /* check spacecraft sequence number */
         spacecraft.sequence_number = ntohl(spacecraft.sequence_number);

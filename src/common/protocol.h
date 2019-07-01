@@ -24,4 +24,27 @@ const int64_t MAX_FILE_SIZE = 4 * GiB;
 
 extern regex parola;
 
+#define AES128_KEY_LEN 16
+
+struct M1 {
+    uint32_t certLen;
+    uint32_t signLen;
+    uint32_t nonceC;
+};  /* and then the actual certificate */
+
+struct M2 {
+    uint32_t certLen;
+    uint32_t signLen;
+    uint32_t nonceS;
+    uint32_t nonceC;
+    unsigned char session_key[AES128_KEY_LEN];
+    unsigned char auth_key[AES128_KEY_LEN];
+    unsigned char iv[AES128_KEY_LEN];
+};  /* and then the actual certificate, and the actual signature */
+
+struct M3 {
+    uint32_t signLen;
+    uint32_t nonceS;
+};  /* and then the actual signature */
+
 #endif
