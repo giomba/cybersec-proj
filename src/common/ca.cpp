@@ -39,7 +39,11 @@ CertificationAuthority::~CertificationAuthority(){
 	debug(INFO, "[I] destroying CA store" << endl);
 }
 
-int CertificationAuthority::cert_verification(X509* cert, string name = ""){
+X509* CertificationAuthority::getCert(){
+	return this->cert;
+}
+
+int CertificationAuthority::cert_verification(X509* cert, string name){
 	// verification
     X509_STORE_CTX* ctx = X509_STORE_CTX_new();
 	if (!ctx) { debug(ERROR, "cannot create ctx on verifying" << endl); return -1; }

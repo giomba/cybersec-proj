@@ -19,7 +19,8 @@ class CertificationAuthority {
     public:
         CertificationAuthority(string);
         ~CertificationAuthority();
-        int cert_verification(X509*, string);
+        X509* getCert();
+        int cert_verification(X509*, string name = "");
 };
 
 #endif

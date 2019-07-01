@@ -438,6 +438,10 @@ int main(int argc, char* argv[]) {
     try {
         connection = new Connection(sv_addr.c_str(), sv_port);
 		ca = new CertificationAuthority(cert_name);
+
+        // handshake
+        if (connection->handshakeClient() == -1) exit(-1); // -- TODO
+
         crypto = new Crypto((unsigned char*)"0123456789abcdef", (unsigned char*)"fedcba9876543210", (unsigned char*)"0000000000000000");
 
         while(1){

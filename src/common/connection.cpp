@@ -1,6 +1,6 @@
 #include "connection.h"
 
-Connection::Connection(int sd, struct sockaddr_in6 peer, const CertificationAuthority* ca) {
+Connection::Connection(int sd, struct sockaddr_in6 peer, CertificationAuthority* ca) {
     debug(INFO, "[I] new connection " << this << endl);
     this->sd = sd;
     this->peer = peer;
@@ -32,11 +32,11 @@ int Connection::handshakeServer() {
     m1.signLen = ntohl(m1.signLen);
 
     unsigned char* serialized_client_certificate = new unsigned char[m1.certLen];
-    this->recv(serialized_client_certificate, m1.certLen);
+    this->recv((char*)serialized_client_certificate, m1.certLen);
 
     /* deserialize certificate */
-    X509* client_certificate = d2i_X509(NULL, serialized_client_certificate, m1.certLen);
-    if (!this->ca->cert_verification(client_certificate)) { debug(ERROR, "client is not authenticated from TrustedCA" << endl); return -1;}
+    X509* client_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_client_certificate, m1.certLen);
+    if (!this->ca->cert_verification(client_certificate, "")) { debug(ERROR, "client is not authenticated from TrustedCA" << endl); return -1;}
 
     debug(INFO, "client on socket " << this->sd << " is authenticated" << endl);
 }
@@ -44,27 +44,30 @@ int Connection::handshakeServer() {
 int Connection::handshakeClient() {
     /* === --- M1 --- === */
 
-    /* load certificate from file */
+    /* load certificate from file
     X509* client_certificate;
     FILE* file = fopen("client.cert.pem", "r");
     if (!file) { cerr << "[E] can not open client certificate" << endl; return -1; }
     client_certificate = PEM_read_X509(file, NULL, NULL, NULL);
     if (! client_certificate) { cerr << "[E] can not read X509 PEM certificate" << endl; return -1; }
     fclose(file);
+    */
 
+    
     /* serialize certificate */
+    X509* client_certificate = ca->getCert();
     int client_certificate_len;
     unsigned char* serialized_client_certificate;
 
     if ((client_certificate_len = i2d_X509(client_certificate, &serialized_client_certificate)) < 0) { cerr << "[E] can not serialize client certificate" << endl; return -1; }
 
-    /* generate nonce */
+    /* generate nonce  */
     uint32_t nonce;
 
     if (RAND_poll() != 1) { cerr << "[E] can not initialize PRNG" << endl; return -1; }
     RAND_bytes((unsigned char*)&nonce, sizeof(nonce));
 
-    /* load priv key from file */
+    /* load priv key from file 
     EVP_PKEY* key;
     file = fopen("client.priv.pem", "r");
 
@@ -75,11 +78,11 @@ int Connection::handshakeClient() {
     fclose(file);
 
     if (! key) { cerr << "[E] can not read key from file" << endl; return -1; }
-
+    */
     /* sign nonce */
     char signature[BUFFER_SIZE];
     int signatureLen;
-
+    /* 
     EVP_MD_CTX* ctx = EVP_MD_CTX_new();
     EVP_SignInit(ctx, EVP_sha256());
     EVP_SignUpdate(ctx, (unsigned char*)&nonce, sizeof(nonce));
@@ -88,7 +91,7 @@ int Connection::handshakeClient() {
 
     EVP_PKEY_free(key);
     OPENSSL_free(serialized_client_certificate);
-
+    */
     /* prepare M1 */
     M1 m1;
     m1.certLen = htonl(client_certificate_len);
@@ -100,8 +103,8 @@ int Connection::handshakeClient() {
     this->send((const char*)serialized_client_certificate, client_certificate_len);
 
     debug(DEBUG, "[D] M1 + Payload" << endl);
-    hexdump(DEBUG, &m1, sizeof(m1));
-    hexdump(DEBUG, serialized_client_certificate, client_certificate_len);
+    hexdump(DEBUG, (const char *)&m1, sizeof(m1));
+    hexdump(DEBUG, (const char *)serialized_client_certificate, client_certificate_len);
 
     /* === --- M2 --- === */
     /* receive M2 */
@@ -110,8 +113,8 @@ int Connection::handshakeClient() {
 
     m2.certLen = ntohl(m2.certLen);
     m2.signLen = ntohl(m2.signLen);
-
-    unsigned char server_certificate = new unsigned char[certLen];
+    /* 
+    unsigned char *server_certificate = new unsigned char[m2.certLen];
 
     // TODO -- I AM HERE
 
@@ -119,9 +122,8 @@ int Connection::handshakeClient() {
 
     this->recv((char*)serialized_server_certificate, server_certificate_len);
 
-    /* */
-
     free(server_certificate);
+    */
 
     return 0;
 }
