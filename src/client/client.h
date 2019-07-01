@@ -14,6 +14,7 @@
 #include "../common/exception.h"
 #include "../common/protocol.h"
 #include "../common/crypto.h"
+#include "../common/ca.h"
 
 
 #define CLIENT_ROOT "downloads/"
@@ -22,9 +23,10 @@
 #define greetings   "Bye :("
 #define error       "Something went wrong. Please retry later."
 
-Connection *connection;
 istringstream is;
+Connection *connection;
 Crypto *crypto;
+CertificationAuthority *ca;
 
 enum CommandType {
     HELP, R_LIST, L_LIST, QUIT, RETR, STOR, DELE, BAD_REQ
