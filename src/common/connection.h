@@ -18,7 +18,6 @@
 #include "debug.h"
 #include "exception.h"
 #include "protocol.h"
-#include "certmanager.h"
 
 class Connection {
     private:
@@ -29,8 +28,6 @@ class Connection {
         Connection(const char* hostname, uint16_t port, CertManager* cm);
         Connection(int sd, sockaddr_in6 peer, CertManager* cm);
         ~Connection();
-        int handshakeServer(void);
-        int handshakeClient(void);
         int send(const char* buffer, int len);
         int recv(char* buffer, int len);
 };
