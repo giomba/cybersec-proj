@@ -2,7 +2,7 @@
 
 regex parola = regex("[A-Za-z0-9\\._]*");
 
-int handshakeServer(Connection* connection) {
+int handshakeServer(Connection* connection, CertManager* cm) {
     debug(DEBUG, "[D] beginning handshake" << endl);
 
     /* === --- M1 --- === */
@@ -32,18 +32,18 @@ int handshakeServer(Connection* connection) {
     X509* client_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_client_certificate, m1.certLen);
 
     /* check validity */
-    if (this->cm->verifyCert(client_certificate, "") == -1) {
+    if (cm->verifyCert(client_certificate, "") == -1) {
         debug(ERROR, "[E] client is not authenticated by TrustedCA" << endl);
         throw ExCertificate("client is not authenticated by TrustedCA");
     }
-    debug(INFO, "[I] client on socket " << this->sd << " is authenticated" << endl);
+    debug(INFO, "[I] client on socket " << connection->getSocket() << " is authenticated" << endl);
 
     /* verify nonce signature */
     if (cm->verifySignature(client_certificate, (char*)&(m1.nonceC), sizeof(m1.nonceC), signature, m1.signLen) == -1) {
         debug(ERROR, "[E] client's nonce signature is not valid" << endl);
         throw ExCertificate("client nonce signature is not valid");
     }
-    debug(INFO, "[I] valid nonce for client socket " << this->sd << endl);
+    debug(INFO, "[I] valid nonce for client socket " << connection->getSocket() << endl);
 
     /* === --- M2 --- === */
     /*
@@ -54,7 +54,7 @@ int handshakeServer(Connection* connection) {
     X509_free(client_certificate);
 }
 
-int handshakeClient(Connection* connection) {
+int handshakeClient(Connection* connection, CertManager* cm) {
     /* === --- M1 --- === */
 
     /* serialize certificate */

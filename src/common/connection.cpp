@@ -1,13 +1,12 @@
 #include "connection.h"
 
-Connection::Connection(int sd, struct sockaddr_in6 peer, CertManager* cm) {
+Connection::Connection(int sd, struct sockaddr_in6 peer) {
     debug(INFO, "[I] new connection " << this << endl);
     this->sd = sd;
     this->peer = peer;
-    this->cm = cm;
 }
 
-Connection::Connection(const char* hostname, uint16_t port, CertManager* cm) {
+Connection::Connection(const char* hostname, uint16_t port) {
     // do everything is needed to connect
     if ((this->sd = socket(AF_INET6, SOCK_STREAM, 0)) == -1) {
         throw ExSocket("can not create socket() for new Connection()", errno);
@@ -20,8 +19,10 @@ Connection::Connection(const char* hostname, uint16_t port, CertManager* cm) {
     if (::connect(this->sd, (struct sockaddr*)&peer, sizeof(peer)) == -1) {
         throw ExConnect("can not connect() for new Connection()", errno);
     };
+}
 
-    this->cm = cm;
+int Connection::getSocket(){
+    return this->sd;
 }
 
 

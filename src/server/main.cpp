@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
         Client* client = NULL;
 
         while (true) {
-            client = new Client(server.accept());
+            client = new Client(server.accept(), server.getCertManager());
 
             thread t(&Client::execute, client);
 

@@ -22,6 +22,7 @@ class Client {
     private:
         Connection* connection;
         Crypto* crypto;
+        CertManager* cm;
         istringstream is;
         ostringstream os;
 
@@ -38,7 +39,7 @@ class Client {
         void cmd_unknown(void);
 
     public:
-        Client(Connection* connection);
+        Client(Connection*, CertManager*);
         ~Client();
         bool execute(void);
 };

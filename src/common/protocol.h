@@ -50,7 +50,7 @@ struct M3 {
     uint32_t nonceS;
 };  /* and then the actual signature */
 
-int handshakeServer(Connection*);
-int handshakeClient(Connection*);
+int handshakeServer(Connection*, CertManager*);
+int handshakeClient(Connection*, CertManager*);
 
 #endif

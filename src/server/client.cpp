@@ -2,8 +2,9 @@
 
 const string SERVER_ROOT = "root";
 
-Client::Client(Connection* c) {
-    connection = c;
+Client::Client(Connection* c, CertManager* cm) {
+    this->connection = c;
+    this->cm = cm;
 }
 
 Client::~Client() {
@@ -233,7 +234,7 @@ bool Client::execute(void) {
 
     try {
         /* key exchange handshake */
-        handshakeServer(connection);
+        handshakeServer(this->connection, this->cm);
         this->crypto = new Crypto((const unsigned char*)"0123456789abcdef", (const unsigned char*)"fedcba9876543210", (const unsigned char*)"0000000000000000");
 
         for (;;) {
