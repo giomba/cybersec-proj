@@ -1,7 +1,7 @@
 .POSIX:
 CXX=g++
-CXXFLAGS=-Wall -Wextra -std=c++11
-LDFLAGS=-lpthread -lcrypto
+CXXFLAGS=-Wall -Wextra -std=c++11 -I/usr/local/opt/openssl@1.1/include
+LDFLAGS=-lpthread -lcrypto -L/usr/local/opt/openssl@1.1/lib
 
 # To debug add
 # 	DBGFLAGS=-DdebugLevel=x
