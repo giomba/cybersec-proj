@@ -30,7 +30,7 @@ int Connection::handshakeServer() {
     M1 m1;
     this->recv((char*)&m1, sizeof(m1));
 
-    /* if client sends an exagerated size for certificate, don't allocate the buffer */
+    /* if client sends an exagerated size for certificate or signature, don't allocate the buffers */
     m1.certLen = ntohl(m1.certLen);
     m1.signLen = ntohl(m1.signLen);
     if (m1.certLen > BUFFER_SIZE) throw ExTooBig("client certificate too big");
@@ -38,21 +38,37 @@ int Connection::handshakeServer() {
 
     unsigned char* serialized_client_certificate = new unsigned char[m1.certLen];
     this->recv((char*)serialized_client_certificate, m1.certLen);
+    unsigned char* signature = new unsigned char[m1.signLen];
+    this->recv((char*)signature, m1.signLen);
 
     /* deserialize certificate */
     X509* client_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_client_certificate, m1.certLen);
 
+    /* check validity */
     if (this->cm->verifyCert(client_certificate, "") == -1) {
-        debug(ERROR, "client is not authenticated by TrustedCA" << endl);
+        debug(ERROR, "[E] client is not authenticated by TrustedCA" << endl);
         throw ExCertificate("client is not authenticated by TrustedCA");
     }
-
     debug(INFO, "client on socket " << this->sd << " is authenticated" << endl);
+
+    /* verify nonce signature */
+    if (cm->verifySignature(client_certificate, (char*)&(m1.nonceC), sizeof(m1.nonceC), signature, m1.signLen) == -1) {
+        debug(ERROR, "[E] client's nonce signature is not valid" << endl);
+        throw ExCertificate("client nonce signature is not valid");
+    }
+    debug(INFO, "valid nonce for client socket " << this->sd << endl);
+
+    /* === --- M2 --- === */
+    /*
+    X509* server_certificate = cm->getCert();
+    unsigned char* serialized_server_certificate; */
+
+
+    X509_free(client_certificate);
 }
 
 int Connection::handshakeClient() {
     /* === --- M1 --- === */
-
 
     /* serialize certificate */
     X509* client_certificate = cm->getCert();
@@ -70,31 +86,20 @@ int Connection::handshakeClient() {
     if (RAND_poll() != 1) { cerr << "[E] can not initialize PRNG" << endl; return -1; }
     RAND_bytes((unsigned char*)&nonce, sizeof(nonce));
 
-    /* load priv key from file
-    EVP_PKEY* key;
-    file = fopen("client.priv.pem", "r");
+    EVP_PKEY* key = cm->getPrivKey();
 
-    if (!file) { cerr << "[E] can not open client private key" << endl; return -1; }
-
-    key = PEM_read_PrivateKey(file, NULL, NULL, NULL);
-
-    fclose(file);
-
-    if (! key) { cerr << "[E] can not read key from file" << endl; return -1; }
-    */
     /* sign nonce */
     char signature[BUFFER_SIZE];
     int signatureLen;
-    /*
+
     EVP_MD_CTX* ctx = EVP_MD_CTX_new();
     EVP_SignInit(ctx, EVP_sha256());
     EVP_SignUpdate(ctx, (unsigned char*)&nonce, sizeof(nonce));
     EVP_SignFinal(ctx, (unsigned char*)signature, (unsigned int*)&signatureLen, key);
     EVP_MD_CTX_free(ctx);
 
-    EVP_PKEY_free(key);
     OPENSSL_free(serialized_client_certificate);
-    */
+
     /* prepare M1 */
     M1 m1;
     m1.certLen = htonl(client_certificate_len);

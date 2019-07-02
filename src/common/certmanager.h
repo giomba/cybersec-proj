@@ -23,7 +23,7 @@ class CertManager {
         EVP_PKEY* getPrivKey();
         X509* getCert();
         int verifyCert(X509*, string name = "");
-        int verifySignature(X509*, char*, int, char*, int);
+        int verifySignature(X509*, char*, int, unsigned char*, int);
 };
 
 #endif
