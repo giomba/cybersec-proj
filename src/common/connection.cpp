@@ -42,7 +42,7 @@ int Connection::handshakeServer() {
     /* deserialize certificate */
     X509* client_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_client_certificate, m1.certLen);
 
-    if (this->cm->verify(client_certificate, "") == -1) {
+    if (this->cm->verifyCert(client_certificate, "") == -1) {
         debug(ERROR, "client is not authenticated by TrustedCA" << endl);
         throw ExCertificate("client is not authenticated by TrustedCA");
     }

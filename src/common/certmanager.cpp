@@ -56,7 +56,7 @@ X509* CertManager::getCert(){
 	return this->cert;
 }
 
-int CertManager::verify(X509* cert, string name){
+int CertManager::verifyCert(X509* cert, string name){
 	// verification
     X509_STORE_CTX* ctx = X509_STORE_CTX_new();
 	if (!ctx) { debug(ERROR, "cannot create ctx on verifying" << endl); return -1; }
@@ -75,4 +75,19 @@ int CertManager::verify(X509* cert, string name){
 
 	debug(INFO, "cert verification succeded" << endl);
 	return 0;
+}
+
+int CertManager::verifySignature(X509* cert, char* msg, int msg_len, char* signature, int signature_len){
+	/* get public key from certificate */
+    EVP_PKEY* pubkey = X509_get_pubkey(cert);
+	if (!pubkey){ debug(ERROR, "cannot extract the pubkey from certificate" << endl); return -1;}
+
+    /* check signature */
+    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    EVP_VerifyInit(ctx, EVP_sha256());
+    EVP_VerifyUpdate(ctx, msg, msg_len);
+    int ret = EVP_VerifyFinal(ctx, (unsigned char*)signature, signature_len, pubkey);
+    EVP_MD_CTX_free(ctx);
+
+	return (ret != 1) ? -1 : 0;
 }
