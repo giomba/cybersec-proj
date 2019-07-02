@@ -60,17 +60,24 @@ int CertManager::verifyCert(X509* cert, string name){
 	// verification
     X509_STORE_CTX* ctx = X509_STORE_CTX_new();
 	if (!ctx) { debug(ERROR, "cannot create ctx on verifying" << endl); return -1; }
-    if (X509_STORE_CTX_init(ctx, this->store, cert, NULL) != 1) { debug(ERROR, "cannot init ctx on verifying" << endl); return -1; }
-    if (X509_verify_cert(ctx) != 1) { debug(ERROR, "cert verification failed" << endl); return -1; }
-    X509_STORE_CTX_free(ctx);
+    if (X509_STORE_CTX_init(ctx, this->store, cert, NULL) != 1) { 
+		X509_STORE_CTX_free(ctx); 
+		debug(ERROR, "cannot init ctx on verifying" << endl); 
+		return -1; 
+	}
+    if (X509_verify_cert(ctx) != 1) { 
+		X509_STORE_CTX_free(ctx); 
+		debug(ERROR, "cert verification failed" << endl); 
+		return -1; 
+	}
 
 	if (!name.empty()){
 		// check subject name of the server
 		X509_NAME* subject_name = X509_get_subject_name(cert);
 		string str(X509_NAME_oneline(subject_name, NULL, 0));
+		free(subject_name);
 		debug(INFO, "cert belongs to " + str << endl);
 		if (str != name) { debug(FATAL, "server name does not match" << endl); return -1; }
-		free(subject_name);
 	}
 
 	debug(INFO, "cert verification succeded" << endl);
