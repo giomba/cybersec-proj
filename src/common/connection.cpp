@@ -1,13 +1,13 @@
 #include "connection.h"
 
-Connection::Connection(int sd, struct sockaddr_in6 peer, CertificationAuthority* ca) {
+Connection::Connection(int sd, struct sockaddr_in6 peer, CertManager* cm) {
     debug(INFO, "[I] new connection " << this << endl);
     this->sd = sd;
     this->peer = peer;
-    this->ca = ca;
+    this->cm = cm;
 }
 
-Connection::Connection(const char* hostname, uint16_t port, CertificationAuthority* ca) {
+Connection::Connection(const char* hostname, uint16_t port, CertManager* cm) {
     // do everything is needed to connect
     if ((this->sd = socket(AF_INET6, SOCK_STREAM, 0)) == -1) {
         throw ExSocket("can not create socket() for new Connection()", errno);
@@ -21,7 +21,7 @@ Connection::Connection(const char* hostname, uint16_t port, CertificationAuthori
         throw ExConnect("can not connect() for new Connection()", errno);
     };
 
-    this->ca = ca;
+    this->cm = cm;
 }
 
 int Connection::handshakeServer() {
@@ -38,7 +38,7 @@ int Connection::handshakeServer() {
 
     /* deserialize certificate */
     X509* client_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_client_certificate, m1.certLen);
-    if (this->ca->cert_verification(client_certificate, "") == -1) { debug(ERROR, "client is not authenticated by TrustedCA" << endl); throw ExCertificate("client is not authenticated by TrustedCA"); }
+    if (this->cm->cert_verification(client_certificate, "") == -1) { debug(ERROR, "client is not authenticated by TrustedCA" << endl); throw ExCertificate("client is not authenticated by TrustedCA"); }
 
     debug(INFO, "client on socket " << this->sd << " is authenticated" << endl);
 }
@@ -57,7 +57,7 @@ int Connection::handshakeClient() {
 
 
     /* serialize certificate */
-    X509* client_certificate = ca->getCert();
+    X509* client_certificate = cm->getCert();
     int client_certificate_len;
     unsigned char* serialized_client_certificate;
 

@@ -1,5 +1,5 @@
-#ifndef CERTIFICATIONAUTHORITY_H
-#define CERTIFICATIONAUTHORITY_H
+#ifndef CERTMANAGER_H
+#define CERTMANAGER_H
 
 #include <iostream>
 #include <openssl/pem.h>
@@ -12,13 +12,13 @@
 
 const string CERT_PATH = "cert/";
 
-class CertificationAuthority {
+class CertManager {
     private:
 	    X509* cert;
         X509_STORE* store;
     public:
-        CertificationAuthority(string);
-        ~CertificationAuthority();
+        CertManager(string);
+        ~CertManager();
         X509* getCert();
         int cert_verification(X509*, string name = "");
 };

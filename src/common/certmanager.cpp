@@ -1,6 +1,6 @@
-#include "ca.h"
+#include "certmanager.h"
 
-CertificationAuthority::CertificationAuthority(string cert_name){
+CertManager::CertManager(string cert_name){
 	// read CA certificate
 	X509* CA_cert;
 	FILE* file = fopen((CERT_PATH + "TrustedCA_cert.pem").c_str(), "r");
@@ -34,16 +34,16 @@ CertificationAuthority::CertificationAuthority(string cert_name){
     fclose(file);
 }
 
-CertificationAuthority::~CertificationAuthority(){
+CertManager::~CertManager(){
 	X509_STORE_free(this->store);
 	debug(INFO, "[I] destroying CA store" << endl);
 }
 
-X509* CertificationAuthority::getCert(){
+X509* CertManager::getCert(){
 	return this->cert;
 }
 
-int CertificationAuthority::cert_verification(X509* cert, string name){
+int CertManager::cert_verification(X509* cert, string name){
 	// verification
     X509_STORE_CTX* ctx = X509_STORE_CTX_new();
 	if (!ctx) { debug(ERROR, "cannot create ctx on verifying" << endl); return -1; }

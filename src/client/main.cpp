@@ -276,7 +276,7 @@ bool check_and_get_file_size(string filename, int64_t &size){
 }
 
 void quit(){
-	delete ca;
+	delete cm;
 	delete connection;
 	delete crypto;
 
@@ -436,10 +436,10 @@ int main(int argc, char* argv[]) {
 	string cert_name = argv[3];
 
     try {
-		ca = new CertificationAuthority(cert_name);
-        // if (!ca) { debug(FATAL, "[F] cannot create Certificate Manager" << endl); exit(1); }
+		cm = new CertManager(cert_name);
+        // if (!cm) { debug(FATAL, "[F] cannot create Certificate Manager" << endl); exit(1); }
 
-        connection = new Connection(sv_addr.c_str(), sv_port, ca);
+        connection = new Connection(sv_addr.c_str(), sv_port, cm);
 
         // handshake
         if (connection->handshakeClient() == -1) exit(-1); // -- TODO

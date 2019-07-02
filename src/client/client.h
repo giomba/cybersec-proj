@@ -14,7 +14,7 @@
 #include "../common/exception.h"
 #include "../common/protocol.h"
 #include "../common/crypto.h"
-#include "../common/ca.h"
+#include "../common/certmanager.h"
 
 
 #define CLIENT_ROOT "downloads/"
@@ -26,7 +26,7 @@
 istringstream is;
 Connection *connection;
 Crypto *crypto;
-CertificationAuthority *ca;
+CertManager *cm;
 
 enum CommandType {
     HELP, R_LIST, L_LIST, QUIT, RETR, STOR, DELE, BAD_REQ

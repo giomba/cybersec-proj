@@ -16,7 +16,7 @@
 #include "../common/debug.h"
 #include "../common/connection.h"
 #include "../common/exception.h"
-#include "../common/ca.h"
+#include "../common/certmanager.h"
 
 using namespace std;
 
@@ -27,7 +27,7 @@ class Server {
         int sd;
         struct sockaddr_in6 addr;
 
-        CertificationAuthority *ca;
+        CertManager *cm;
     public:
         Server(const char* address, uint16_t port);
         Connection* accept(void);
