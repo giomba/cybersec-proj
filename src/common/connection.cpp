@@ -30,8 +30,11 @@ int Connection::handshakeServer() {
     M1 m1;
     this->recv((char*)&m1, sizeof(m1));
 
+    /* if client sends an exagerated size for certificate, don't allocate the buffer */
     m1.certLen = ntohl(m1.certLen);
     m1.signLen = ntohl(m1.signLen);
+    if (m1.certLen > BUFFER_SIZE) throw ExTooBig("client certificate too big");
+    if (m1.signLen > BUFFER_SIZE) throw ExTooBig("nonce signature too big");
 
     unsigned char* serialized_client_certificate = new unsigned char[m1.certLen];
     this->recv((char*)serialized_client_certificate, m1.certLen);
@@ -49,22 +52,16 @@ int Connection::handshakeServer() {
 int Connection::handshakeClient() {
     /* === --- M1 --- === */
 
-    /* load certificate from file
-    X509* client_certificate;
-    FILE* file = fopen("client.cert.pem", "r");
-    if (!file) { cerr << "[E] can not open client certificate" << endl; return -1; }
-    client_certificate = PEM_read_X509(file, NULL, NULL, NULL);
-    if (! client_certificate) { cerr << "[E] can not read X509 PEM certificate" << endl; return -1; }
-    fclose(file);
-    */
-
 
     /* serialize certificate */
     X509* client_certificate = ca->getCert();
     int client_certificate_len;
     unsigned char* serialized_client_certificate;
 
-    if ((client_certificate_len = i2d_X509(client_certificate, &serialized_client_certificate)) < 0) { cerr << "[E] can not serialize client certificate" << endl; return -1; }
+    if ((client_certificate_len = i2d_X509(client_certificate, &serialized_client_certificate)) < 0) {
+        cerr << "[E] can not serialize client certificate" << endl;
+        return -1;
+    }
 
     /* generate nonce  */
     uint32_t nonce;

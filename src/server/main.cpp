@@ -44,6 +44,11 @@ int main(int argc, char** argv) {
 
                 // TODO remember to destroy these clients when they disconnect
             }
+            catch (ExProtocol e) {
+                delete client;
+                debug(ERROR, "[E] protocol: " << e << endl);
+                continue;
+            }
             catch (ExCertificate e) {
                 delete client;
                 debug(ERROR, "[E] certificate: " << e << endl);
