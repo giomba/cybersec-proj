@@ -4,8 +4,6 @@ const string SERVER_ROOT = "root";
 
 Client::Client(Connection* c) {
     connection = c;
-    connection->handshakeServer();
-    this->crypto = new Crypto((const unsigned char*)"0123456789abcdef", (const unsigned char*)"fedcba9876543210", (const unsigned char*)"0000000000000000");
 }
 
 Client::~Client() {
@@ -234,6 +232,9 @@ bool Client::execute(void) {
     string cmd;
 
     try {
+        /* key exchange handshake */
+        connection->handshakeServer();
+        this->crypto = new Crypto((const unsigned char*)"0123456789abcdef", (const unsigned char*)"fedcba9876543210", (const unsigned char*)"0000000000000000");
 
         for (;;) {
             /* Receive command and read first parola */
@@ -259,11 +260,19 @@ bool Client::execute(void) {
     catch (ExNetwork e) {
         cerr << "[E] network: " << e << endl;
     }
+    catch (ExCertificate e) {
+        cerr << "[E] certificate: " << e << endl;
+    }
+    catch (ExProtocol e) {
+        cerr << "[E] protocol: " << e << endl;
+    }
     catch (Ex e) {
         cerr << "[E] " << e << endl;
     }
 
     delete connection;
+
+    delete this;
 
     return true;
 }

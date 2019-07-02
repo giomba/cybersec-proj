@@ -58,14 +58,14 @@ int Connection::handshakeServer() {
         debug(ERROR, "[E] client is not authenticated by TrustedCA" << endl);
         throw ExCertificate("client is not authenticated by TrustedCA");
     }
-    debug(INFO, "client on socket " << this->sd << " is authenticated" << endl);
+    debug(INFO, "[I] client on socket " << this->sd << " is authenticated" << endl);
 
     /* verify nonce signature */
     if (cm->verifySignature(client_certificate, (char*)&(m1.nonceC), sizeof(m1.nonceC), signature, m1.signLen) == -1) {
         debug(ERROR, "[E] client's nonce signature is not valid" << endl);
         throw ExCertificate("client nonce signature is not valid");
     }
-    debug(INFO, "valid nonce for client socket " << this->sd << endl);
+    debug(INFO, "[I] valid nonce for client socket " << this->sd << endl);
 
     /* === --- M2 --- === */
     /*
@@ -168,8 +168,8 @@ int Connection::recv(char* buffer, int len) {
 }
 
 Connection::~Connection() {
-    debug(INFO, "[I] destroyng connection " << this << " socket " << sd << endl);
-    close(sd);
+    debug(INFO, "[I][" << this->sd << "] destroyng connection " << this << endl);
+    if (this->sd != 0) close(this->sd);
     // close connections and destroy created sockets, if necessary
     // (eg. if socket was created using this->connect() )
 }

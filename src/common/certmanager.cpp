@@ -31,14 +31,14 @@ CertManager::CertManager(string cert_name){
     if (!file) { debug(FATAL, "cannot open " + cert_name + ".pem" << endl); throw ExCertificate(); }
     this->cert = PEM_read_X509(file, NULL, NULL, NULL);
 	fclose(file);
-    if (!this->cert) { debug(FATAL, "can not read my certificate" << endl); throw ExCertificate(); } 
+    if (!this->cert) { debug(FATAL, "can not read my certificate" << endl); throw ExCertificate(); }
 
 	// load my private key
     file = fopen((CERT_PATH + cert_name + "_key.pem").c_str(), "r");
     if (!file) { debug(FATAL, "cannot open " + cert_name + " private key" << endl); throw ExCertificate(); }
 	this->privkey = PEM_read_PrivateKey(file, NULL, NULL, NULL);
 	fclose(file);
-	if (!this->privkey) { debug(FATAL, "cannot read my private key" << endl); throw ExCertificate(); } 
+	if (!this->privkey) { debug(FATAL, "cannot read my private key" << endl); throw ExCertificate(); }
 }
 
 CertManager::~CertManager(){
@@ -60,15 +60,15 @@ int CertManager::verifyCert(X509* cert, string name){
 	// verification
     X509_STORE_CTX* ctx = X509_STORE_CTX_new();
 	if (!ctx) { debug(ERROR, "cannot create ctx on verifying" << endl); return -1; }
-    if (X509_STORE_CTX_init(ctx, this->store, cert, NULL) != 1) { 
-		X509_STORE_CTX_free(ctx); 
-		debug(ERROR, "cannot init ctx on verifying" << endl); 
-		return -1; 
+    if (X509_STORE_CTX_init(ctx, this->store, cert, NULL) != 1) {
+		X509_STORE_CTX_free(ctx);
+		debug(ERROR, "cannot init ctx on verifying" << endl);
+		return -1;
 	}
-    if (X509_verify_cert(ctx) != 1) { 
-		X509_STORE_CTX_free(ctx); 
-		debug(ERROR, "cert verification failed" << endl); 
-		return -1; 
+    if (X509_verify_cert(ctx) != 1) {
+		X509_STORE_CTX_free(ctx);
+		debug(WARNING, "[W] cert verification failed" << endl);
+		return -1;
 	}
 
 	if (!name.empty()){
@@ -80,7 +80,7 @@ int CertManager::verifyCert(X509* cert, string name){
 		if ((int)str.find("CN=server") == -1) { debug(FATAL, "server name does not match" << endl); return -1; }
 	}
 
-	debug(INFO, "cert verification succeded" << endl);
+	debug(INFO, "[I] cert verification succeded" << endl);
 	return 0;
 }
 
