@@ -442,7 +442,7 @@ int main(int argc, char* argv[]) {
         connection = new Connection(sv_addr.c_str(), sv_port, cm);
 
         // handshake
-        if (connection->handshakeClient() == -1) exit(-1); // -- TODO
+        if (handshakeClient(connection) == -1) exit(-1); // -- TODO
 
         crypto = new Crypto((unsigned char*)"0123456789abcdef", (unsigned char*)"fedcba9876543210", (unsigned char*)"0000000000000000");
 

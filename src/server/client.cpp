@@ -233,7 +233,7 @@ bool Client::execute(void) {
 
     try {
         /* key exchange handshake */
-        connection->handshakeServer();
+        handshakeServer(connection);
         this->crypto = new Crypto((const unsigned char*)"0123456789abcdef", (const unsigned char*)"fedcba9876543210", (const unsigned char*)"0000000000000000");
 
         for (;;) {
@@ -270,7 +270,7 @@ bool Client::execute(void) {
         cerr << "[E] " << e << endl;
     }
 
-    delete connection;
+    //delete connection;
 
     delete this;
 
