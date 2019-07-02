@@ -439,10 +439,10 @@ int main(int argc, char* argv[]) {
 		cm = new CertManager(cert_name);
         // if (!cm) { debug(FATAL, "[F] cannot create Certificate Manager" << endl); exit(1); }
 
-        connection = new Connection(sv_addr.c_str(), sv_port, cm);
+        connection = new Connection(sv_addr.c_str(), sv_port);
 
         // handshake
-        if (connection->handshakeClient() == -1) exit(-1); // -- TODO
+        if (handshakeClient(connection, cm) == -1) exit(-1); // -- TODO
 
         crypto = new Crypto((unsigned char*)"0123456789abcdef", (unsigned char*)"fedcba9876543210", (unsigned char*)"0000000000000000");
 

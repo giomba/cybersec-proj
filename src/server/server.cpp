@@ -28,9 +28,13 @@ Connection* Server::accept() {
     struct sockaddr_in6 client_addr;
     int client_sd = ::accept(sd, (struct sockaddr*)&client_addr, &sizeof_addr);
     debug(INFO, "[I] remote TCP port: " << client_addr.sin6_port << endl);
-    return new Connection(client_sd, client_addr, this->cm);
+    return new Connection(client_sd, client_addr);
 }
 
 Server::~Server() {
     // please someone implement me :-(
+}
+
+CertManager* Server::getCertManager(){
+    return this->cm;
 }

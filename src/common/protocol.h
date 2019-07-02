@@ -3,6 +3,9 @@
 
 #include <regex>
 
+#include "certmanager.h"
+#include "connection.h"
+
 using namespace std;
 
 /* protocol status */
@@ -46,5 +49,8 @@ struct M3 {
     uint32_t signLen;
     uint32_t nonceS;
 };  /* and then the actual signature */
+
+int handshakeServer(Connection*, CertManager*);
+int handshakeClient(Connection*, CertManager*);
 
 #endif

@@ -10,6 +10,7 @@ using namespace std;
 #include <openssl/hmac.h>
 
 #include "connection.h"
+#include "protocol.h"
 
 const int HMAC_SIZE = 32; // EVP_MD_size(EVP_sha256());
 

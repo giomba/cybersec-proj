@@ -33,28 +33,15 @@ int main(int argc, char** argv) {
         Client* client = NULL;
 
         while (true) {
-            try {
-                client = new Client(server.accept());
+            client = new Client(server.accept(), server.getCertManager());
 
-                thread t(&Client::execute, client);
+            thread t(&Client::execute, client);
 
-                debug(INFO, "[I] thread created for client " << client << endl);
+            debug(INFO, "[I] thread created for client " << client << endl);
 
-                t.detach();
+            t.detach();
 
-                // TODO remember to destroy these clients when they disconnect
-            }
-            catch (ExProtocol e) {
-                delete client;
-                debug(ERROR, "[E] protocol: " << e << endl);
-                continue;
-            }
-            catch (ExCertificate e) {
-                delete client;
-                debug(ERROR, "[E] certificate: " << e << endl);
-                continue;
-            }
-
+            /* client will delete itself when finished */
         }
     } catch (ExNetwork e) {
         cerr << "[E] network: " << e << endl;

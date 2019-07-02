@@ -32,6 +32,7 @@ class Server {
         Server(const char* address, uint16_t port);
         Connection* accept(void);
         ~Server();
+        CertManager* getCertManager();
 };
 
 #endif

@@ -8,7 +8,7 @@
 
 #include "debug.h"
 #include "exception.h"
-#include "protocol.h"
+#include "certmanager.h"
 
 const string CERT_PATH = "cert/";
 
