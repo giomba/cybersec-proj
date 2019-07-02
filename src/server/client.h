@@ -39,6 +39,7 @@ class Client {
 
     public:
         Client(Connection* connection);
+        ~Client();
         bool execute(void);
 };
 

@@ -30,9 +30,12 @@ int main(int argc, char** argv) {
 
         Server server = Server("::0", atoi(argv[1]));
 
+        Client* client = NULL;
+
         while (true) {
             try {
-                Client* client = new Client(server.accept());
+                client = new Client(server.accept());
+
                 thread t(&Client::execute, client);
 
                 debug(INFO, "[I] thread created for client " << client << endl);
@@ -41,7 +44,13 @@ int main(int argc, char** argv) {
 
                 // TODO remember to destroy these clients when they disconnect
             }
+            catch (ExProtocol e) {
+                delete client;
+                debug(ERROR, "[E] protocol: " << e << endl);
+                continue;
+            }
             catch (ExCertificate e) {
+                delete client;
                 debug(ERROR, "[E] certificate: " << e << endl);
                 continue;
             }

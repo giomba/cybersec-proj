@@ -8,6 +8,10 @@ Client::Client(Connection* c) {
     this->crypto = new Crypto((const unsigned char*)"0123456789abcdef", (const unsigned char*)"fedcba9876543210", (const unsigned char*)"0000000000000000");
 }
 
+Client::~Client() {
+    if (connection) delete connection;
+}
+
 void Client::recvCmd() {
     char buffer[BUFFER_SIZE];
 //    char ciphertext;
