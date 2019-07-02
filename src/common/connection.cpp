@@ -25,6 +25,8 @@ Connection::Connection(const char* hostname, uint16_t port, CertManager* cm) {
 }
 
 int Connection::handshakeServer() {
+    debug(DEBUG, "[D] beginning handshake" << endl);
+
     /* === --- M1 --- === */
     /* receive M1 */
     M1 m1;
@@ -36,10 +38,17 @@ int Connection::handshakeServer() {
     if (m1.certLen > BUFFER_SIZE) throw ExTooBig("client certificate too big");
     if (m1.signLen > BUFFER_SIZE) throw ExTooBig("nonce signature too big");
 
+    debug(DEBUG, "[D] certLen: " << m1.certLen << "\t" << "signLen: " << m1.signLen << endl);
+
     unsigned char* serialized_client_certificate = new unsigned char[m1.certLen];
     this->recv((char*)serialized_client_certificate, m1.certLen);
     unsigned char* signature = new unsigned char[m1.signLen];
     this->recv((char*)signature, m1.signLen);
+
+    debug(DEBUG, "[D] received M1 + payload" << endl);
+    hexdump(DEBUG, (const char*)&m1, sizeof(m1));
+    hexdump(DEBUG, (const char*)serialized_client_certificate, m1.certLen);
+    hexdump(DEBUG, (const char*)signature, m1.signLen);
 
     /* deserialize certificate */
     X509* client_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_client_certificate, m1.certLen);
@@ -73,7 +82,7 @@ int Connection::handshakeClient() {
     /* serialize certificate */
     X509* client_certificate = cm->getCert();
     int client_certificate_len;
-    unsigned char* serialized_client_certificate;
+    unsigned char* serialized_client_certificate = NULL;
 
     if ((client_certificate_len = i2d_X509(client_certificate, &serialized_client_certificate)) < 0) {
         cerr << "[E] can not serialize client certificate" << endl;
@@ -98,7 +107,6 @@ int Connection::handshakeClient() {
     EVP_SignFinal(ctx, (unsigned char*)signature, (unsigned int*)&signatureLen, key);
     EVP_MD_CTX_free(ctx);
 
-    OPENSSL_free(serialized_client_certificate);
 
     /* prepare M1 */
     M1 m1;
@@ -109,10 +117,12 @@ int Connection::handshakeClient() {
     /* send M1 */
     this->send((const char*)&m1, sizeof(m1));
     this->send((const char*)serialized_client_certificate, client_certificate_len);
+    this->send((const char*)signature, signatureLen);
 
     debug(DEBUG, "[D] M1 + Payload" << endl);
     hexdump(DEBUG, (const char *)&m1, sizeof(m1));
     hexdump(DEBUG, (const char *)serialized_client_certificate, client_certificate_len);
+    hexdump(DEBUG, (const char *)signature, signatureLen);
 
     /* === --- M2 --- === */
     /* receive M2 */
@@ -134,7 +144,7 @@ int Connection::handshakeClient() {
 
     free(server_certificate);
     */
-
+    OPENSSL_free(serialized_client_certificate);
     return 0;
 }
 
