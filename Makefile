@@ -1,6 +1,6 @@
 .POSIX:
 CXX=g++
-CXXFLAGS=-Wall -Wextra -std=c++11
+CXXFLAGS=-Wall -Wextra -std=c++11 -g -O0
 LDFLAGS=-lpthread -lcrypto
 
 # To debug add
