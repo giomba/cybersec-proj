@@ -44,21 +44,11 @@ int Connection::handshakeServer() {
     /* deserialize certificate */
     X509* client_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_client_certificate, m1.certLen);
     /* check validity */
-    if (this->cm->cert_verification(client_certificate, "") == -1) {
+    if (this->cm->verify(client_certificate, "") == -1) {
         debug(ERROR, "client is not authenticated by TrustedCA" << endl);
         throw ExCertificate("client is not authenticated by TrustedCA");
     }
     debug(INFO, "client on socket " << this->sd << " is authenticated" << endl);
-
-    /* get client's public key from certificate */
-    EVP_PKEY* client_public_key = cm->getPublicKey(client_certificate);
-
-    /* check signature */
-    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
-    EVP_VerifyInit(ctx, EVP_sha256());
-    EVP_VerifyUpdate(ctx, m1.nonceC, sizeof(m1.nonceC));
-    EVP_VerifyFinal(ctx, signature, m1.signLen, client_public_key);
-    EVP_MD_CTX_free(ctx);
 
     EVP_PKEY_free(client_public_key);
     X509_free(client_certificate);
