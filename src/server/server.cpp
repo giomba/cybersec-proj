@@ -32,7 +32,7 @@ Connection* Server::accept() {
 }
 
 Server::~Server() {
-    // please someone implement me :-(
+    delete this->cm;
 }
 
 CertManager* Server::getCertManager(){

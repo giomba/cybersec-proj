@@ -8,7 +8,8 @@ Client::Client(Connection* c, CertManager* cm) {
 }
 
 Client::~Client() {
-    if (connection) delete connection;
+    if (this->connection) delete connection;
+    if (this->crypto) delete crypto;
 }
 
 void Client::recvCmd() {
@@ -270,8 +271,6 @@ bool Client::execute(void) {
     catch (Ex e) {
         cerr << "[E] " << e << endl;
     }
-
-    //delete connection;
 
     delete this;
 
