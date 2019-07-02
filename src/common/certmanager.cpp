@@ -77,7 +77,7 @@ int CertManager::verifyCert(X509* cert, string name){
 		string str(X509_NAME_oneline(subject_name, NULL, 0));
 		free(subject_name);
 		debug(INFO, "cert belongs to " + str << endl);
-		if (str != name) { debug(FATAL, "server name does not match" << endl); return -1; }
+		if ((int)str.find("CN=server") == -1) { debug(FATAL, "server name does not match" << endl); return -1; }
 	}
 
 	debug(INFO, "[I] cert verification succeded" << endl);
