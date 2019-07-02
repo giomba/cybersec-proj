@@ -14,13 +14,15 @@ const string CERT_PATH = "cert/";
 
 class CertManager {
     private:
+        EVP_PKEY* privkey;
 	    X509* cert;
         X509_STORE* store;
     public:
-        CertManager(string);
+        CertManager(string cert_name = "server");
         ~CertManager();
+        EVP_PKEY* getPrivKey();
         X509* getCert();
-        int cert_verification(X509*, string name = "");
+        int verify(X509*, string name = "");
 };
 
 #endif
