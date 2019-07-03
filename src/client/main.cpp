@@ -82,13 +82,18 @@ int receiveM2(){
     connection->recv((char*)seal_iv, m2.ivLen);
     unsigned char* keyblob = new unsigned char[m2.keyblobLen];
     connection->recv((char*)keyblob, m2.keyblobLen);
-    unsigned char* iv = new unsigned char[m2.ivLen];
+    iv = new unsigned char[m2.ivLen];
     connection->recv((char*)iv, m2.ivLen);
 
     debug(DEBUG, "[D] received M2 + payload" << endl);
     hexdump(DEBUG, (const char*)&m2, sizeof(m2));
     hexdump(DEBUG, (const char*)serialized_certificate, m2.certLen);
     hexdump(DEBUG, (const char*)signature, m2.signLen);
+    hexdump(DEBUG, (const char*)seal_enc_key, m2.encryptedSymmetricKeyLen);
+    hexdump(DEBUG, (const char*)seal_iv, m2.ivLen);
+    hexdump(DEBUG, (const char*)keyblob, m2.keyblobLen);
+    hexdump(DEBUG, (const char*)iv, m2.ivLen);
+    
 
     /* deserialize certificate */
     X509* server_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_certificate, m2.certLen);
@@ -131,9 +136,13 @@ int receiveM2(){
 	sharedKeyLen += outLen;
 	EVP_CIPHER_CTX_free(ctx);
 	sessionKey = new unsigned char[AES128_KEY_LEN];
+	
 	authKey = new unsigned char[AES128_KEY_LEN];
 	memcpy(sessionKey, sharedKeys, AES128_KEY_LEN);
 	memcpy(authKey, sharedKeys + AES128_KEY_LEN, AES128_KEY_LEN);
+	
+	hexdump(DEBUG, (const char*)sessionKey, AES128_KEY_LEN);
+	hexdump(DEBUG, (const char*)authKey, AES128_KEY_LEN);
     return 0;
 }
 
@@ -585,7 +594,7 @@ int main(int argc, char* argv[]) {
         // handshake
         if (!handshake()){ cout << "handshake error: Unable to connect to the server" << endl; exit(-1); } // -- TODO
 
-        crypto = new Crypto((unsigned char*)"0123456789abcdef", (unsigned char*)"fedcba9876543210", (unsigned char*)"0000000000000000");
+        crypto = new Crypto(sessionKey, authKey, iv);
 
         while(1){
             // clear line, stringstream and input stream

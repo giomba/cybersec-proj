@@ -102,9 +102,9 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
     RAND_bytes(auth_key, AES128_KEY_LEN);
     RAND_bytes(iv, AES128_KEY_LEN);
 
-    hexdump(DEBUG, session_key, AES128_KEY_LEN);
-    hexdump(DEBUG, auth_key, AES128_KEY_LEN);
-    hexdump(DEBUG, iv_key, AES128_KEY_LEN);
+    hexdump(DEBUG, (const char*)session_key, AES128_KEY_LEN);
+    hexdump(DEBUG, (const char*)auth_key, AES128_KEY_LEN);
+    hexdump(DEBUG, (const char*)iv, AES128_KEY_LEN);
 
     /* asymmetric encrypting - ctx_e = context for encryption */
     /* encrypt session and auth keys with client public key */
