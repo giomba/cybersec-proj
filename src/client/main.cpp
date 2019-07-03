@@ -67,10 +67,17 @@ int receiveM2(){
     /* if server sends an exagerated size for certificate or signature, don't allocate the buffers */
     m2.certLen = ntohl(m2.certLen);
     m2.signLen = ntohl(m2.signLen);
+    m2.encryptedSymmetricKeyLen = ntohl(m2.encryptedSymmetricKeyLen);
+    m2.ivLen = ntohl(m2.ivLen);
+    m2.keyblobLen = ntohl(m2.keyblobLen);
+
+    // TODO -- check too big things!!!
     if (m2.certLen > BUFFER_SIZE) throw ExTooBig("client certificate too big");
     if (m2.signLen > BUFFER_SIZE) throw ExTooBig("nonce signature too big");
 
-    debug(DEBUG, "[D] certLen: " << m2.certLen << "\t" << "signLen: " << m2.signLen << endl);
+    //debug(DEBUG, "[D] certLen: " << m2.certLen << "\t" << "signLen: " << m2.signLen << endl);
+    debug(DEBUG, "[D] received M2" << endl);
+    hexdump(DEBUG, (const char*)&m2, sizeof(m2));
 
     unsigned char* serialized_certificate = new unsigned char[m2.certLen];
     connection->recv((char*)serialized_certificate, m2.certLen);
@@ -85,8 +92,7 @@ int receiveM2(){
     iv = new unsigned char[m2.ivLen];
     connection->recv((char*)iv, m2.ivLen);
 
-    debug(DEBUG, "[D] received M2 + payload" << endl);
-    hexdump(DEBUG, (const char*)&m2, sizeof(m2));
+    debug(DEBUG, "[D] received M2 payload" << endl);
     hexdump(DEBUG, (const char*)serialized_certificate, m2.certLen);
     hexdump(DEBUG, (const char*)signature, m2.signLen);
     hexdump(DEBUG, (const char*)seal_enc_key, m2.encryptedSymmetricKeyLen);

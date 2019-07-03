@@ -126,7 +126,7 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
     }
     EVP_SealUpdate(ctx_e, keyblob, &update_len, session_key, AES128_KEY_LEN);
     keyblob_len += update_len;
-    EVP_SealUpdate(ctx_e, keyblob + keyblob_len, &update_len, auth_key, EVP_MD_size(EVP_sha256()));
+    EVP_SealUpdate(ctx_e, keyblob + keyblob_len, &update_len, auth_key, HMAC_SIZE);
     keyblob_len += update_len;
 
     EVP_SealFinal(ctx_e, keyblob + keyblob_len, &update_len);
@@ -149,11 +149,11 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
     /* prepare M2 */
     m2.certLen = htonl(server_certificate_len);
     m2.signLen = htonl(signatureLen);
-    m2.encryptedSymmetricKeyLen = seal_enc_key_len;
-    m2.ivLen = seal_iv_len;
-    m2.keyblobLen = keyblob_len;
+    m2.encryptedSymmetricKeyLen = htonl(seal_enc_key_len);
+    m2.ivLen = htonl(seal_iv_len);
+    m2.keyblobLen = htonl(keyblob_len);
     m2.nonceS = nonce;
-    m2.nonceC = 0;
+    m2.nonceC = htonl(0xcafebabe);  // TODO
 
     /* send M2 */
     connection->send((const char*)&m2, sizeof(m2));
@@ -163,6 +163,13 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
     connection->send((const char*)seal_iv, seal_iv_len);
     connection->send((const char*)keyblob, keyblob_len);
     connection->send((const char*)iv, seal_iv_len);
+
+    debug(DEBUG, "[D] M2 Lengths" << endl);
+    debug(DEBUG, "[D] server_certificate_len:\t" << server_certificate_len << endl);
+    debug(DEBUG, "[D] signatureLen:\t" << signatureLen << endl);
+    debug(DEBUG, "[D] seal_enc_key_len:\t" << seal_enc_key_len << endl);
+    debug(DEBUG, "[D] seal_iv_len:\t" << seal_iv_len << endl);
+    debug(DEBUG, "[D] keyblob_len:\t" << keyblob_len << endl);
 
     debug(DEBUG, "[D] M2 + Payload" << endl);
     hexdump(DEBUG, (const char *)&m2, sizeof(m2));
