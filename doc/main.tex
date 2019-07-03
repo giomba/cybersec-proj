@@ -1,5 +1,5 @@
 \documentclass[a4paper,12pt]{article}
-\usepackage[italian]{babel}
+\usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
 
 % Larger borders -- we do not want do waste paper, even if it is only paper on screen =)
@@ -236,7 +236,7 @@ Every time that the application layer calls the secure layer with new data to se
 
 Receiver's side transparently checks these packet's validity, and then unfolds them and passes them to the application layer as stream of bytes.
 
-\begin{figure}
+\begin{figure}[H]
 \centering
 \includegraphics{img/secure-session-protocol.pdf}
 \caption{Secure layer session protocol overview}
@@ -291,15 +291,19 @@ Finally, the encrypted payload follows the SpaceCraft.
 The encrypted payload can be of any length between $0$ and $2^{32}$ bytes, even if in our implementation it has a practical limitation of $4k$ bytes.
 
 \section{Key exchange protocol}
+A 3 way handshake is needed in order to establish the secure session.
 
-% -- TODO -- draw
+\begin{figure}[H]
+\centering
+\includegraphics{img/key-exchange-protocol.pdf}
+\caption{Key exchange protocol overview}
+\end{figure}
 
 \subsection{Objectives}
 
 \[A \believes A \sharekey{k_s} B \]
-\[B \believes A \sharekey{k_s} B \]
+%\[B \believes A \sharekey{k_s} B \]
 \[A \believes \fresh{A \sharekey{k_s} B} \]
-
 
 \subsection{Assumptions}
 
@@ -331,7 +335,7 @@ The encrypted payload can be of any length between $0$ and $2^{32}$ bytes, even 
 \frac{A \believes CA \believes cert_B, A \believes CA \controls cert_B}{A \believes cert_B} \tag*{postulate 3}
 \end{align}
 
-$A \believes cert_B$ means that $A \believes \pubkey{B^+} B$.
+$A \believes cert_B$ means that $A \believes \pubkey{B^+} B$, since $\pubkey{B+} B$ is part of $cert_B$
 
 \begin{align}
 \frac{A \believes \pubkey{B^+} B, A \sees \encrypt{payload_{M2}}{B^-}}{A \believes B \oncesaid payload_{M2}} \tag*{postulate 1}
