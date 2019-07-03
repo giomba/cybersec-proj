@@ -27,7 +27,7 @@ const int64_t MAX_FILE_SIZE = 4 * GiB;
 
 extern regex parola;
 
-#define AES128_KEY_LEN 16
+#define AES128_KEY_LEN 32
 
 struct M1 {
     uint32_t certLen;

@@ -137,12 +137,12 @@ int receiveM2(){
 	EVP_CIPHER_CTX_free(ctx);
 	sessionKey = new unsigned char[AES128_KEY_LEN];
 	
-	authKey = new unsigned char[AES128_KEY_LEN];
+	authKey = new unsigned char[EVP_MD_size(EVP_sha256())];
 	memcpy(sessionKey, sharedKeys, AES128_KEY_LEN);
-	memcpy(authKey, sharedKeys + AES128_KEY_LEN, AES128_KEY_LEN);
+	memcpy(authKey, sharedKeys + AES128_KEY_LEN, EVP_MD_size(EVP_sha256()));
 	
 	hexdump(DEBUG, (const char*)sessionKey, AES128_KEY_LEN);
-	hexdump(DEBUG, (const char*)authKey, AES128_KEY_LEN);
+	hexdump(DEBUG, (const char*)authKey, EVP_MD_size(EVP_sha256()));
     return 0;
 }
 

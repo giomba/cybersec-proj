@@ -96,14 +96,14 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
 
     /* generate Ks, Ka and IV */
     session_key = new unsigned char[AES128_KEY_LEN];
-    auth_key = new unsigned char[AES128_KEY_LEN];
+    auth_key = new unsigned char[EVP_MD_size(EVP_sha256())];
     iv = new unsigned char[AES128_KEY_LEN];
     RAND_bytes(session_key, AES128_KEY_LEN);
-    RAND_bytes(auth_key, AES128_KEY_LEN);
+    RAND_bytes(auth_key, EVP_MD_size(EVP_sha256()));
     RAND_bytes(iv, AES128_KEY_LEN);
 
     hexdump(DEBUG, (const char*)session_key, AES128_KEY_LEN);
-    hexdump(DEBUG, (const char*)auth_key, AES128_KEY_LEN);
+    hexdump(DEBUG, (const char*)auth_key, EVP_MD_size(EVP_sha256()));
     hexdump(DEBUG, (const char*)iv, AES128_KEY_LEN);
 
     /* asymmetric encrypting - ctx_e = context for encryption */
@@ -113,7 +113,7 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
     int seal_enc_key_len;
     unsigned char *seal_iv = new unsigned char[EVP_CIPHER_iv_length(EVP_aes_128_cbc())];
     int seal_iv_len = EVP_CIPHER_iv_length(EVP_aes_128_cbc());
-    unsigned char* keyblob = new unsigned char[(AES128_KEY_LEN << 1) + 16];
+    unsigned char* keyblob = new unsigned char[(EVP_MD_size(EVP_sha256()) << 1) + 16];
     int update_len, keyblob_len = 0;
 
     EVP_CIPHER_CTX *ctx_e = EVP_CIPHER_CTX_new();
@@ -123,7 +123,7 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
     }
     EVP_SealUpdate(ctx_e, keyblob, &update_len, session_key, AES128_KEY_LEN);
     keyblob_len += update_len;
-    EVP_SealUpdate(ctx_e, keyblob + keyblob_len, &update_len, auth_key, AES128_KEY_LEN);
+    EVP_SealUpdate(ctx_e, keyblob + keyblob_len, &update_len, auth_key, EVP_MD_size(EVP_sha256()));
     keyblob_len += update_len;
 
     EVP_SealFinal(ctx_e, keyblob + keyblob_len, &update_len);
@@ -156,7 +156,7 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
     connection->send((const char*)seal_enc_key, seal_enc_key_len);
     connection->send((const char*)seal_iv, seal_iv_len);
     connection->send((const char*)keyblob, keyblob_len);
-    connection->send((const char*)iv, sizeof(iv));
+    connection->send((const char*)iv, seal_iv_len);
 
     debug(DEBUG, "[D] M2 + Payload" << endl);
     hexdump(DEBUG, (const char *)&m2, sizeof(m2));
@@ -165,7 +165,7 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
     hexdump(DEBUG, (const char *)seal_enc_key, seal_enc_key_len);
     hexdump(DEBUG, (const char *)seal_iv, seal_iv_len);
     hexdump(DEBUG, (const char *)keyblob, keyblob_len);
-    hexdump(DEBUG, (const char *)iv, sizeof(iv));
+    hexdump(DEBUG, (const char *)iv, seal_iv_len);
 
     /* free memory */
     OPENSSL_free(serialized_server_certificate);

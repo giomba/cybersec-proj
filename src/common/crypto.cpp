@@ -11,6 +11,11 @@ Crypto::Crypto(const unsigned char* session_key, const unsigned char* auth_key, 
     this->auth_key = new unsigned char[EVP_MD_size(EVP_sha256())];
     memcpy(this->auth_key, auth_key, EVP_MD_size(EVP_sha256()));
 
+    debug(DEBUG, "session_key + auth_key" << endl);
+    hexdump(DEBUG, (const char*)session_key, AES128_KEY_LEN);
+    hexdump(DEBUG, (const char*)auth_key, EVP_MD_size(EVP_sha256()));
+    hexdump(DEBUG, (const char*)iv, AES128_KEY_LEN);
+
     sequence_number_i = sequence_number_o = 0;  /* TODO -- is it ok to always initialize to 0? */
 }
 
