@@ -13,12 +13,14 @@ Client::~Client() {
 }
 
 int Client::handshake() {
-    receiveM1();
-    sendM2();
+    X509* client_certificate = NULL;
+    if (receiveM1(client_certificate) == -1) throw ExCertificate("[E] M1");
+    if (sendM2(client_certificate) == -1) throw ExCertificate("[E] M2");
     //receiveM3();
+    return 0;
 }
 
-int Client::receiveM1() {
+int Client::receiveM1(X509*& client_certificate) {
     /* receive M1 */
     M1 m1;
     connection->recv((char*)&m1, sizeof(m1));
@@ -71,8 +73,10 @@ int Client::receiveM1() {
 
 }
 
-int Client::sendM2() {
+int Client::sendM2(X509* client_certificate) {
     M2 m2;
+    EVP_PKEY *client_pubkey = X509_get_pubkey(client_certificate);
+	if (!client_pubkey){ debug(ERROR, "cannot extract the pubkey from client certificate" << endl); return -1;}
 
     /* serialize certificate */
     X509* server_certificate = cm->getCert();
@@ -99,49 +103,68 @@ int Client::sendM2() {
     RAND_bytes(iv, AES128_KEY_LEN);
 
     /* asymmetric encrypting - ctx_e = context for encryption */
-    EVP_PKEY* key = cm->getPrivKey();
-    EVP_CIPHER_CTX* ctx_e = EVP_CIPHER_CTX_new();
-    unsigned char* encrypted_symmetric_key = new EVP_PKEY_size(client_certificate);
+    /* encrypt session and auth keys with client public key */
 
-    m2.encryptedSymmetricKeyLen = EVP_PKEY_size(client_certificate);
+    unsigned char* seal_enc_key = new unsigned char[EVP_PKEY_size(client_pubkey)];
+    int seal_enc_key_len;
+    unsigned char *seal_iv = new unsigned char[EVP_CIPHER_iv_length(EVP_aes_128_cbc())];
+    int seal_iv_len = EVP_CIPHER_iv_length(EVP_aes_128_cbc());
+    unsigned char* keyblob = new unsigned char[(AES128_KEY_LEN << 1) + 16];
+    int update_len, keyblob_len = 0;
 
+    EVP_CIPHER_CTX *ctx_e = EVP_CIPHER_CTX_new();
+    if (EVP_SealInit(ctx_e, EVP_aes_128_cbc(), &seal_enc_key, &seal_enc_key_len, seal_iv, &client_pubkey, 1) == 0){
+        debug(ERROR, "[E] EVP_SealInit()" << endl);
+        return -1;
+    }
+    EVP_SealUpdate(ctx_e, keyblob, &update_len, session_key, sizeof(session_key));
+    keyblob_len += update_len;
+    EVP_SealUpdate(ctx_e, keyblob + keyblob_len, &update_len, auth_key, sizeof(auth_key));
+    keyblob_len += update_len;
 
-
-    int encrypted_symmetric_key_len;
-    unsigned char*
-
-    EVP_SealInit(ctx_e, EVP_aes_128_cfb8(), encrypted_symmetric_key, &encrypted_symmetric_key_len, iv, &
-
-
+    EVP_SealFinal(ctx_e, keyblob + keyblob_len, &update_len);
+    keyblob_len += update_len;
+    EVP_CIPHER_CTX_free(ctx_e);
 
     /* signature - ctx_s = context for signing */
     char server_signature[BUFFER_SIZE];
     int signatureLen;
 
     EVP_MD_CTX* ctx_s = EVP_MD_CTX_new();
-    EVP_SignInit(ctx, EVP_sha256());
-    EVP_SignUpdate(ctx, (unsigned char*)&nonce, sizeof(nonce));
-    EVP_SignFinal(ctx, (unsigned char*)server_signature, (unsigned int*)&signatureLen, key);
-    EVP_MD_CTX_free(ctx);
+    EVP_SignInit(ctx_s, EVP_sha256());
+    EVP_SignUpdate(ctx_s, (unsigned char*)&nonce, sizeof(nonce));
+    EVP_SignFinal(ctx_s, (unsigned char*)server_signature, (unsigned int*)&signatureLen, cm->getPrivKey());
+    EVP_MD_CTX_free(ctx_s);
 
     /* prepare M2 */
     m2.certLen = htonl(server_certificate_len);
     m2.signLen = htonl(signatureLen);
+    m2.encryptedSymmetricKeyLen = seal_enc_key_len;
+    m2.ivLen = seal_iv_len;
+    m2.keyblobLen = keyblob_len;
     m2.nonceS = nonce;
+    m2.nonceC = 0;
 
     /* send M2 */
     connection->send((const char*)&m2, sizeof(m2));
     connection->send((const char*)serialized_server_certificate, server_certificate_len);
     connection->send((const char*)server_signature, signatureLen);
+    connection->send((const char*)seal_enc_key, seal_enc_key_len);
+    connection->send((const char*)seal_iv, seal_iv_len);
+    connection->send((const char*)keyblob, keyblob_len);
+    connection->send((const char*)iv, sizeof(iv));
 
     debug(DEBUG, "[D] M2 + Payload" << endl);
     hexdump(DEBUG, (const char *)&m2, sizeof(m2));
     hexdump(DEBUG, (const char *)serialized_server_certificate, server_certificate_len);
     hexdump(DEBUG, (const char *)server_signature, signatureLen);
+    hexdump(DEBUG, (const char *)seal_enc_key, seal_enc_key_len);
+    hexdump(DEBUG, (const char *)seal_iv, seal_iv_len);
+    hexdump(DEBUG, (const char *)keyblob, keyblob_len);
 
     /* free memory */
     OPENSSL_free(serialized_server_certificate);
-
+    return 0;
 }
 
 void Client::recvCmd() {
