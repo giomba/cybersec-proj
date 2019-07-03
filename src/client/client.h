@@ -27,6 +27,8 @@ istringstream is;
 Connection *connection;
 Crypto *crypto;
 CertManager *cm;
+unsigned char *sessionKey;
+unsigned char *authKey;
 
 enum CommandType {
     HELP, R_LIST, L_LIST, QUIT, RETR, STOR, DELE, BAD_REQ

@@ -64,7 +64,7 @@ int receiveM2(){
     M2 m2;
     connection->recv((char*)&m2, sizeof(m2));
 
-    /* if client sends an exagerated size for certificate or signature, don't allocate the buffers */
+    /* if server sends an exagerated size for certificate or signature, don't allocate the buffers */
     m2.certLen = ntohl(m2.certLen);
     m2.signLen = ntohl(m2.signLen);
     if (m2.certLen > BUFFER_SIZE) throw ExTooBig("client certificate too big");
@@ -76,6 +76,14 @@ int receiveM2(){
     connection->recv((char*)serialized_certificate, m2.certLen);
     unsigned char* signature = new unsigned char[m2.signLen];
     connection->recv((char*)signature, m2.signLen);
+    unsigned char* seal_enc_key = new unsigned char[m2.encryptedSymmetricKeyLen];
+    connection->recv((char*)seal_enc_key, m2.encryptedSymmetricKeyLen);
+    unsigned char* seal_iv = new unsigned char[m2.ivLen];
+    connection->recv((char*)seal_iv, m2.ivLen);
+    unsigned char* keyblob = new unsigned char[m2.keyblobLen];
+    connection->recv((char*)keyblob, m2.keyblobLen);
+    unsigned char* iv = new unsigned char[m2.ivLen];
+    connection->recv((char*)iv, m2.ivLen);
 
     debug(DEBUG, "[D] received M2 + payload" << endl);
     hexdump(DEBUG, (const char*)&m2, sizeof(m2));
@@ -106,7 +114,26 @@ int receiveM2(){
     /* TODO -- free memory */ 
     //delete[] server_signature;
     //delete[] serialized_server_certificate;
-
+    
+	EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+	int ret = EVP_OpenInit(ctx, EVP_aes_128_cbc(), seal_enc_key, m2.encryptedSymmetricKeyLen, seal_iv, cm->getPrivKey());
+    if(ret == 0){
+		debug(ERROR, "[E] can't openinit the seal"<<endl);
+		}
+	unsigned char* sharedKeys = new unsigned char(m2.keyblobLen);
+	int outLen;
+	EVP_OpenUpdate(ctx, sharedKeys, &outLen, keyblob, m2.keyblobLen);
+	int sharedKeyLen = outLen;
+	ret = EVP_OpenFinal(ctx, sharedKeys + sharedKeyLen, &outLen);
+	if(ret == 0){
+		debug(ERROR. "[E] open final in the client for M2 not working");
+		}
+	sharedKeyLen += outLen;
+	EVP_CIPHER_CTX_free(ctx);
+	sessionKey = new unsigned char[AES128_KEY_LEN];
+	authKey = new unsigned char[AES128_KEY_LEN];
+	memcpy(sessionKey, sharedKeys, AES128_KEY_LEN);
+	memcpy(authKey, sharedKeys + AES128_KEY_LEN, AES_128_KEY_LEN);
     return 0;
 }
 
