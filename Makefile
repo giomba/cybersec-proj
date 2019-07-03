@@ -34,7 +34,7 @@ CXX_C_OBJ=$(patsubst src/client/%.cpp, obj/c_c_%.o, $(CXX_C_SRC))
 all: environment bin/server bin/client
 
 environment:
-	mkdir -p bin obj
+	mkdir -p bin obj downloads
 
 obj/c_a_%.o: src/common/%.cpp $(CXX_A_HDR)
 	$(CXX) -c $(CXXFLAGS) $(DBGFLAGS) -o $@ $<
