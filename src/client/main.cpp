@@ -7,7 +7,7 @@ using namespace std;
 /****************************************/
 
 int handshake(){
-    return sendM1() & receiveM2() & sendM3();
+    return (sendM1() != -1) & (receiveM2() != -1) & (sendM3() != -1);
 }
 
 int sendM1(){
@@ -112,6 +112,7 @@ int receiveM2(){
 
 int sendM3(){
     /* TODO */
+    return 0;
 }
 
 /****************************************/
@@ -393,6 +394,7 @@ void quit(){
 	delete crypto;
 
 	cout << greetings << endl;
+    exit(0);
 }
 
 /********************************/
@@ -554,7 +556,7 @@ int main(int argc, char* argv[]) {
         // if (!connection) { debug(FATAL, "[F] cannot create Connection" << endl); exit(1); }
 
         // handshake
-        if (!handshake()){ cout << "error: Unable to connect to the server" << endl; exit(-1); } // -- TODO
+        if (!handshake()){ cout << "handshake error: Unable to connect to the server" << endl; exit(-1); } // -- TODO
 
         crypto = new Crypto((unsigned char*)"0123456789abcdef", (unsigned char*)"fedcba9876543210", (unsigned char*)"0000000000000000");
 
@@ -584,5 +586,4 @@ int main(int argc, char* argv[]) {
     }
 
     quit();
-    return 0;
 }
