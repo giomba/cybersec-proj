@@ -3,6 +3,118 @@
 using namespace std;
 
 /****************************************/
+/*              HANDSHAKE               */
+/****************************************/
+
+int handshake(){
+    return sendM1() & receiveM2() & sendM3();
+}
+
+int sendM1(){
+    /* serialize certificate */
+    X509* certificate = cm->getCert();
+    int certificate_len;
+    unsigned char* serialized_certificate = NULL;
+
+    if ((certificate_len = i2d_X509(certificate, &serialized_certificate)) < 0) {
+        cerr << "[E] can not serialize client certificate" << endl;
+        return -1;
+    }
+
+    /* generate nonce  */
+    uint32_t nonce;
+
+    if (RAND_poll() != 1) { cerr << "[E] can not initialize PRNG" << endl; return -1; }
+    RAND_bytes((unsigned char*)&nonce, sizeof(nonce));
+
+    EVP_PKEY* key = cm->getPrivKey();
+
+    /* sign nonce */
+    char signature[BUFFER_SIZE];
+    int signatureLen;
+
+    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    EVP_SignInit(ctx, EVP_sha256());
+    EVP_SignUpdate(ctx, (unsigned char*)&nonce, sizeof(nonce));
+    EVP_SignFinal(ctx, (unsigned char*)signature, (unsigned int*)&signatureLen, key);
+    EVP_MD_CTX_free(ctx);
+
+    /* prepare M1 */
+    M1 m1;
+    m1.certLen = htonl(certificate_len);
+    m1.signLen = htonl(signatureLen);
+    m1.nonceC = nonce;
+
+    /* send M1 */
+    connection->send((const char*)&m1, sizeof(m1));
+    connection->send((const char*)serialized_certificate, certificate_len);
+    connection->send((const char*)signature, signatureLen);
+
+    debug(DEBUG, "[D] M1 + Payload" << endl);
+    hexdump(DEBUG, (const char *)&m1, sizeof(m1));
+    hexdump(DEBUG, (const char *)serialized_certificate, certificate_len);
+    hexdump(DEBUG, (const char *)signature, signatureLen);
+
+    /* free memory */
+    OPENSSL_free(serialized_certificate);
+    return 0;
+}
+
+int receiveM2(){
+    M2 m2;
+    connection->recv((char*)&m2, sizeof(m2));
+
+    /* if client sends an exagerated size for certificate or signature, don't allocate the buffers */
+    m2.certLen = ntohl(m2.certLen);
+    m2.signLen = ntohl(m2.signLen);
+    if (m2.certLen > BUFFER_SIZE) throw ExTooBig("client certificate too big");
+    if (m2.signLen > BUFFER_SIZE) throw ExTooBig("nonce signature too big");
+
+    debug(DEBUG, "[D] certLen: " << m2.certLen << "\t" << "signLen: " << m2.signLen << endl);
+
+    unsigned char* serialized_certificate = new unsigned char[m2.certLen];
+    connection->recv((char*)serialized_certificate, m2.certLen);
+    unsigned char* signature = new unsigned char[m2.signLen];
+    connection->recv((char*)signature, m2.signLen);
+
+    debug(DEBUG, "[D] received M2 + payload" << endl);
+    hexdump(DEBUG, (const char*)&m2, sizeof(m2));
+    hexdump(DEBUG, (const char*)serialized_certificate, m2.certLen);
+    hexdump(DEBUG, (const char*)signature, m2.signLen);
+
+    /* deserialize certificate */
+    X509* server_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_certificate, m2.certLen);
+    if (!server_certificate){
+        debug(ERROR, "[E] cannot deserialize server certificate" << endl);
+        return -1;
+    }
+
+    /* check validity */
+    if (cm->verifyCert(server_certificate, "server") == -1) {
+        debug(ERROR, "[E] server is not authenticated by TrustedCA" << endl);
+        throw ExCertificate("server is not authenticated by TrustedCA");
+    }
+    debug(INFO, "[I] server is authenticated" << endl);
+
+    /* verify nonce signature */
+    if (cm->verifySignature(server_certificate, (char*)&(m2.nonceS), sizeof(m2.nonceS), signature, m2.signLen) == -1) {
+        debug(ERROR, "[E] server's nonce signature is not valid" << endl);
+        throw ExCertificate("server nonce signature is not valid");
+    }
+    debug(INFO, "[I] valid nonce received from the server"<< endl);
+
+    /* TODO -- free memory */ 
+    //delete[] server_signature;
+    //delete[] serialized_server_certificate;
+
+    return 0;
+}
+
+int sendM3(){
+    /* TODO */
+}
+
+/****************************************/
 /*              SEND/RECV               */
 /****************************************/
 
@@ -281,7 +393,6 @@ void quit(){
 	delete crypto;
 
 	cout << greetings << endl;
-    exit(0);
 }
 
 /********************************/
@@ -440,9 +551,10 @@ int main(int argc, char* argv[]) {
         // if (!cm) { debug(FATAL, "[F] cannot create Certificate Manager" << endl); exit(1); }
 
         connection = new Connection(sv_addr.c_str(), sv_port);
+        // if (!connection) { debug(FATAL, "[F] cannot create Connection" << endl); exit(1); }
 
         // handshake
-        if (handshakeClient(connection, cm) == -1) exit(-1); // -- TODO
+        if (!handshake()){ cout << "error: Unable to connect to the server" << endl; exit(-1); } // -- TODO
 
         crypto = new Crypto((unsigned char*)"0123456789abcdef", (unsigned char*)"fedcba9876543210", (unsigned char*)"0000000000000000");
 
@@ -467,9 +579,10 @@ int main(int argc, char* argv[]) {
     } catch(ExRecv e) {
         cout << "error: Unable to connect to server" << endl;
         cout << "info: You have been disconnected" << endl;
-        quit();
     } catch (Ex e) {
         cerr << e << endl;
-        quit();
     }
+
+    quit();
+    return 0;
 }
