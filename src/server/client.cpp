@@ -121,9 +121,9 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
         debug(ERROR, "[E] EVP_SealInit()" << endl);
         return -1;
     }
-    EVP_SealUpdate(ctx_e, keyblob, &update_len, session_key, sizeof(session_key));
+    EVP_SealUpdate(ctx_e, keyblob, &update_len, session_key, AES128_KEY_LEN);
     keyblob_len += update_len;
-    EVP_SealUpdate(ctx_e, keyblob + keyblob_len, &update_len, auth_key, sizeof(auth_key));
+    EVP_SealUpdate(ctx_e, keyblob + keyblob_len, &update_len, auth_key, AES128_KEY_LEN);
     keyblob_len += update_len;
 
     EVP_SealFinal(ctx_e, keyblob + keyblob_len, &update_len);
