@@ -21,8 +21,10 @@ using namespace std;
 class Client {
     private:
         Connection* connection;
-        Crypto* crypto;
         CertManager* cm;
+        Crypto* crypto;
+        X509* client_certificate;
+
         istringstream is;
         ostringstream os;
 

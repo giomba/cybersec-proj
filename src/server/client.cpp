@@ -42,7 +42,7 @@ int Client::receiveM1() {
     hexdump(DEBUG, (const char*)client_signature, m1.signLen);
 
     /* deserialize certificate */
-    X509* client_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_client_certificate, m1.certLen);
+    client_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_client_certificate, m1.certLen);
     if (!client_certificate){
         debug(ERROR, "cannot deserialize client certificate on socket " << connection->getSocket() << endl);
         return -1;
@@ -72,6 +72,8 @@ int Client::receiveM1() {
 }
 
 int Client::sendM2() {
+    M2 m2;
+
     /* serialize certificate */
     X509* server_certificate = cm->getCert();
     int server_certificate_len;
@@ -82,26 +84,47 @@ int Client::sendM2() {
         return -1;
     }
 
-    /* generate nonce */
+    /* generate nonce NB */
     uint32_t nonce;
 
     if (RAND_poll() != 1) { cerr << "[E] can not initialize PRNG" << endl; return -1; }
     RAND_bytes((unsigned char*)&nonce, sizeof(nonce));
 
-    EVP_PKEY* key = cm->getPrivKey();
+    /* generate Ks, Ka and IV */
+    unsigned char* session_key = new unsigned char[AES128_KEY_LEN];
+    unsigned char* auth_key = new unsigned char[AES128_KEY_LEN];
+    unsigned char* iv = new unsigned char[AES128_KEY_LEN];
+    RAND_bytes(session_key, AES128_KEY_LEN);
+    RAND_bytes(auth_key, AES128_KEY_LEN);
+    RAND_bytes(iv, AES128_KEY_LEN);
 
-    /* sign nonce */
+    /* asymmetric encrypting - ctx_e = context for encryption */
+    EVP_PKEY* key = cm->getPrivKey();
+    EVP_CIPHER_CTX* ctx_e = EVP_CIPHER_CTX_new();
+    unsigned char* encrypted_symmetric_key = new EVP_PKEY_size(client_certificate);
+
+    m2.encryptedSymmetricKeyLen = EVP_PKEY_size(client_certificate);
+
+
+
+    int encrypted_symmetric_key_len;
+    unsigned char*
+
+    EVP_SealInit(ctx_e, EVP_aes_128_cfb8(), encrypted_symmetric_key, &encrypted_symmetric_key_len, iv, &
+
+
+
+    /* signature - ctx_s = context for signing */
     char server_signature[BUFFER_SIZE];
     int signatureLen;
 
-    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    EVP_MD_CTX* ctx_s = EVP_MD_CTX_new();
     EVP_SignInit(ctx, EVP_sha256());
     EVP_SignUpdate(ctx, (unsigned char*)&nonce, sizeof(nonce));
     EVP_SignFinal(ctx, (unsigned char*)server_signature, (unsigned int*)&signatureLen, key);
     EVP_MD_CTX_free(ctx);
 
     /* prepare M2 */
-    M2 m2;
     m2.certLen = htonl(server_certificate_len);
     m2.signLen = htonl(signatureLen);
     m2.nonceS = nonce;
