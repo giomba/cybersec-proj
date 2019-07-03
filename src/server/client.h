@@ -28,9 +28,9 @@ class Client {
         istringstream is;
         ostringstream os;
 
-        int handshake(void);
+        int handshake(unsigned char*&, unsigned char*&, unsigned char*&);
         int receiveM1(X509*&);
-        int sendM2(X509*);
+        int sendM2(X509*, unsigned char*&, unsigned char*&, unsigned char*&);
         int receiveM3(void);
 
         void recvCmd();
