@@ -126,14 +126,14 @@ int receiveM2(){
 	int sharedKeyLen = outLen;
 	ret = EVP_OpenFinal(ctx, sharedKeys + sharedKeyLen, &outLen);
 	if(ret == 0){
-		debug(ERROR. "[E] open final in the client for M2 not working");
+		debug(ERROR, "[E] open final in the client for M2 not working");
 		}
 	sharedKeyLen += outLen;
 	EVP_CIPHER_CTX_free(ctx);
 	sessionKey = new unsigned char[AES128_KEY_LEN];
 	authKey = new unsigned char[AES128_KEY_LEN];
 	memcpy(sessionKey, sharedKeys, AES128_KEY_LEN);
-	memcpy(authKey, sharedKeys + AES128_KEY_LEN, AES_128_KEY_LEN);
+	memcpy(authKey, sharedKeys + AES128_KEY_LEN, AES128_KEY_LEN);
     return 0;
 }
 
