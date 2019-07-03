@@ -39,10 +39,10 @@ struct M2 {
     uint32_t certLen;
     uint32_t signLen;
     uint32_t encryptedSymmetricKeyLen;
+    uint32_t ivLen;
     uint32_t keyblobLen;
     uint32_t nonceS;
     uint32_t nonceC;
-    unsigned char iv[AES128_KEY_LEN];
 };  /* and then the actual certificate, and the actual signature */
 
 struct M3 {
