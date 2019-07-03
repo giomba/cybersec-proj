@@ -234,7 +234,7 @@ Reply status:
 \section{Secure layer session protocol}
 Every time that the application layer calls the secure layer with new data to send to the other party, a special secure layer packet is created; the receiver then expects to receive the same kind of packet, and extracts data from it to pass to the application level.
 
-Receiver's side transparently checks these packet's validity, and then unfolds them and passes them to the application layer as stream of bytes.
+Receiver's side transparently checks these packet's validity, and then unfolds them and passes them to the application layer as a stream of bytes.
 
 \begin{figure}[H]
 \centering
@@ -247,11 +247,11 @@ Secure packets have two fixed length headers, called \texttt{Rocket} and \texttt
 Every integer has network byte order endianess.
 
 \subsection{Rocket}
-First \texttt{Rocket} is sent (or received).
+First, \texttt{Rocket} is sent (or received).
 
 \begin{verbatim}
 struct Rocket {
-  unsigned char hmac[],
+  unsigned char hmac[HMAC_SIZE],
   uint32_t length,
   uint32_t sequence_number
 };
@@ -260,7 +260,7 @@ struct Rocket {
 where
 
 \begin{itemize}
-  \item \texttt{hmac[]} is used to authenticate Rocket's content;
+  \item \texttt{hmac} is used to authenticate Rocket's content;
   \item \texttt{length} is the size, in bytes, of the variable length payload and it is used to allocate data at receiver's endpoint;
   \item \texttt{sequence\_number} is used to protect against replay attacks;
 \end{itemize}
@@ -273,7 +273,7 @@ A \texttt{SpaceCraft} always follows the \texttt{Rocket}.
 
 \begin{verbatim}
 struct SpaceCraft {
-  unsigned char hmac[],
+  unsigned char hmac[HMAC_SIZE],
   uint32_t sequence_number
 };
 \end{verbatim}
@@ -286,9 +286,18 @@ where
 \end{itemize}
 
 \subsection{Encrypted Payload}
-Finally, the encrypted payload follows the SpaceCraft.
+Finally, the encrypted payload follows the \texttt{SpaceCraft}.
 
 The encrypted payload can be of any length between $0$ and $2^{32}$ bytes, even if in our implementation it has a practical limitation of $4k$ bytes.
+
+The payload is encrypted using AES128 in CFB mode, using a \emph{session key} and an \emph{initialization vector} that are exchanged during the initial handshake.
+
+// TODO
+
+\begin{itemize}
+  \item \texttt{session_key}
+  \item \texttt{iv}
+\end{itemize}
 
 \section{Key exchange protocol}
 A 3 way handshake is needed in order to establish the secure session.
