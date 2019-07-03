@@ -72,6 +72,7 @@
 \newcommand{\pubkey}[1]{\xmapsto{#1}}
 \newcommand{\secret}[1]{\xleftrightharpoons{#1}}
 
+\newcommand{\projectname}{Cybersec.proj}
 
 % Hides ugly links from the index
 \usepackage[hidelinks]{hyperref}
@@ -87,12 +88,20 @@
 
 \clearpage
 
-\section{Protocol}
-Client must create a secure communication channel to connect to the server.
-% TODO more details on next lessons
+\section{Introduction}
+\projectname{} is a client-server application which allows to download and upload files on a server in a secure manner.
+
+\section{Application protocol}
+Application layer manages its input/output data as continuos infinite stream of bytes.
+
+Application sends and receives request commands and reply statuses, and generic streams of bytes (the body), whose meaning depends on the previous sent/received command/reply.
+
+The protocol vaguely resembles HTTP.
 
 A \texttt{parola} is defined as a pure ASCII sequence which can match the following regular expression \texttt{[A-Za-z0-9\textbackslash.\_]*}.
 Different \texttt{parola}s can be separed by a whitespace.
+
+Every command must be composed by one or more \texttt{parola}s.
 
 \subsection{Request commands}
 A request command is sent by the client to the server.
@@ -142,7 +151,7 @@ A reply status is composed by the following parts:
 
 \subsection{Request commands list}
 
-\subsubsection{DELE}
+\paragraph{DELE}
 \texttt{DELE filename}
 
 Reply status:
@@ -151,7 +160,7 @@ Reply status:
   \item \texttt{452}: bad file
 \end{itemize}
 
-\subsubsection{LIST}
+\paragraph{LIST}
 \texttt{LIST}
 
 Request the server to send a list of available files
@@ -166,7 +175,7 @@ body
 
 \texttt{body} is a list of \texttt{parola}, each one representing the name of a file and each one separed by a newline.
 
-\subsubsection{QUIT}
+\paragraph{QUIT}
 \texttt{QUIT}
 
 Close connection with the server.
@@ -176,7 +185,7 @@ Reply status:
   \item \texttt{200}: ok
 \end{itemize}
 
-\subsubsection{RETR}
+\paragraph{RETR}
 \texttt{RETR filename}
 
 Retrieve a file from the server.
@@ -194,7 +203,7 @@ body
   \texttt{452}: bad file
 \end{itemize}
 
-\subsubsection{STOR}
+\paragraph{STOR}
 \begin{verbatim}
 STOR filename
 Size: filesize
@@ -222,18 +231,71 @@ Reply status:
   \item \texttt{503}: bad sequence of commands
 \end{itemize}
 
+\section{Session protocol}
+Every time that the application layer calls the secure layer with new data to send to the other party, a special secure layer packet is created; the receiver then expects to receive the same kind of packet, and extracts data from it to pass to the application level.
+
+Receiver's side transparently checks these packet's validity, and then unfolds them and passes them to the application layer as stream of bytes.
+
+\subsection{Secure packets}
+Secure packets have two fixed length headers, called \texttt{Rocket} and \texttt{SpaceCraft}.
+Every integer has network byte order endianess.
+
+\subsection{Rocket}
+First \texttt{Rocket} is sent (or received).
+
+\begin{verbatim}
+struct Rocket {
+  unsigned char hmac[],
+  uint32_t length,
+  uint32_t sequence_number
+};
+\end{verbatim}
+
+where
+
+\begin{itemize}
+  \item \texttt{hmac[]} is used to authenticate Rocket's content;
+  \item \texttt{length} is the size, in bytes, of the variable length payload and it is used to allocate data at receiver's endpoint;
+  \item \texttt{sequence\_number} is used to protect against replay attacks;
+\end{itemize}
+
+After the \texttt{Rocket}'s content has been authenticated, its content is used to prepare the receiver's buffer.
+Then, \texttt{Rocket} can be detached and control passes entirely to \texttt{spacecraft}.
+
+\subsection{SpaceCraft}
+A \texttt{SpaceCraft} always follows the \texttt{Rocket}.
+
+\begin{verbatim}
+struct SpaceCraft {
+  unsigned char hmac[],
+  uint32_t sequence_number
+};
+\end{verbatim}
+
+where
+
+\begin{itemize}
+  \item \texttt{hmac[]} is used to authenticate SpaceCraft's content;
+  \item \texttt{sequence\_number} is used to protect against replay attacks;
+\end{itemize}
+
+\subsection{Encrypted Payload}
+Finally, the encrypted payload follows the SpaceCraft.
+
+The encrypted payload can be of any length between 0 and $2^{32}$ bytes, even if in our implementation it has a practical limitation of 4K.
+
 \section{Key exchange protocol}
 
 % -- TODO -- draw
 
-\subsubsection{Objectives}
+\subsection{Objectives}
 
 \[A \believes A \sharekey{k_s} B \]
 \[B \believes A \sharekey{k_s} B \]
 \[A \believes \fresh{A \sharekey{k_s} B} \]
 
 
-\subsubsection{Assumptions}
+\subsection{Assumptions}
 
 \paragraph{Keys}
 
@@ -253,7 +315,7 @@ Reply status:
 \[B \believes \fresh{R_B} \]
 \[B \controls \fresh{A \sharekey{k_s} B} \]
 
-\subsubsection{Proof}
+\subsection{Proof}
 
 By postulate 1
 \[\frac{A \believes \pubkey{CA^+} CA, A \sees \encrypt{cert_B}{CA^-}}{A \believes CA \oncesaid cert_B}\]
