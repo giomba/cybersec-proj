@@ -323,24 +323,29 @@ The encrypted payload can be of any length between $0$ and $2^{32}$ bytes, even 
 
 \subsection{Proof}
 
-By postulate 1
-\[\frac{A \believes \pubkey{CA^+} CA, A \sees \encrypt{cert_B}{CA^-}}{A \believes CA \oncesaid cert_B}\]
+\begin{align}
+\frac{A \believes \pubkey{CA^+} CA, A \sees \encrypt{cert_B}{CA^-}}{A \believes CA \oncesaid cert_B} \tag*{postulate 1}
+\end{align}
 
-By postulate 3
-\[\frac{A \believes CA \believes cert_B, A \believes CA \controls cert_B}{A \believes cert_B}\]
+\begin{align}
+\frac{A \believes CA \believes cert_B, A \believes CA \controls cert_B}{A \believes cert_B} \tag*{postulate 3}
+\end{align}
 
-$A \believes cert_B$ is equal to $A \believes \pubkey{B^+} B$.
+$A \believes cert_B$ means that $A \believes \pubkey{B^+} B$.
 
-By postulate 1
-\[\frac{A \believes \pubkey{B^+} B, A \sees \encrypt{payload_{M2}}{B^-}}{A \believes B \oncesaid payload_{M2}}\]
+\begin{align}
+\frac{A \believes \pubkey{B^+} B, A \sees \encrypt{payload_{M2}}{B^-}}{A \believes B \oncesaid payload_{M2}} \tag*{postulate 1}
+\end{align}
 
-By postulate 2
-\[\frac{A \believes \fresh{payload_{M2}, A \believes B \oncesaid payload_{M2}}}{A \believes B \believes payload_{M2}}\]
+\begin{align}
+\frac{A \believes \fresh{payload_{M2}, A \believes B \oncesaid payload_{M2}}}{A \believes B \believes payload_{M2}} \tag*{postulate 2}
+\end{align}
 
-$\fresh{payload_{M2}}$ is due to the fact that it contains $R_A$.
+$\fresh{payload_{M2}}$ is due to the fact that it contains $R_A$, that is known to be fresh.
 
-By postulate 3
-\[\frac{A \believes B \believes payload_{M2}, A \believes B \controls payload_{M2}}{A \believes payload_{M2}}\]
+\begin{align}
+\frac{A \believes B \believes payload_{M2}, A \believes B \controls payload_{M2}}{A \believes payload_{M2}} \tag*{postulate 3}
+\end{align}
 
-This means that $A \believes A \sharekey{k_s} B$.
+This means that $A \believes A \sharekey{k_s} B$
 \end{document}
