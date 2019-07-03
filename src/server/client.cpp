@@ -96,25 +96,28 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
 
     /* generate Ks, Ka and IV */
     session_key = new unsigned char[AES128_KEY_LEN];
-    auth_key = new unsigned char[EVP_MD_size(EVP_sha256())];
+    auth_key = new unsigned char[HMAC_SIZE];
     iv = new unsigned char[AES128_KEY_LEN];
     RAND_bytes(session_key, AES128_KEY_LEN);
-    RAND_bytes(auth_key, EVP_MD_size(EVP_sha256()));
+    RAND_bytes(auth_key, HMAC_SIZE);
     RAND_bytes(iv, AES128_KEY_LEN);
 
     hexdump(DEBUG, (const char*)session_key, AES128_KEY_LEN);
-    hexdump(DEBUG, (const char*)auth_key, EVP_MD_size(EVP_sha256()));
+    hexdump(DEBUG, (const char*)auth_key, HMAC_SIZE);
     hexdump(DEBUG, (const char*)iv, AES128_KEY_LEN);
 
     /* asymmetric encrypting - ctx_e = context for encryption */
     /* encrypt session and auth keys with client public key */
 
-    unsigned char* seal_enc_key = new unsigned char[EVP_PKEY_size(client_pubkey)];
-    int seal_enc_key_len;
-    unsigned char *seal_iv = new unsigned char[EVP_CIPHER_iv_length(EVP_aes_128_cbc())];
-    int seal_iv_len = EVP_CIPHER_iv_length(EVP_aes_128_cbc());
-    unsigned char* keyblob = new unsigned char[(EVP_MD_size(EVP_sha256()) << 1) + 16];
+    int seal_enc_key_len = EVP_PKEY_size(client_pubkey);
+    unsigned char* seal_enc_key = new unsigned char[seal_enc_key_len];
+    int seal_iv_len = AES128_BLOCK_LEN;//EVP_CIPHER_iv_length(EVP_aes_128_cbc());
+    unsigned char *seal_iv = new unsigned char[seal_iv_len];
+    unsigned char* keyblob = new unsigned char[AES128_KEY_LEN + HMAC_SIZE + AES128_BLOCK_LEN];
     int update_len, keyblob_len = 0;
+
+    debug(DEBUG, "seal_enc_key_len:\t" << seal_enc_key_len << endl);
+    debug(DEBUG, "keyblob_len:\t" << AES128_KEY_LEN + HMAC_SIZE + AES128_BLOCK_LEN << endl);
 
     EVP_CIPHER_CTX *ctx_e = EVP_CIPHER_CTX_new();
     if (EVP_SealInit(ctx_e, EVP_aes_128_cbc(), &seal_enc_key, &seal_enc_key_len, seal_iv, &client_pubkey, 1) == 0){
@@ -129,6 +132,9 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
     EVP_SealFinal(ctx_e, keyblob + keyblob_len, &update_len);
     keyblob_len += update_len;
     EVP_CIPHER_CTX_free(ctx_e);
+
+    debug(DEBUG, "seal_enc_key_len:\t" << seal_enc_key_len << endl);
+    debug(DEBUG, "keyblob_len:\t" << keyblob_len << endl);
 
     /* signature - ctx_s = context for signing */
     char server_signature[BUFFER_SIZE];
