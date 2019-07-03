@@ -32,6 +32,11 @@ enum CommandType {
     HELP, R_LIST, L_LIST, QUIT, RETR, STOR, DELE, BAD_REQ
 };
 
+int handshake();
+int sendM1();
+int receiveM2();
+int sendM3();
+
 void send_cmd(string);
 void send_fragment(const char*, const int);
 void send_file(string, string, int64_t);
