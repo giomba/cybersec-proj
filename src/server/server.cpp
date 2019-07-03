@@ -32,6 +32,7 @@ Connection* Server::accept() {
 }
 
 Server::~Server() {
+    // TODO -- is there any other thing to do in this destructor?
     delete this->cm;
 }
 

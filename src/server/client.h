@@ -26,6 +26,11 @@ class Client {
         istringstream is;
         ostringstream os;
 
+        int handshake(void);
+        int receiveM1(void);
+        int sendM2(void);
+        int receiveM3(void);
+
         void recvCmd();
         int  recvBodyFragment(char *, int len);
         void sendCmd();
