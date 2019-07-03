@@ -29,6 +29,7 @@ Crypto *crypto;
 CertManager *cm;
 unsigned char *sessionKey;
 unsigned char *authKey;
+unsigned char* iv;
 
 enum CommandType {
     HELP, R_LIST, L_LIST, QUIT, RETR, STOR, DELE, BAD_REQ

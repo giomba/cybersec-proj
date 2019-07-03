@@ -102,6 +102,10 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
     RAND_bytes(auth_key, AES128_KEY_LEN);
     RAND_bytes(iv, AES128_KEY_LEN);
 
+    hexdump(DEBUG, (const char*)session_key, AES128_KEY_LEN);
+    hexdump(DEBUG, (const char*)auth_key, AES128_KEY_LEN);
+    hexdump(DEBUG, (const char*)iv, AES128_KEY_LEN);
+
     /* asymmetric encrypting - ctx_e = context for encryption */
     /* encrypt session and auth keys with client public key */
 
@@ -117,9 +121,9 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
         debug(ERROR, "[E] EVP_SealInit()" << endl);
         return -1;
     }
-    EVP_SealUpdate(ctx_e, keyblob, &update_len, session_key, sizeof(session_key));
+    EVP_SealUpdate(ctx_e, keyblob, &update_len, session_key, AES128_KEY_LEN);
     keyblob_len += update_len;
-    EVP_SealUpdate(ctx_e, keyblob + keyblob_len, &update_len, auth_key, sizeof(auth_key));
+    EVP_SealUpdate(ctx_e, keyblob + keyblob_len, &update_len, auth_key, AES128_KEY_LEN);
     keyblob_len += update_len;
 
     EVP_SealFinal(ctx_e, keyblob + keyblob_len, &update_len);
@@ -161,6 +165,7 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
     hexdump(DEBUG, (const char *)seal_enc_key, seal_enc_key_len);
     hexdump(DEBUG, (const char *)seal_iv, seal_iv_len);
     hexdump(DEBUG, (const char *)keyblob, keyblob_len);
+    hexdump(DEBUG, (const char *)iv, sizeof(iv));
 
     /* free memory */
     OPENSSL_free(serialized_server_certificate);
