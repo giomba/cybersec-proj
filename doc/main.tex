@@ -91,7 +91,7 @@
 \section{Introduction}
 \projectname{} is a client-server application which allows to download and upload files on a server in a secure manner.
 
-\section{Application protocol}
+\section{Application layer protocol}
 Application layer manages its input/output data as continuos infinite stream of bytes.
 
 Application sends and receives request commands and reply statuses, and generic streams of bytes (the body), whose meaning depends on the previous sent/received command/reply.
@@ -231,10 +231,16 @@ Reply status:
   \item \texttt{503}: bad sequence of commands
 \end{itemize}
 
-\section{Session protocol}
+\section{Secure layer session protocol}
 Every time that the application layer calls the secure layer with new data to send to the other party, a special secure layer packet is created; the receiver then expects to receive the same kind of packet, and extracts data from it to pass to the application level.
 
 Receiver's side transparently checks these packet's validity, and then unfolds them and passes them to the application layer as stream of bytes.
+
+\begin{figure}
+\centering
+\includegraphics{img/secure-session-protocol.pdf}
+\caption{Secure layer session protocol overview}
+\end{figure}
 
 \subsection{Secure packets}
 Secure packets have two fixed length headers, called \texttt{Rocket} and \texttt{SpaceCraft}.
@@ -282,7 +288,7 @@ where
 \subsection{Encrypted Payload}
 Finally, the encrypted payload follows the SpaceCraft.
 
-The encrypted payload can be of any length between 0 and $2^{32}$ bytes, even if in our implementation it has a practical limitation of 4K.
+The encrypted payload can be of any length between $0$ and $2^{32}$ bytes, even if in our implementation it has a practical limitation of $4k$ bytes.
 
 \section{Key exchange protocol}
 
