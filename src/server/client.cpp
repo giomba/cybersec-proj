@@ -12,10 +12,10 @@ Client::~Client() {
     if (this->crypto) delete crypto;
 }
 
-int Client::handshake() {
+int Client::handshake(unsigned char*& session_key, unsigned char*& auth_key, unsigned char*& iv) {
     X509* client_certificate = NULL;
     if (receiveM1(client_certificate) == -1) throw ExCertificate("[E] M1");
-    if (sendM2(client_certificate) == -1) throw ExCertificate("[E] M2");
+    if (sendM2(client_certificate, session_key, auth_key, iv) == -1) throw ExCertificate("[E] M2");
     //receiveM3();
     return 0;
 }
@@ -73,7 +73,7 @@ int Client::receiveM1(X509*& client_certificate) {
 
 }
 
-int Client::sendM2(X509* client_certificate) {
+int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsigned char*& auth_key, unsigned char*& iv) {
     M2 m2;
     EVP_PKEY *client_pubkey = X509_get_pubkey(client_certificate);
 	if (!client_pubkey){ debug(ERROR, "cannot extract the pubkey from client certificate" << endl); return -1;}
@@ -95,9 +95,9 @@ int Client::sendM2(X509* client_certificate) {
     RAND_bytes((unsigned char*)&nonce, sizeof(nonce));
 
     /* generate Ks, Ka and IV */
-    unsigned char* session_key = new unsigned char[AES128_KEY_LEN];
-    unsigned char* auth_key = new unsigned char[AES128_KEY_LEN];
-    unsigned char* iv = new unsigned char[AES128_KEY_LEN];
+    session_key = new unsigned char[AES128_KEY_LEN];
+    auth_key = new unsigned char[AES128_KEY_LEN];
+    iv = new unsigned char[AES128_KEY_LEN];
     RAND_bytes(session_key, AES128_KEY_LEN);
     RAND_bytes(auth_key, AES128_KEY_LEN);
     RAND_bytes(iv, AES128_KEY_LEN);
@@ -387,11 +387,14 @@ void Client::cmd_unknown(void) {
 
 bool Client::execute(void) {
     string cmd;
+    unsigned char *session_key;
+    unsigned char *auth_key;
+    unsigned char *iv;
 
     try {
         /* key exchange handshake */
-        handshake();
-        this->crypto = new Crypto((const unsigned char*)"0123456789abcdef", (const unsigned char*)"fedcba9876543210", (const unsigned char*)"0000000000000000");
+        handshake(session_key, auth_key, iv);
+        this->crypto = new Crypto((const unsigned char*)session_key, (const unsigned char*)auth_key, (const unsigned char*)iv);
 
         for (;;) {
             /* Receive command and read first parola */

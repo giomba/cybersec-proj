@@ -40,7 +40,7 @@ private:
     int hmac(unsigned char* digest, const SpaceCraft& spacecraft, const unsigned char* encrypted_payload, int size);
 
 public:
-	Crypto(const unsigned char* key_e, const unsigned char* key_d, const unsigned char* iv);
+	Crypto(const unsigned char* session_key, const unsigned char* auth_key, const unsigned char* iv);
     ~Crypto();
 
     int send(Connection* connection, const char* s_buffer, int size);
