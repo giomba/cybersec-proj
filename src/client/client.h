@@ -15,6 +15,7 @@
 #include "../common/protocol.h"
 #include "../common/crypto.h"
 #include "../common/certmanager.h"
+#include "../common/signer.h"
 
 
 #define CLIENT_ROOT "downloads/"
@@ -24,12 +25,13 @@
 #define error       "Something went wrong. Please retry later."
 
 istringstream is;
-Connection *connection;
-Crypto *crypto;
-CertManager *cm;
-unsigned char *sessionKey;
-unsigned char *authKey;
-unsigned char *iv;
+Connection* connection;
+Crypto* crypto;
+CertManager* cm;
+Signer* signer;
+unsigned char* sessionKey;
+unsigned char* authKey;
+unsigned char* iv;
 
 enum CommandType {
     HELP, R_LIST, L_LIST, QUIT, RETR, STOR, DELE, BAD_REQ

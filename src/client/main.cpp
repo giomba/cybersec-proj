@@ -618,17 +618,18 @@ void cmd_unknown(string cmd){
 
 int main(int argc, char* argv[]) {
     if (argc < 4){
-        cout << "./bin/client <ipserver> <serverport> <certname>" << endl;
+        cout << "./bin/client <ipserver> <serverport> <username>" << endl;
         exit(0);
     }
 
     string line;
     string sv_addr = argv[1];
     uint16_t sv_port = atoi(argv[2]);
-	string cert_name = argv[3];
+	string username = argv[3];
 
     try {
-		cm = new CertManager(cert_name);
+		cm = new CertManager(username);
+        signer = new Signer(username);
         // if (!cm) { debug(FATAL, "[F] cannot create Certificate Manager" << endl); exit(1); }
 
         connection = new Connection(sv_addr.c_str(), sv_port);

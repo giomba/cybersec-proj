@@ -58,7 +58,7 @@ int Client::receiveM1(X509*& client_certificate) {
     debug(INFO, "[I] client on socket " << connection->getSocket() << " is authenticated" << endl);
 
     /* verify nonce signature */
-    if (cm->verifySignature(client_certificate, (char*)&(m1.nonceC), sizeof(m1.nonceC), client_signature, m1.signLen) == -1) {
+    if (signer->verify(client_certificate, (char*)&(m1.nonceC), sizeof(m1.nonceC), client_signature, m1.signLen) == -1) {
         debug(WARNING, "[W] client's nonce signature is not valid" << endl);
         goto ripper;
     }
@@ -412,6 +412,7 @@ bool Client::execute(void) {
         /* key exchange handshake */
         handshake(session_key, auth_key, iv);
         this->crypto = new Crypto((const unsigned char*)session_key, (const unsigned char*)auth_key, (const unsigned char*)iv);
+        this->signer = new Signer();
 
         for (;;) {
             /* Receive command and read first parola */
