@@ -32,24 +32,12 @@ CertManager::CertManager(string cert_name){
     this->cert = PEM_read_X509(file, NULL, NULL, NULL);
 	fclose(file);
     if (!this->cert) { debug(FATAL, "can not read my certificate" << endl); throw ExCertificate(); }
-
-	// load my private key
-    file = fopen((CERT_PATH + cert_name + "_key.pem").c_str(), "r");
-    if (!file) { debug(FATAL, "cannot open " + cert_name + " private key" << endl); throw ExCertificate(); }
-	this->privkey = PEM_read_PrivateKey(file, NULL, NULL, NULL);
-	fclose(file);
-	if (!this->privkey) { debug(FATAL, "cannot read my private key" << endl); throw ExCertificate(); }
 }
 
 CertManager::~CertManager(){
 	X509_STORE_free(this->store);
-	EVP_PKEY_free(this->privkey);
 	X509_free(this->cert);
-	debug(INFO, "[I] destroying CA store and private key" << endl);
-}
-
-EVP_PKEY* CertManager::getPrivKey(){
-	return this->privkey;
+	debug(INFO, "[I] destroying CA store and certificate" << endl);
 }
 
 X509* CertManager::getCert(){
@@ -92,19 +80,4 @@ int CertManager::verifyCert(X509* cert, string name){
 	ripper:
 		X509_STORE_CTX_free(ctx);
 		return -1;
-}
-
-int CertManager::verifySignature(X509* cert, char* msg, int msg_len, unsigned char* signature, int signature_len){
-	/* get public key from certificate */
-    EVP_PKEY* pubkey = X509_get_pubkey(cert);
-	if (!pubkey){ debug(ERROR, "cannot extract the pubkey from certificate" << endl); return -1;}
-
-    /* check signature */
-    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
-    EVP_VerifyInit(ctx, EVP_sha256());
-    EVP_VerifyUpdate(ctx, msg, msg_len);
-    int ret = EVP_VerifyFinal(ctx, signature, signature_len, pubkey);
-    EVP_MD_CTX_free(ctx);
-
-	return (ret != 1) ? -1 : 0;
 }
