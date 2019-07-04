@@ -421,7 +421,7 @@ bool Client::execute(void) {
 
             /* Choose command function */
             if (is.good()) {
-                     if (cmd == "DELE") { cmd_dele(); }
+                if (cmd == "DELE") { cmd_dele(); }
                 else if (cmd == "LIST") { cmd_list(); }
                 else if (cmd == "QUIT") { cmd_quit(); break; }
                 else if (cmd == "RETR") { cmd_retr(); }
