@@ -142,7 +142,7 @@ int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsign
     EVP_MD_CTX* ctx_s = EVP_MD_CTX_new();
     EVP_SignInit(ctx_s, EVP_sha256());
     EVP_SignUpdate(ctx_s, (unsigned char*)&nonce, sizeof(nonce));
-    EVP_SignFinal(ctx_s, (unsigned char*)server_signature, (unsigned int*)&signatureLen, cm->getPrivKey());
+    EVP_SignFinal(ctx_s, (unsigned char*)server_signature, (unsigned int*)&signatureLen, signer->getPrivKey());
     EVP_MD_CTX_free(ctx_s);
 
     /* prepare M2 */

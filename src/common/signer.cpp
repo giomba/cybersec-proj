@@ -4,7 +4,8 @@ using namespace std;
 
 Signer::Signer(string username){
 	// load the private key
-    file = fopen((CERT_PATH + username + "_key.pem").c_str(), "r");
+    
+    FILE *file = fopen((KEY_PATH + username + "_key.pem").c_str(), "r");
     if (!file) { debug(FATAL, "cannot open " + username + " private key" << endl); throw ExCertificate(); }
 	this->privkey = PEM_read_PrivateKey(file, NULL, NULL, NULL);
 	fclose(file);
@@ -15,7 +16,11 @@ Signer::~Signer(){
 	EVP_PKEY_free(this->privkey);
 }
 
-int Signer::sign(unsigned char* msg, int msgLen, unsigned char*& signature, unsigned int*& signatureLen){
+EVP_PKEY* Signer::getPrivKey(){
+	return this->privkey;
+	}
+	
+int Signer::sign(unsigned char* msg, int msgLen, unsigned char* signature, unsigned int* signatureLen){
 	EVP_MD_CTX* ctx = EVP_MD_CTX_new();
 	int ret = 0;
 	bool pass = true;
