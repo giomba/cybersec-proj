@@ -132,7 +132,7 @@ int receiveM2(){
         debug(ERROR, "[E] EVP_OpenInit()" << endl);
         return -1;
 	}
-	unsigned char* sharedKeys = new unsigned char(m2.keyblobLen);
+	unsigned char* sharedKeys = new unsigned char[AES128_KEY_LEN + HMAC_LEN];
 	int outLen;
 	EVP_OpenUpdate(ctx, sharedKeys, &outLen, keyblob, m2.keyblobLen);
 	int sharedKeyLen = outLen;
@@ -145,9 +145,9 @@ int receiveM2(){
 
     /* set plain keys */
 	sessionKey = new unsigned char[AES128_KEY_LEN];
-	authKey = new unsigned char[EVP_MD_size(EVP_sha256())];
+	authKey = new unsigned char[HMAC_LEN];
 	memcpy(sessionKey, sharedKeys, AES128_KEY_LEN);
-	memcpy(authKey, sharedKeys + AES128_KEY_LEN, EVP_MD_size(EVP_sha256()));
+	memcpy(authKey, sharedKeys + AES128_KEY_LEN, HMAC_LEN);
 	
     return 0;
 }
@@ -611,7 +611,6 @@ int main(int argc, char* argv[]) {
             cin.clear();
 
             cout << cursor << flush;
-            debug(DEBUG, "[D] waiting for command" << endl);
             // waiting for command
             if (!getline(cin, line))
 				line = "q";
