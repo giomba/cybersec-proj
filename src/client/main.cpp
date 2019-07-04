@@ -131,7 +131,7 @@ int receiveM2(){
     if(ret == 0){
 		debug(ERROR, "[E] can't openinit the seal"<<endl);
 		}
-	unsigned char* sharedKeys = new unsigned char(m2.keyblobLen);
+	unsigned char* sharedKeys = new unsigned char[m2.keyblobLen];
 	int outLen;
 	EVP_OpenUpdate(ctx, sharedKeys, &outLen, keyblob, m2.keyblobLen);
 	int sharedKeyLen = outLen;
