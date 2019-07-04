@@ -46,31 +46,30 @@ int Client::receiveM1(X509*& client_certificate) {
     /* deserialize certificate */
     client_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_client_certificate, m1.certLen);
     if (!client_certificate){
-        debug(ERROR, "cannot deserialize client certificate on socket " << connection->getSocket() << endl);
-        return -1;
+        debug(WARNING, "[W] cannot deserialize client certificate on socket " << connection->getSocket() << endl);
+        goto ripper;
     }
 
     /* check validity */
     if (cm->verifyCert(client_certificate, "") == -1) {
-        debug(ERROR, "[E] client is not authenticated by TrustedCA" << endl);
-        throw ExCertificate("client is not authenticated by TrustedCA");
+        debug(WARNING, "[W] client is not authenticated by TrustedCA" << endl);
+        goto ripper;
     }
     debug(INFO, "[I] client on socket " << connection->getSocket() << " is authenticated" << endl);
 
     /* verify nonce signature */
     if (cm->verifySignature(client_certificate, (char*)&(m1.nonceC), sizeof(m1.nonceC), client_signature, m1.signLen) == -1) {
-        debug(ERROR, "[E] client's nonce signature is not valid" << endl);
-        throw ExCertificate("client nonce signature is not valid");
+        debug(WARNING, "[W] client's nonce signature is not valid" << endl);
+        goto ripper;
     }
     debug(INFO, "[I] valid nonce for client socket " << connection->getSocket() << endl);
 
     return 0;
 
-    /* free memory */
-    // TODO
-    //delete[] client_signature;
-    //delete[] serialized_client_certificate;
-
+    ripper: /* deallocates everything in case of an error */
+        delete[] serialized_client_certificate;
+        delete[] client_signature;
+        return -1;
 }
 
 int Client::sendM2(X509* client_certificate, unsigned char*& session_key, unsigned char*& auth_key, unsigned char*& iv) {

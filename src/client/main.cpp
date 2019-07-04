@@ -635,7 +635,7 @@ int main(int argc, char* argv[]) {
         // if (!connection) { debug(FATAL, "[F] cannot create Connection" << endl); exit(1); }
 
         // handshake
-        if (!handshake()){ cout << "handshake error: Unable to connect to the server" << endl; exit(-1); } // -- TODO
+        if (!handshake()){ cout << "handshake error: Unable to connect to the server" << endl; exit(-1); }
 
         crypto = new Crypto(sessionKey, authKey, iv);
 

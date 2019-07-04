@@ -94,14 +94,14 @@
 \section{Application layer protocol}
 Application layer manages its input/output data as continuos infinite stream of bytes.
 
-Application sends and receives request commands and reply statuses, and generic streams of bytes (the body), whose meaning depends on the previous sent/received command/reply.
+The application sends and receives request commands, reply statuses, and generic streams of bytes (the body), whose meaning depends on the previous sent/received command/reply.
 
-The protocol vaguely resembles HTTP.
+The protocol partially resembles HTTP.
 
 A \texttt{parola} is defined as a pure ASCII sequence which can match the following regular expression \texttt{[A-Za-z0-9\textbackslash.\_]*}.
-Different \texttt{parola}s can be separed by a whitespace.
+Different \texttt{parola}s can be separated by whitespaces.
 
-Every command must be composed by one or more \texttt{parola}s.
+Every command must be composed of one or more \texttt{parola}s.
 
 \subsection{Request commands}
 A request command is sent by the client to the server.
@@ -114,8 +114,8 @@ tag: value\n
 body
 \end{verbatim}
 
-Each line is terminated by a \texttt{LF} char, and each command is terminated by a \texttt{LF} char.
-It is important to send the line feed char because server will not parse the command until two trailing \texttt{LF}s are received.
+Each line is terminated by a line feed(\texttt{LF}) char, and each command is terminated by a \texttt{LF} char.
+It is important to send the \texttt{LF} char because server will not parse the command until two trailing \texttt{LF}s are received.
 
 Note: a \texttt{LF} char is represented by a byte whose value is \texttt{0x0A}.
 \\
@@ -124,10 +124,10 @@ A command is composed by the following parts:
   \item \texttt{COMM} is a 4 char \texttt{parola} and represents the command to issue;
   \item \texttt{filename} is the name of a file on which issue the command.
   Filenames are composed by one \texttt{parola}.
-  Depending on the specific command, a filename is mandatory or forbidden;
+  Depending on the specific command type, use of a filename is mandatory or forbidden;
   \item \texttt{tag: value} is a pair of two \texttt{parola}s, composed by a \texttt{parola} immediately followed by a colon, a whitespace and another \texttt{parola}.
   First \texttt{parola} represents the tag for an additional parameter of current command, while second one representes the actual value for the parameter; depending on the specific command, one or more parameters may be mandatory or forbidden;
-  \item \texttt{body} is a stream of bytes whose length must be specified in a command parameter; depending on the specific command, a body is mandatory or forbidden:
+  \item \texttt{body} is a stream of bytes whose length must be specified in a command parameter; depending on the specific command type, use of a body is mandatory or forbidden:
 \end{itemize}
 
 \subsection{Reply status}
@@ -145,7 +145,7 @@ body
 A reply status is composed by the following parts:
 \begin{itemize}
   \item \texttt{DDD} a 3 ASCII digits number representing the state of the previous request command;
-  \item \texttt{tag: value} is a pair to represent a parameter, with the same format of the request command parameter; depending on the specific command, one or more parameters may be mandatory or forbidden;
+  \item \texttt{tag: value} is a pair to represent a parameter, with the same format of the request command parameter; depending on the specific command type received, one or more parameters may be mandatory or forbidden;
   \item \texttt{body} is a stream of bytes whose length must be specified in a reply status parameter; depending on the specific command the reply refers to, a body is mandatory or forbidden;
 \end{itemize}
 
@@ -295,7 +295,7 @@ The payload is encrypted using AES128 in CFB mode, using a \emph{session key} an
 // TODO
 
 \begin{itemize}
-  \item \texttt{session_key}
+  \item \texttt{session\_key}
   \item \texttt{iv}
 \end{itemize}
 
