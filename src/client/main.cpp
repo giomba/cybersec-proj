@@ -6,6 +6,7 @@ using namespace std;
 /*              HANDSHAKE               */
 /****************************************/
 
+
 int handshake(){
     return (sendM1() != -1) & (receiveM2() != -1) & (sendM3() != -1);
 }
@@ -27,8 +28,6 @@ int sendM1(){
     if (RAND_poll() != 1) { cerr << "[E] can not initialize PRNG" << endl; return -1; }
     RAND_bytes((unsigned char*)&nonce, sizeof(nonce));
 
-    EVP_PKEY* key = cm->getPrivKey();
-
     /* sign nonce */
     char signature[BUFFER_SIZE];
     int signatureLen;
@@ -36,7 +35,7 @@ int sendM1(){
     EVP_MD_CTX* ctx = EVP_MD_CTX_new();
     EVP_SignInit(ctx, EVP_sha256());
     EVP_SignUpdate(ctx, (unsigned char*)&nonce, sizeof(nonce));
-    EVP_SignFinal(ctx, (unsigned char*)signature, (unsigned int*)&signatureLen, key);
+    EVP_SignFinal(ctx, (unsigned char*)signature, (unsigned int*)&signatureLen, cm->getPrivKey());
     EVP_MD_CTX_free(ctx);
 
     /* prepare M1 */
@@ -80,16 +79,17 @@ int receiveM2(){
     hexdump(DEBUG, (const char*)&m2, sizeof(m2));
 
     unsigned char* serialized_certificate = new unsigned char[m2.certLen];
-    connection->recv((char*)serialized_certificate, m2.certLen);
     unsigned char* signature = new unsigned char[m2.signLen];
-    connection->recv((char*)signature, m2.signLen);
     unsigned char* seal_enc_key = new unsigned char[m2.encryptedSymmetricKeyLen];
-    connection->recv((char*)seal_enc_key, m2.encryptedSymmetricKeyLen);
     unsigned char* seal_iv = new unsigned char[m2.ivLen];
-    connection->recv((char*)seal_iv, m2.ivLen);
     unsigned char* keyblob = new unsigned char[m2.keyblobLen];
+    iv = new unsigned char[m2.ivLen]; /* global */
+
+    connection->recv((char*)serialized_certificate, m2.certLen);
+    connection->recv((char*)signature, m2.signLen);
+    connection->recv((char*)seal_enc_key, m2.encryptedSymmetricKeyLen);
+    connection->recv((char*)seal_iv, m2.ivLen);
     connection->recv((char*)keyblob, m2.keyblobLen);
-    iv = new unsigned char[m2.ivLen];
     connection->recv((char*)iv, m2.ivLen);
 
     debug(DEBUG, "[D] received M2 payload" << endl);
@@ -115,7 +115,7 @@ int receiveM2(){
     }
     debug(INFO, "[I] server is authenticated" << endl);
 
-    /* verify nonce signature */
+    /* verify msg signature */
     if (cm->verifySignature(server_certificate, (char*)&(m2.nonceS), sizeof(m2.nonceS), signature, m2.signLen) == -1) {
         debug(ERROR, "[E] server's nonce signature is not valid" << endl);
         throw ExCertificate("server nonce signature is not valid");
@@ -126,29 +126,29 @@ int receiveM2(){
     //delete[] server_signature;
     //delete[] serialized_server_certificate;
     
+    /* keys envelope decryption */
 	EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
-	int ret = EVP_OpenInit(ctx, EVP_aes_128_cbc(), seal_enc_key, m2.encryptedSymmetricKeyLen, seal_iv, cm->getPrivKey());
-    if(ret == 0){
-		debug(ERROR, "[E] can't openinit the seal"<<endl);
-		}
+	if (EVP_OpenInit(ctx, EVP_aes_128_cbc(), seal_enc_key, m2.encryptedSymmetricKeyLen, seal_iv, cm->getPrivKey()) == 0){
+        debug(ERROR, "[E] EVP_OpenInit()" << endl);
+        return -1;
+	}
 	unsigned char* sharedKeys = new unsigned char(m2.keyblobLen);
 	int outLen;
 	EVP_OpenUpdate(ctx, sharedKeys, &outLen, keyblob, m2.keyblobLen);
 	int sharedKeyLen = outLen;
-	ret = EVP_OpenFinal(ctx, sharedKeys + sharedKeyLen, &outLen);
-	if(ret == 0){
-		debug(ERROR, "[E] open final in the client for M2 not working");
-		}
+	if (EVP_OpenFinal(ctx, sharedKeys + sharedKeyLen, &outLen) == 0){
+	    debug(ERROR, "[E] open final in the client for M2 not working");
+        return -1;
+	}
 	sharedKeyLen += outLen;
 	EVP_CIPHER_CTX_free(ctx);
+
+    /* set plain keys */
 	sessionKey = new unsigned char[AES128_KEY_LEN];
-	
 	authKey = new unsigned char[EVP_MD_size(EVP_sha256())];
 	memcpy(sessionKey, sharedKeys, AES128_KEY_LEN);
 	memcpy(authKey, sharedKeys + AES128_KEY_LEN, EVP_MD_size(EVP_sha256()));
 	
-	hexdump(DEBUG, (const char*)sessionKey, AES128_KEY_LEN);
-	hexdump(DEBUG, (const char*)authKey, EVP_MD_size(EVP_sha256()));
     return 0;
 }
 
@@ -156,6 +156,7 @@ int sendM3(){
     /* TODO */
     return 0;
 }
+
 
 /****************************************/
 /*              SEND/RECV               */
@@ -609,7 +610,8 @@ int main(int argc, char* argv[]) {
             is.str("");
             cin.clear();
 
-            cout << cursor;
+            cout << cursor << flush;
+            debug(DEBUG, "[D] waiting for command" << endl);
             // waiting for command
             if (!getline(cin, line))
 				line = "q";
