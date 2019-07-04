@@ -11,15 +11,21 @@ int handshake(){
     return (sendM1() != -1) & (receiveM2() != -1) & (sendM3() != -1);
 }
 
-int sendM1(){
+int sendM1(){ /* TODO */
     /* serialize certificate */
     X509* certificate = cm->getCert();
     int certificate_len;
     unsigned char* serialized_certificate = NULL;
+    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+
+    /* variable for check results */
+    int ret = 0;
+    bool pass = true;
 
     if ((certificate_len = i2d_X509(certificate, &serialized_certificate)) < 0) {
-        cerr << "[E] can not serialize client certificate" << endl;
-        return -1;
+        debug(ERROR, "[E] cannot serialize client certificate" << endl);
+        ret = -1;
+        goto ripper;
     }
 
     /* generate nonce  */
@@ -29,14 +35,17 @@ int sendM1(){
     RAND_bytes((unsigned char*)&nonce, sizeof(nonce));
 
     /* sign nonce */
-    char signature[BUFFER_SIZE];
+    char signature[BUFFER_SIZE]; /* TODO */
     int signatureLen;
 
-    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
-    EVP_SignInit(ctx, EVP_sha256());
-    EVP_SignUpdate(ctx, (unsigned char*)&nonce, sizeof(nonce));
-    EVP_SignFinal(ctx, (unsigned char*)signature, (unsigned int*)&signatureLen, cm->getPrivKey());
-    EVP_MD_CTX_free(ctx);
+    pass = EVP_SignInit(ctx, EVP_sha256())
+           && EVP_SignUpdate(ctx, (unsigned char*)&nonce, sizeof(nonce))
+           && EVP_SignFinal(ctx, (unsigned char*)signature, (unsigned int*)&signatureLen, cm->getPrivKey());
+    if (!pass){
+        debug(ERROR, "[E] EVP_Sign()" << endl);
+        ret = -1;
+        goto ripper;
+    }
 
     /* prepare M1 */
     M1 m1;
@@ -54,12 +63,13 @@ int sendM1(){
     hexdump(DEBUG, (const char *)serialized_certificate, certificate_len);
     hexdump(DEBUG, (const char *)signature, signatureLen);
 
-    /* free memory */
-    OPENSSL_free(serialized_certificate);
-    return 0;
+    ripper:
+        OPENSSL_free(serialized_certificate);
+        EVP_MD_CTX_free(ctx);
+        return ret;
 }
 
-int receiveM2(){
+int receiveM2(){ /* TODO */
     M2 m2;
     connection->recv((char*)&m2, sizeof(m2));
 
@@ -78,12 +88,23 @@ int receiveM2(){
     debug(DEBUG, "[D] received M2" << endl);
     hexdump(DEBUG, (const char*)&m2, sizeof(m2));
 
+    /* 
+        All the allocations are done here in order to be able to deallocate in one shot whenever
+        there is an error 
+    */
+
+    /* Allocate buffer for M2 reception */
     unsigned char* serialized_certificate = new unsigned char[m2.certLen];
     unsigned char* signature = new unsigned char[m2.signLen];
     unsigned char* seal_enc_key = new unsigned char[m2.encryptedSymmetricKeyLen];
     unsigned char* seal_iv = new unsigned char[m2.ivLen];
     unsigned char* keyblob = new unsigned char[m2.keyblobLen];
     iv = new unsigned char[m2.ivLen]; /* global */
+
+    /* Allocate ctx and buffer for plain keys */
+	EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    unsigned char sharedKeys[AES128_KEY_LEN + HMAC_LEN];
+    int outLen, sharedKeyLen = 0;
 
     connection->recv((char*)serialized_certificate, m2.certLen);
     connection->recv((char*)signature, m2.signLen);
@@ -99,57 +120,72 @@ int receiveM2(){
     hexdump(DEBUG, (const char*)seal_iv, m2.ivLen);
     hexdump(DEBUG, (const char*)keyblob, m2.keyblobLen);
     hexdump(DEBUG, (const char*)iv, m2.ivLen);
-    
 
+    /* variable for check results */
+    int ret = 0;
+    
     /* deserialize certificate */
     X509* server_certificate = d2i_X509(NULL, (const unsigned char**)&serialized_certificate, m2.certLen);
     if (!server_certificate){
         debug(ERROR, "[E] cannot deserialize server certificate" << endl);
-        return -1;
+        ret = -1;
+        goto ripper;
     }
 
-    /* check validity */
+    /* check cert validity */
     if (cm->verifyCert(server_certificate, "server") == -1) {
         debug(ERROR, "[E] server is not authenticated by TrustedCA" << endl);
-        throw ExCertificate("server is not authenticated by TrustedCA");
+        ret = -1;
+        goto ripper;
     }
     debug(INFO, "[I] server is authenticated" << endl);
 
-    /* verify msg signature */
+    /* TODO -- verify msg signature, now I'm verifying only the nonce */
     if (cm->verifySignature(server_certificate, (char*)&(m2.nonceS), sizeof(m2.nonceS), signature, m2.signLen) == -1) {
         debug(ERROR, "[E] server's nonce signature is not valid" << endl);
-        throw ExCertificate("server nonce signature is not valid");
+        ret = -1;
+        goto ripper;
     }
     debug(INFO, "[I] valid nonce received from the server"<< endl);
 
-    /* TODO -- free memory */ 
-    //delete[] server_signature;
-    //delete[] serialized_server_certificate;
+    /* TODO -- check nonce */
     
     /* keys envelope decryption */
-	EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
 	if (EVP_OpenInit(ctx, EVP_aes_128_cbc(), seal_enc_key, m2.encryptedSymmetricKeyLen, seal_iv, cm->getPrivKey()) == 0){
         debug(ERROR, "[E] EVP_OpenInit()" << endl);
-        return -1;
+        ret = -1;
+        goto ripper;
 	}
-	unsigned char* sharedKeys = new unsigned char[AES128_KEY_LEN + HMAC_LEN];
-	int outLen;
-	EVP_OpenUpdate(ctx, sharedKeys, &outLen, keyblob, m2.keyblobLen);
-	int sharedKeyLen = outLen;
-	if (EVP_OpenFinal(ctx, sharedKeys + sharedKeyLen, &outLen) == 0){
-	    debug(ERROR, "[E] open final in the client for M2 not working");
-        return -1;
+	if (EVP_OpenUpdate(ctx, (unsigned char*)&sharedKeys, &outLen, keyblob, m2.keyblobLen) == 0){
+        debug(ERROR, "[E] EVP_OpenUpdate()");
+        ret = -1;
+        goto ripper;
+    }
+	sharedKeyLen += outLen;
+    clog << "sharedKeyLen: " << sharedKeyLen << endl;
+	if (EVP_OpenFinal(ctx, (unsigned char*)&sharedKeys + sharedKeyLen, &outLen) == 0){
+	    debug(ERROR, "[E] EVP_OpenFinal()");
+        ret = -1;
+        goto ripper;
 	}
 	sharedKeyLen += outLen;
-	EVP_CIPHER_CTX_free(ctx);
 
     /* set plain keys */
 	sessionKey = new unsigned char[AES128_KEY_LEN];
 	authKey = new unsigned char[HMAC_LEN];
 	memcpy(sessionKey, sharedKeys, AES128_KEY_LEN);
 	memcpy(authKey, sharedKeys + AES128_KEY_LEN, HMAC_LEN);
-	
-    return 0;
+
+    /* deallocations on error */
+    ripper:
+        X509_free(server_certificate);
+        delete[] serialized_certificate;
+        delete[] signature;
+        delete[] seal_enc_key;
+        delete[] seal_iv;
+        delete[] keyblob;
+        EVP_CIPHER_CTX_free(ctx);
+        return ret;
 }
 
 int sendM3(){
