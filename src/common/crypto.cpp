@@ -19,6 +19,9 @@ Crypto::Crypto(const unsigned char* session_key, const unsigned char* auth_key, 
     hexdump(DEBUG, (const char*)iv, AES128_KEY_LEN);
 
     sequence_number_i = sequence_number_o = 0;  /* TODO -- is it ok to always initialize to 0? */
+
+    delete[] session_key;
+    delete[] iv;
 }
 
 int Crypto::encrypt(char* d_buffer, const char* s_buffer, int size){
