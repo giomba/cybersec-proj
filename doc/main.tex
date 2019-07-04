@@ -251,7 +251,7 @@ First, \texttt{Rocket} is sent (or received).
 
 \begin{verbatim}
 struct Rocket {
-  unsigned char hmac[HMAC_SIZE],
+  unsigned char hmac[HMAC_LEN],
   uint32_t length,
   uint32_t sequence_number
 };
@@ -273,7 +273,7 @@ A \texttt{SpaceCraft} always follows the \texttt{Rocket}.
 
 \begin{verbatim}
 struct SpaceCraft {
-  unsigned char hmac[HMAC_SIZE],
+  unsigned char hmac[HMAC_LEN],
   uint32_t sequence_number
 };
 \end{verbatim}
