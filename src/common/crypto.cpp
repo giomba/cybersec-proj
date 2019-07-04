@@ -1,6 +1,6 @@
 #include "crypto.h"
 
-Crypto::Crypto(const unsigned char* session_key, const unsigned char* auth_key, const unsigned char * iv) {
+Crypto::Crypto(const unsigned char* session_key, const unsigned char* auth_key, const unsigned char * iv) : auth_key(auth_key) {
     //create and initialize context for encryption and decryption
 	ctx_e = EVP_CIPHER_CTX_new();
 	EVP_EncryptInit(ctx_e, EVP_aes_128_cfb8(), session_key, iv);
@@ -8,12 +8,14 @@ Crypto::Crypto(const unsigned char* session_key, const unsigned char* auth_key, 
     ctx_d = EVP_CIPHER_CTX_new();
     EVP_DecryptInit(ctx_d, EVP_aes_128_cfb8(), session_key, iv);
 
-    this->auth_key = new unsigned char[EVP_MD_size(EVP_sha256())];
-    memcpy(this->auth_key, auth_key, EVP_MD_size(EVP_sha256()));
+    this->auth_key = auth_key;
+
+    /* this->auth_key = new unsigned char[HMAC_LEN];
+    memcpy(this->auth_key, auth_key, HMAC_LEN); */
 
     debug(DEBUG, "session_key + auth_key" << endl);
     hexdump(DEBUG, (const char*)session_key, AES128_KEY_LEN);
-    hexdump(DEBUG, (const char*)auth_key, EVP_MD_size(EVP_sha256()));
+    hexdump(DEBUG, (const char*)auth_key, HMAC_LEN);
     hexdump(DEBUG, (const char*)iv, AES128_KEY_LEN);
 
     sequence_number_i = sequence_number_o = 0;  /* TODO -- is it ok to always initialize to 0? */
@@ -48,7 +50,7 @@ int Crypto::hmac(unsigned char* digest, const Rocket& rocket) {
     if (ctx == NULL) throw ExCryptoComputation("Crypto::hmac() out of memory");
 
     bool pass =
-        HMAC_Init_ex(ctx, auth_key, EVP_MD_size(EVP_sha256()), EVP_sha256(), NULL) &&
+        HMAC_Init_ex(ctx, auth_key, HMAC_LEN, EVP_sha256(), NULL) &&
         HMAC_Update(ctx, (const unsigned char*)&rocket.length, sizeof(rocket.length)) &&
         HMAC_Update(ctx, (const unsigned char*)&rocket.sequence_number, sizeof(rocket.sequence_number)) &&
         HMAC_Final(ctx, digest, &len);
@@ -66,7 +68,7 @@ int Crypto::hmac(unsigned char* digest, const SpaceCraft& spacecraft, const unsi
     if (ctx == NULL) throw ExCryptoComputation("Crypto::hmac() out of memory");
 
     bool pass =
-        HMAC_Init_ex(ctx, auth_key, EVP_MD_size(EVP_sha256()), EVP_sha256(), NULL) &&
+        HMAC_Init_ex(ctx, auth_key, HMAC_LEN, EVP_sha256(), NULL) &&
         HMAC_Update(ctx, (const unsigned char*)&spacecraft.sequence_number, sizeof(spacecraft.sequence_number)) &&
         HMAC_Update(ctx, encrypted_payload, size) &&
         HMAC_Final(ctx, digest, &len);
@@ -128,9 +130,9 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
         debug(DEBUG, "[D] Rocket: " << endl); hexdump(DEBUG, (const char*)&rocket, sizeof(Rocket));
 
         /* Rocket HMAC verification */
-        unsigned char* rocket_computed_hmac = new unsigned char[EVP_MD_size(EVP_sha256())];
+        unsigned char* rocket_computed_hmac = new unsigned char[HMAC_LEN];
         hmac(rocket_computed_hmac, rocket);
-        r = CRYPTO_memcmp(rocket_computed_hmac, (const char*)&rocket.hmac, EVP_MD_size(EVP_sha256()));
+        r = CRYPTO_memcmp(rocket_computed_hmac, (const char*)&rocket.hmac, HMAC_LEN);
         delete[] rocket_computed_hmac;
         if (r != 0) {
             debug(WARNING, "[W] rocket: bad hmac" << endl);
@@ -156,9 +158,9 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
         debug(DEBUG, "[D] CypherText: " << endl); hexdump(DEBUG, encrypted_payload, rocket.length);
 
         /* SpaceCraft HMAC verification */
-        unsigned char* spacecraft_computed_hmac = new unsigned char[EVP_MD_size(EVP_sha256())];
+        unsigned char* spacecraft_computed_hmac = new unsigned char[HMAC_LEN];
         hmac(spacecraft_computed_hmac, spacecraft, (unsigned char*)encrypted_payload, rocket.length);
-        r = CRYPTO_memcmp(spacecraft_computed_hmac, (const char*)&spacecraft.hmac, EVP_MD_size(EVP_sha256()));
+        r = CRYPTO_memcmp(spacecraft_computed_hmac, (const char*)&spacecraft.hmac, HMAC_LEN);
         delete[] spacecraft_computed_hmac;
         if (r != 0) {
             debug(WARNING, "[W] spacecraft: invalid hmac" << endl);

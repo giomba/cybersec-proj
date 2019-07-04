@@ -12,16 +12,16 @@ using namespace std;
 #include "connection.h"
 #include "protocol.h"
 
-const int HMAC_SIZE = 32; // EVP_MD_size(EVP_sha256());
+const int HMAC_LEN = 32; // EVP_MD_size(EVP_sha256());
 
 struct Rocket {
-    unsigned char hmac[HMAC_SIZE];
+    unsigned char hmac[HMAC_LEN];
     uint32_t length;
     uint32_t sequence_number;
 };
 
 struct SpaceCraft {
-    unsigned char hmac[HMAC_SIZE];
+    unsigned char hmac[HMAC_LEN];
     uint32_t sequence_number;
 };
 
@@ -29,7 +29,7 @@ class Crypto {
 private:
     EVP_CIPHER_CTX* ctx_e;    /* context will be the same for all session */
     EVP_CIPHER_CTX* ctx_d;
-    unsigned char* auth_key;
+    const unsigned char* auth_key;
     uint32_t sequence_number_i = 0;
     uint32_t sequence_number_o = 0;
 
