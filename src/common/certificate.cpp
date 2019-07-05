@@ -8,6 +8,16 @@ Certificate::Certificate(X509* cert) {
     this->cert = cert;
 }
 
+Certificate::Certificate(string buffer) {
+    const char* tmpstr = buffer.c_str();
+    this->cert = d2i_X509(NULL, (const unsigned char**)&tmpstr, buffer.size());
+    if (this->cert == NULL) {
+        debug(ERROR, "[E] cannot deserialize certificate" << endl);
+        openssl_perror();
+        throw ExCertificate("cannot deserialize certificate");
+    }
+}
+
 Certificate::~Certificate(void) {
     X509_free(this->cert);
 }
@@ -22,8 +32,11 @@ string Certificate::str() {
 
     if ((len = i2d_X509(this->cert, &serialized_certificate)) < 0) {
         debug(ERROR, "[E] cannot serialize certificate" << endl);
-        throw ExCertificate("[E] cannot serialize certificate");
+        openssl_perror();
+        throw ExCertificate("cannot serialize certificate");
     }
+
+    vhexdump(DEBUG, (const char*)serialized_certificate, len);
 
     return string((const char*)serialized_certificate, len);
 }

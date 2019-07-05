@@ -41,14 +41,16 @@ int Connection::recv(string& buffer) {
 
     ret1 = this->recv((char*)&size, sizeof(size));
     size = ntohl(size);
-    
+
+    if (size > BUFFER_SIZE) throw ExTooBig("string too big");
+
     char* tmp_buffer = new char[size];
     ret2 = this->recv(tmp_buffer, size);
 
     buffer.assign(tmp_buffer, size);
-    
+
     delete tmp_buffer;
-    
+
     if (ret1 >= 0 && ret2 >= 0) return ret1 + ret2;
     else return -1;
 }

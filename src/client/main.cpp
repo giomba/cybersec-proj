@@ -402,13 +402,16 @@ void cmd_unknown(string cmd){
 }
 
 int handshake() {
-    /*
-    string certificate = Certificate.str();
-    connection->send();
-    */
+    debug(INFO, "[I] handshake with server..." << endl)
+    /* === M1 === */
+    /* send certificate */
+    string certificate = cm->getCert().str();
 
-    // if (some error) return -1;
-    
+    debug(DEBUG, "[D] serialized certificate" << endl);
+    vstrdump(DEBUG, certificate);
+
+    connection->send(certificate);
+
     return 0;   /* all ok */
 }
 

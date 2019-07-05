@@ -17,6 +17,7 @@
 
 #include "debug.h"
 #include "exception.h"
+#include "protocol.h"
 
 class Connection {
     private:

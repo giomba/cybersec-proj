@@ -15,6 +15,7 @@ class Certificate {
     public:
         Certificate(void);
         Certificate(X509*);
+        Certificate(string);
         ~Certificate(void);
         Certificate(const Certificate& old);
 
