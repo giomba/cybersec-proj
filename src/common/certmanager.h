@@ -2,6 +2,7 @@
 #define CERTMANAGER_H
 
 #include <iostream>
+#include <vector>
 #include <openssl/pem.h>
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>

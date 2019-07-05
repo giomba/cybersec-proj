@@ -49,6 +49,7 @@ Certificate& CertManager::getCert(){
 	return this->cert;
 }
 
+//Here we are also doing the client verification
 int CertManager::verifyCert(Certificate& cert, const vector<string>& namelist) {
 	// verification
     X509_STORE_CTX* ctx = X509_STORE_CTX_new();
@@ -63,19 +64,34 @@ int CertManager::verifyCert(Certificate& cert, const vector<string>& namelist) {
 		goto ripper;
 	}
 
+<<<<<<< HEAD
+	if (!clientList.empty()){
+=======
 /* giomba commented this out to allow bruk work on this code // TODO
 	if (!namelist.empty()) {
+>>>>>>> c29c56b989a31e1af6bca613f3833e52ab2facb4
 		// check subject name of the server
 		X509_NAME* subject_name = X509_get_subject_name(cert.getX509());
 		string str(X509_NAME_oneline(subject_name, NULL, 0));
-		free(subject_name);
+		
 		debug(INFO, "[I] cert belongs to " + str << endl);
-		if ((int)str.find("CN=" + name) == -1) {
-			debug(FATAL, "[F] server name does not match" << endl);
-			goto ripper;
+		
+		//check if the name is in the list of clients
+		for(unsigned int i=0; i<clientList.size(); i++){
+			if ((int)str.find("CN=" + clientList[i]) == -1) {
+				debug(FATAL, "[F] server name/client name does not match" << endl);
+				goto ripper;
+			}
+			
 		}
+		free(subject_name);
 	}
+<<<<<<< HEAD
+	
+	
+=======
 	*/
+>>>>>>> c29c56b989a31e1af6bca613f3833e52ab2facb4
 
 	debug(INFO, "[I] cert verification succeded" << endl);
 
