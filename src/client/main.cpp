@@ -424,8 +424,11 @@ int main(int argc, char* argv[]) {
         connection = new Connection(sv_addr.c_str(), sv_port);
         // if (!connection) { debug(FATAL, "[F] cannot create Connection" << endl); exit(1); }
 
-        // handshake
-        //if (!handshake()){ cout << "handshake error: Unable to connect to the server" << endl; exit(-1); }
+        /* handshake with server */
+        if (! handshake()) {
+            cout << "handshake error: Unable to connect to the server" << endl;
+            exit(-1);
+        }
 
         crypto = new Crypto(sessionKey, authKey, iv);
 
