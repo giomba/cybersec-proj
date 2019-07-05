@@ -407,6 +407,9 @@ int handshake() {
     connection->send();
     */
 
+    // if (some error) return -1;
+    
+    return 0;   /* all ok */
 }
 
 /****************************************/
@@ -433,7 +436,7 @@ int main(int argc, char* argv[]) {
         // if (!connection) { debug(FATAL, "[F] cannot create Connection" << endl); exit(1); }
 
         /* handshake with server */
-        if (! handshake()) {
+        if (handshake() == -1) {
             cout << "handshake error: Unable to connect to the server" << endl;
             exit(-1);
         }
