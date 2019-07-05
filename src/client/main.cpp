@@ -401,6 +401,14 @@ void cmd_unknown(string cmd){
     cout << "error: '" << cmd << "' is an invalid command" << endl;
 }
 
+int handshake() {
+    /*
+    string certificate = Certificate.str();
+    connection->send();
+    */
+
+}
+
 /****************************************/
 /*                MAIN                  */
 /****************************************/
