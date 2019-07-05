@@ -38,5 +38,9 @@ string Certificate::str() {
 
     vhexdump(DEBUG, (const char*)serialized_certificate, len);
 
-    return string((const char*)serialized_certificate, len);
+    string ret = string((const char*)serialized_certificate, len);
+
+    OPENSSL_free(serialized_certificate);
+
+    return ret;
 }

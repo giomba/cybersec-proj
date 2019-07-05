@@ -440,12 +440,12 @@ int main(int argc, char* argv[]) {
         connection = new Connection(sv_addr.c_str(), sv_port);
         // if (!connection) { debug(FATAL, "[F] cannot create Connection" << endl); exit(1); }
 
-        /* handshake with server 
+        // handshake with server
         if (handshake() == -1) {
             cout << "handshake error: Unable to connect to the server" << endl;
             exit(-1);
         }
-        */
+
         crypto = new Crypto(sessionKey, authKey, iv);
 
         while(1){

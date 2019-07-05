@@ -240,7 +240,7 @@ int Client::handshake(void) {
     debug(DEBUG, "[D] serialized certificate" << endl);
     vstrdump(DEBUG, buffer);
 
-    //Certificate certificate(buffer);
+    Certificate certificate(buffer);
 
     /* if (some error) return -1; else */
     return 0;
@@ -261,6 +261,7 @@ bool Client::execute(void) {
     try {
         /* key exchange handshake */
         //handshake(session_key, auth_key, iv);
+        handshake();
         this->crypto = new Crypto(sessionKey, authKey, iv);
         this->signer = new Signer();
 
