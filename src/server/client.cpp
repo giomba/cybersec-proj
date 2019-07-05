@@ -239,14 +239,14 @@ bool Client::execute(void) {
     unsigned char* iv;
     */
 
-    unsigned char sessionKey[] = "1230000000000321";
-    unsigned char authKey[] = "0123456789abcdef9876543210abcdef";
-    unsigned char iv[] = "0000000000000000";
+    string sessionKey = "1230000000000321";
+    string authKey = "0123456789abcdef9876543210abcdef";
+    string iv = "0000000000000000";
 
     try {
         /* key exchange handshake */
         //handshake(session_key, auth_key, iv);
-        this->crypto = new Crypto((const unsigned char*)sessionKey, (const unsigned char*)authKey, (const unsigned char*)iv);
+        this->crypto = new Crypto(sessionKey, authKey, iv);
         this->signer = new Signer();
 
         for (;;) {

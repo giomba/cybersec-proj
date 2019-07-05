@@ -53,19 +53,18 @@ void send_file(string filepath, string filename, int64_t size){
 
 void recv_response(){
     char buffer[BUFFER_SIZE];
-//    char d_buffer[BUFFER_SIZE];
 
     int recvBytes;
     char shiftRegister[2];
 
     memset(buffer, 0, BUFFER_SIZE);
-//    memset(d_buffer, 0, BUFFER_SIZE);
+    memset(shiftRegister, 0, 2);
+
     is.clear();
     is.str("");
 
     for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
-        recvBytes = crypto->recv(connection, buffer + i, 1); //connection->recv(buffer + i, 1);
-//        crypto->decrypt(d_buffer + i, buffer + i, 1);
+        recvBytes = crypto->recv(connection, buffer + i, 1);
 
         if (recvBytes == 1) {
             shiftRegister[0] = shiftRegister[1];

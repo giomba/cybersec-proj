@@ -27,6 +27,8 @@ const int64_t MAX_FILE_SIZE = 4 * GiB;
 
 extern regex parola;
 
+#define HMAC_LEN            32 // EVP_MD_size(EVP_sha256());
+
 #define AES128_KEY_LEN      16
 #define AES128_BLOCK_LEN    16
 
@@ -50,8 +52,5 @@ struct M3 {
     uint32_t signLen;
     uint32_t nonceS;
 };  /* and then the actual signature */
-
-int handshakeServer(Connection*, CertManager*);
-int handshakeClient(Connection*, CertManager*);
 
 #endif
