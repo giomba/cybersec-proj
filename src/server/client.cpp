@@ -3,30 +3,30 @@
 const string SERVER_ROOT = "root";
 
 Client::Client(Connection* c, CertManager* cm) {
+    memset(this, 0, sizeof(Client));
     this->connection = c;
     this->cm = cm;
 }
 
 Client::~Client() {
-    if (this->connection) delete connection;
-    if (this->crypto) delete crypto;
+    if (this->connection != NULL) delete connection;
+    if (this->crypto != NULL) delete crypto;
 }
 
 
 void Client::recvCmd() {
     char buffer[BUFFER_SIZE];
-//    char ciphertext;
-    int recvBytes;
+    int recvBytes = 0;
     char shiftRegister[2];
+
+    memset(buffer, 0, BUFFER_SIZE);
+    memset(shiftRegister, 0, 2);
 
     is.ignore(BUFFER_SIZE);
     is.clear();
 
     for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
         recvBytes = crypto->recv(connection, buffer + i, 1);
-        //recvBytes = connection->recv(&ciphertext, 1);
-        //crypto.decrypt(buffer + i, &ciphertext, 1);
-        //recvBytes = connection->recv(buffer + i, 1);
         if (recvBytes == 1) {
             shiftRegister[0] = shiftRegister[1];
             shiftRegister[1] = buffer[i];
