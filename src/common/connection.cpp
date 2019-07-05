@@ -25,6 +25,35 @@ int Connection::getSocket(){
     return this->sd;
 }
 
+int Connection::send(string& buffer) {
+    uint32_t size = buffer.size();
+    size = htonl(size);
+    int ret1, ret2;
+    ret1 = this->send((const char*)&size, sizeof(size));
+    ret2 = this->send(buffer.data(), buffer.size());
+    if (ret1 >= 0 && ret2 >= 0) return ret1 + ret2;
+    else return -1;
+}
+
+int Connection::recv(string& buffer) {
+    uint32_t size;
+    int ret1, ret2;
+
+    ret1 = this->recv((char*)&size, sizeof(size));
+    size = ntohl(size);
+
+    if (size > BUFFER_SIZE) throw ExTooBig("string too big");
+
+    char* tmp_buffer = new char[size];
+    ret2 = this->recv(tmp_buffer, size);
+
+    buffer.assign(tmp_buffer, size);
+
+    delete tmp_buffer;
+
+    if (ret1 >= 0 && ret2 >= 0) return ret1 + ret2;
+    else return -1;
+}
 
 int Connection::send(const char* buffer, int len) {
     debug(DEBUG, "=== Connection::send()" << endl);

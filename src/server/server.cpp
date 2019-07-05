@@ -23,6 +23,12 @@ Server::Server(const char* address, uint16_t port) {
     debug(INFO, "listen() ok" << endl);
 
     this->cm = new CertManager("server");
+    
+    
+    //intializing the list of clients
+    clientList.push_back("barba");
+    clientList.push_back("alice");
+    clientList.push_back("tommy");
 }
 
 Connection* Server::accept() {

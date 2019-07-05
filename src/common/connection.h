@@ -17,6 +17,7 @@
 
 #include "debug.h"
 #include "exception.h"
+#include "protocol.h"
 
 class Connection {
     private:
@@ -29,6 +30,8 @@ class Connection {
         int getSocket();
         int send(const char* buffer, int len);
         int recv(char* buffer, int len);
+        int send(string&);
+        int recv(string&);
 };
 
 #endif

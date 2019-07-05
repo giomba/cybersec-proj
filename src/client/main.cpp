@@ -9,24 +9,13 @@ using namespace std;
 
 void send_cmd(string cmd){
     int size = strlen(cmd.c_str());
-    //char *ciphertext = new char[size];
-
-//    crypto->encrypt(ciphertext, cmd.c_str(), size);
-//    connection->send(ciphertext, size);
 
     crypto->send(connection, cmd.c_str(), size);
 
-    //delete(ciphertext);
 }
 
 void send_fragment(const char *buffer, const int len){
-//    char *ciphertext = new char[len];
-
-//    crypto->encrypt(ciphertext, buffer, len);
-//    connection->send(ciphertext, len);
     crypto->send(connection, buffer, len);
-
-    //delete(ciphertext);
 }
 
 void send_file(string filepath, string filename, int64_t size){
@@ -84,14 +73,8 @@ void recv_response(){
 
 int recv_fragment(char* buffer, const int len){
     int recvBytes;
-//    char *ciphertext = new char[len];
-
-/*    recvBytes = connection->recv(ciphertext, len);
-    crypto->decrypt(buffer, ciphertext, len);*/
 
     recvBytes = crypto->recv(connection, buffer, len);
-
-//    delete(ciphertext);
 
     return recvBytes;
 }
@@ -420,6 +403,20 @@ void cmd_unknown(string cmd){
     cout << "error: '" << cmd << "' is an invalid command" << endl;
 }
 
+int handshake() {
+    debug(INFO, "[I] handshake with server..." << endl)
+    /* === M1 === */
+    /* send certificate */
+    string certificate = cm->getCert().str();
+
+    debug(DEBUG, "[D] serialized certificate" << endl);
+    vstrdump(DEBUG, certificate);
+
+    connection->send(certificate);
+
+    return 0;   /* all ok */
+}
+
 /****************************************/
 /*                MAIN                  */
 /****************************************/
@@ -443,9 +440,12 @@ int main(int argc, char* argv[]) {
         connection = new Connection(sv_addr.c_str(), sv_port);
         // if (!connection) { debug(FATAL, "[F] cannot create Connection" << endl); exit(1); }
 
-        // handshake
-        //if (!handshake()){ cout << "handshake error: Unable to connect to the server" << endl; exit(-1); }
-
+        /* handshake with server 
+        if (handshake() == -1) {
+            cout << "handshake error: Unable to connect to the server" << endl;
+            exit(-1);
+        }
+        */
         crypto = new Crypto(sessionKey, authKey, iv);
 
         while(1){

@@ -231,9 +231,24 @@ void Client::cmd_unknown(void) {
     sendCmd();
 }
 
+int Client::handshake(void) {
+    debug(INFO, "[I] handshake with client..." << endl);
+    /* === M1 === */
+    string buffer;
+    connection->recv(buffer);
+
+    debug(DEBUG, "[D] serialized certificate" << endl);
+    vstrdump(DEBUG, buffer);
+
+    //Certificate certificate(buffer);
+
+    /* if (some error) return -1; else */
+    return 0;
+}
+
 bool Client::execute(void) {
     string cmd;
-    /* TODO 
+    /* TODO
     unsigned char* sessionKey;
     unsigned char* authKey;
     unsigned char* iv;
@@ -287,4 +302,3 @@ bool Client::execute(void) {
 
     return true;
 }
-
