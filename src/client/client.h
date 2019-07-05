@@ -29,9 +29,16 @@ Connection* connection;
 Crypto* crypto;
 CertManager* cm;
 Signer* signer;
+
+/* TODO 
 unsigned char* sessionKey;
 unsigned char* authKey;
 unsigned char* iv;
+*/
+
+unsigned char sessionKey[] = "1230000000000321";
+unsigned char authKey[] = "0123456789abcdef9876543210abcdef";
+unsigned char iv[] = "0000000000000000";
 
 enum CommandType {
     HELP, R_LIST, L_LIST, QUIT, RETR, STOR, DELE, BAD_REQ

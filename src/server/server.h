@@ -22,8 +22,7 @@ using namespace std;
 
 class Server {
     private:
-        static socklen_t sizeof_addr;
-
+        socklen_t sizeof_addr;
         int sd;
         struct sockaddr_in6 addr;
 

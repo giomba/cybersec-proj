@@ -1,8 +1,9 @@
 #include "server.h"
 
-socklen_t Server::sizeof_addr = sizeof(addr);
+//const socklen_t Server::
 
 Server::Server(const char* address, uint16_t port) {
+    sizeof_addr = sizeof(addr);
     sd = socket(AF_INET6, SOCK_STREAM, 0);
 
     memset(&addr, 0, sizeof(addr));

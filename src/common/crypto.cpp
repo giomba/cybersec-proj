@@ -20,8 +20,8 @@ Crypto::Crypto(const unsigned char* session_key, const unsigned char* auth_key, 
 
     sequence_number_i = sequence_number_o = 0;  /* TODO -- is it ok to always initialize to 0? */
 
-    delete[] session_key;
-    delete[] iv;
+    //delete[] session_key;
+    //delete[] iv;
 }
 
 int Crypto::encrypt(char* d_buffer, const char* s_buffer, int size){
@@ -199,7 +199,7 @@ Crypto::~Crypto() {
         EVP_DecryptFinal(ctx_d, ...);
     */
 
-    delete[] auth_key;
+    //delete[] auth_key;
 
     EVP_CIPHER_CTX_free(ctx_e);
 	EVP_CIPHER_CTX_free(ctx_d);

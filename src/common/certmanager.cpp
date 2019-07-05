@@ -32,6 +32,9 @@ CertManager::CertManager(string cert_name){
     this->cert = PEM_read_X509(file, NULL, NULL, NULL);
 	fclose(file);
     if (!this->cert) { debug(FATAL, "can not read my certificate" << endl); throw ExCertificate(); }
+
+	X509_free(CA_cert);
+	X509_CRL_free(crl);
 }
 
 CertManager::~CertManager(){
