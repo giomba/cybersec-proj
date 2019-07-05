@@ -20,7 +20,7 @@ class CertManager {
     public:
         CertManager(string cert_name = "server");
         ~CertManager();
-        Certificate getCert();
+        Certificate& getCert();
         int verifyCert(Certificate&, const vector<string>&);
 };
 

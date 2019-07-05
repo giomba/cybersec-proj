@@ -10,6 +10,7 @@ class Certificate {
         Certificate(void);
         Certificate(X509*);
         ~Certificate(void);
+        Certificate(const Certificate& old);
 
         X509* getX509(void);
 };

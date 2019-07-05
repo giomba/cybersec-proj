@@ -45,7 +45,7 @@ CertManager::~CertManager(){
 	debug(INFO, "[I] destroying CA store and certificate" << endl);
 }
 
-Certificate CertManager::getCert(){
+Certificate& CertManager::getCert(){
 	return this->cert;
 }
 
