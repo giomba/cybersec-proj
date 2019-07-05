@@ -2,6 +2,7 @@
 #define CERTMANAGER_H
 
 #include <iostream>
+#include <vector>
 #include <openssl/pem.h>
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
@@ -19,7 +20,7 @@ class CertManager {
         CertManager(string cert_name = "server");
         ~CertManager();
         X509* getCert();
-        int verifyCert(X509*, string name = "");
+        int verifyCert(X509*, vector<string>);
 };
 
 #endif

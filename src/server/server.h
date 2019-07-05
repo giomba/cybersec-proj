@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <vector>
 
 #include "../common/debug.h"
 #include "../common/connection.h"
@@ -25,6 +26,7 @@ class Server {
         socklen_t sizeof_addr;
         int sd;
         struct sockaddr_in6 addr;
+        vector<string> clientList;
 
         CertManager *cm;
     public:

@@ -47,7 +47,8 @@ X509* CertManager::getCert(){
 	return this->cert;
 }
 
-int CertManager::verifyCert(X509* cert, string name){
+//Here we are also doing the client verification
+int CertManager::verifyCert(X509* cert, vector<string> clientList){ 
 	// verification
     X509_STORE_CTX* ctx = X509_STORE_CTX_new();
 
@@ -61,17 +62,25 @@ int CertManager::verifyCert(X509* cert, string name){
 		goto ripper;
 	}
 
-	if (!name.empty()){
+	if (!clientList.empty()){
 		// check subject name of the server
 		X509_NAME* subject_name = X509_get_subject_name(cert);
 		string str(X509_NAME_oneline(subject_name, NULL, 0));
-		free(subject_name);
+		
 		debug(INFO, "[I] cert belongs to " + str << endl);
-		if ((int)str.find("CN=" + name) == -1) {
-			debug(FATAL, "[F] server name does not match" << endl);
-			goto ripper;
+		
+		//check if the name is in the list of clients
+		for(unsigned int i=0; i<clientList.size(); i++){
+			if ((int)str.find("CN=" + clientList[i]) == -1) {
+				debug(FATAL, "[F] server name/client name does not match" << endl);
+				goto ripper;
+			}
+			
 		}
+		free(subject_name);
 	}
+	
+	
 
 	debug(INFO, "[I] cert verification succeded" << endl);
 
