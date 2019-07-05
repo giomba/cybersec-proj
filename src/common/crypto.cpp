@@ -10,9 +10,6 @@ Crypto::Crypto(const unsigned char* session_key, const unsigned char* auth_key, 
 
     this->auth_key = auth_key;
 
-    /* this->auth_key = new unsigned char[HMAC_LEN];
-    memcpy(this->auth_key, auth_key, HMAC_LEN); */
-
     debug(DEBUG, "session_key + auth_key" << endl);
     hexdump(DEBUG, (const char*)session_key, AES128_KEY_LEN);
     hexdump(DEBUG, (const char*)auth_key, HMAC_LEN);
