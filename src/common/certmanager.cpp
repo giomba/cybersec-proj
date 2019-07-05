@@ -27,11 +27,14 @@ CertManager::CertManager(string cert_name){
 	debug(INFO, "CA store created successfully" << endl);
 
 	// read my certificate
+	X509* my_cert;
 	file = fopen((CERT_PATH + cert_name + "_cert.pem").c_str(), "r");
     if (!file) { debug(FATAL, "cannot open " + cert_name + ".pem" << endl); throw ExCertificate(); }
-    this->cert = PEM_read_X509(file, NULL, NULL, NULL);
+    my_cert = PEM_read_X509(file, NULL, NULL, NULL);
 	fclose(file);
-    if (!this->cert) { debug(FATAL, "can not read my certificate" << endl); throw ExCertificate(); }
+    if (my_cert == NULL) { debug(FATAL, "can not read my certificate" << endl); throw ExCertificate(); }
+
+	this->cert = Certificate(my_cert);
 
 	X509_free(CA_cert);
 	X509_CRL_free(crl);
@@ -39,20 +42,19 @@ CertManager::CertManager(string cert_name){
 
 CertManager::~CertManager(){
 	X509_STORE_free(this->store);
-	X509_free(this->cert);
 	debug(INFO, "[I] destroying CA store and certificate" << endl);
 }
 
-X509* CertManager::getCert(){
+Certificate CertManager::getCert(){
 	return this->cert;
 }
 
-int CertManager::verifyCert(X509* cert, string name){
+int CertManager::verifyCert(Certificate& cert, const vector<string>& namelist) {
 	// verification
     X509_STORE_CTX* ctx = X509_STORE_CTX_new();
 
 	if (!ctx) { debug(ERROR, "cannot create ctx on verifying" << endl); return -1; }
-    if (X509_STORE_CTX_init(ctx, this->store, cert, NULL) != 1) {
+    if (X509_STORE_CTX_init(ctx, this->store, cert.getX509(), NULL) != 1) {
 		debug(WARNING, "[W] cannot init ctx to verify" << endl);
 		goto ripper;
 	}
@@ -61,9 +63,10 @@ int CertManager::verifyCert(X509* cert, string name){
 		goto ripper;
 	}
 
-	if (!name.empty()){
+/* giomba commented this out to allow bruk work on this code // TODO
+	if (!namelist.empty()) {
 		// check subject name of the server
-		X509_NAME* subject_name = X509_get_subject_name(cert);
+		X509_NAME* subject_name = X509_get_subject_name(cert.getX509());
 		string str(X509_NAME_oneline(subject_name, NULL, 0));
 		free(subject_name);
 		debug(INFO, "[I] cert belongs to " + str << endl);
@@ -72,6 +75,7 @@ int CertManager::verifyCert(X509* cert, string name){
 			goto ripper;
 		}
 	}
+	*/
 
 	debug(INFO, "[I] cert verification succeded" << endl);
 
