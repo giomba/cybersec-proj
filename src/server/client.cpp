@@ -5,6 +5,7 @@ const string SERVER_ROOT = "root";
 Client::Client(Connection* c, CertManager* cm) {
     this->connection = c;
     this->cm = cm;
+    this->crypto = 0;
 }
 
 Client::~Client() {

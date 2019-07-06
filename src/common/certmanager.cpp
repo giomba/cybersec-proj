@@ -4,24 +4,24 @@ CertManager::CertManager(string cert_name){
 	// read CA certificate
 	X509* CA_cert;
 	FILE* file = fopen((CERT_PATH + "TrustedCA_cert.pem").c_str(), "r");
-    if (!file) { debug(FATAL, "cannot open CA_cert.pem" << endl); throw ExCertificate(); }
+    if (!file) throw ExCertificate("CertManager::CertManager(): cannot open TrustedCA_cert.open");
     CA_cert = PEM_read_X509(file, NULL, NULL, NULL);
 	fclose(file);
-    if (!CA_cert) { debug(FATAL, "cannot read CA certificate" << endl); throw ExCertificate(); }
-
+    if (!CA_cert) throw ExCertificate("CertManager::CertManager(): cannot read CA_cert");
+	
 	// read Certificate Revocation List
 	X509_CRL* crl;
     file = fopen((CERT_PATH + "TrustedCA_crl.pem").c_str(), "r");
-    if (!file) { debug(ERROR, "cannot open CA_crl.pem" << endl); throw ExCertificate(); }
+    if (!file) throw ExCertificate("CertManager::CertManager(): cannot open TrustedCA_crl.pem");
     crl = PEM_read_X509_CRL(file, NULL, NULL, NULL);
 	fclose(file);
-    if (!crl) { debug(ERROR, "cannot read CRL" << endl); throw ExCertificate(); }
+    if (!crl) throw ExCertificate("CertManager::CertManager(): cannot read crl");
 
 	// build store
     this->store = X509_STORE_new();
-	if (!this->store) { debug(FATAL, "cannot create the CA store" << endl); throw ExCertificate(); }
-    if (X509_STORE_add_cert(this->store, CA_cert) != 1) { debug(FATAL, "cannot add CA_cert to store" << endl); throw ExCertificate(); }
-    if (X509_STORE_add_crl(this->store, crl) != 1) { debug(FATAL, "cannot add CRL to store" << endl); throw ExCertificate(); }
+	if (!this->store) throw ExCertificate("CertManager::CertManager(): cannot create the store");
+    //if (X509_STORE_add_cert(this->store, CA_cert) != 1) throw ExCertificate("CertManager::CertManager(): cannot add CA_cert to store");
+    if (X509_STORE_add_crl(this->store, crl) != 1) throw ExCertificate("CertManager::CertManager(): cannot add crl to store");
     X509_STORE_set_flags(this->store, X509_V_FLAG_CRL_CHECK);
 
 	debug(INFO, "CA store created successfully" << endl);
@@ -66,6 +66,8 @@ void CertManager::verifyCert(Certificate* cert) {
 
 	X509_STORE_CTX_free(ctx);
 
+	if (!cert_pass) throw ExCertificate("CertManager::verify(): invalid certificate");
+
 	bool name_pass = false;
 	if (!clientList.empty()) {
 		// get subject name
@@ -78,12 +80,12 @@ void CertManager::verifyCert(Certificate* cert) {
 		debug(DEBUG, "[D] client list size: " << clientList.size() << endl);
 		unsigned int i = 0;
 		for(i = 0; i < clientList.size() && ((int)subject_name_str.find("CN=" + clientList[i]) == -1); i++);
-		debug(DEBUG, "[D] " << clientList[i] << " is in the list" << endl);
-		name_pass = (i == clientList.size()) ? false : true;
+		if (i == clientList.size()){ debug(DEBUG, "[D] user not in the list" << endl);} 
+		else {name_pass = true; debug(DEBUG, "[D] " << clientList[i] << " is in the list" << endl);}
 		free(subject_name);
 	}
 
-	if (!cert_pass) throw ExCertificate("CertManager::verify(): invalid certificate");
+
 	if (!name_pass) throw ExCertificate("CertManager::verify(): unauthorized client");
 	debug(INFO, "[I] client verified successfully" << endl);
 
