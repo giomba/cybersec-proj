@@ -20,7 +20,7 @@ CertManager::CertManager(string cert_name){
 	// build store
     this->store = X509_STORE_new();
 	if (!this->store) throw ExCertificate("CertManager::CertManager(): cannot create the store");
-    //if (X509_STORE_add_cert(this->store, CA_cert) != 1) throw ExCertificate("CertManager::CertManager(): cannot add CA_cert to store");
+    if (X509_STORE_add_cert(this->store, CA_cert) != 1) throw ExCertificate("CertManager::CertManager(): cannot add CA_cert to store");
     if (X509_STORE_add_crl(this->store, crl) != 1) throw ExCertificate("CertManager::CertManager(): cannot add crl to store");
     X509_STORE_set_flags(this->store, X509_V_FLAG_CRL_CHECK);
 
