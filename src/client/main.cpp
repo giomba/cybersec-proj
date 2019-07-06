@@ -403,15 +403,20 @@ void cmd_unknown(string cmd){
 }
 
 int handshake() {
+    string buffer;
     debug(INFO, "[I] handshake with server..." << endl)
+
     /* === M1 === */
     /* send certificate */
-    string certificate = cm->getCert()->str();
+    buffer = cm->getCert()->str();
+    debug(DEBUG, "[D] Client Certificate" << endl); vstrdump(DEBUG, buffer);
+    connection->send(buffer);
+    /* generate and send nonce */
+    Nonce nonceClient;
+    buffer = nonceClient.str();
+    debug(DEBUG, "[D] Client Nonce" << endl); vstrdump(DEBUG, buffer);
+    connection->send(buffer);
 
-    debug(DEBUG, "[D] serialized certificate" << endl);
-    vstrdump(DEBUG, certificate);
-
-    connection->send(certificate);
 
     return 0;   /* all ok */
 }

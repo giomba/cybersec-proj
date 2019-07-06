@@ -15,6 +15,7 @@
 #include "../common/signer.h"
 #include "../common/debug.h"
 #include "../common/exception.h"
+#include "../common/nonce.h"
 #include "../common/protocol.h"
 
 using namespace std;

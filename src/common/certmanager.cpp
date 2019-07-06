@@ -71,7 +71,7 @@ void CertManager::verifyCert(Certificate& cert) {
 		string subject_name_str = string(oneline);
 		free(oneline);
 
-		debug(INFO, "[I] cert belongs to " + subject_name_str << endl);
+		debug(DEBUG, "[D] cert belongs to " + subject_name_str << endl);
 
 		//check if the name is in the list
 		unsigned int i = 0;

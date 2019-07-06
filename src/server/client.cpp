@@ -232,15 +232,20 @@ void Client::cmd_unknown(void) {
 }
 
 int Client::handshake(void) {
-    debug(INFO, "[I] handshake with client..." << endl);
-    /* === M1 === */
     string buffer;
+    debug(INFO, "[I] handshake with client..." << endl);
 
+    /* === M1 === */
+    /* receive client's certificate */
     connection->recv(buffer);
-    debug(DEBUG, "[D] serialized certificate" << endl);
-    vstrdump(DEBUG, buffer);
+    debug(DEBUG, "[D] Client Certificate" << endl); vstrdump(DEBUG, buffer);
     Certificate certificate(buffer);
     cm->verifyCert(certificate);
+
+    /* receive client's nonce */
+    connection->recv(buffer);
+    debug(DEBUG, "[D] Client Nonce" << endl); vstrdump(DEBUG, buffer);
+    Nonce clientNonce(buffer);
 
     //delete certificate;
     /* if (some error) return -1; else */

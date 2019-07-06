@@ -30,16 +30,18 @@ class ExPort : public ExNetwork { using ExNetwork::ExNetwork; };
 /* User Input Exception */
 class ExUserInput : public Ex { using Ex::Ex; };
 
-/* Crypto Exceptions */
+/* Cryptography Exceptions */
 class ExCrypto : public Ex { using Ex::Ex; };
 class ExCryptoComputation : public ExCrypto { using ExCrypto::ExCrypto; };
 class ExBadSeqNum : public ExCrypto { using ExCrypto::ExCrypto; };
 class ExBadHMAC : public ExCrypto { using ExCrypto::ExCrypto; };
 class ExBadProtocol : public ExCrypto { using ExCrypto::ExCrypto; };
+class ExRandom : public ExCrypto { using ExCrypto::ExCrypto; };
 
-/* Application protocol exceptions */
+/* Protocol exceptions */
 class ExProtocol : public Ex { using Ex::Ex; };
 class ExTooBig : public ExProtocol { using ExProtocol::ExProtocol; };
+class ExNonce : public ExProtocol { using ExProtocol::ExProtocol; };
 
 /* Certificate Exceptions */
 class ExCertificate : public Ex { using Ex::Ex; };
