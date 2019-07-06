@@ -17,7 +17,7 @@ class Certificate {
         Certificate(X509*);
         Certificate(string);
         ~Certificate(void);
-        Certificate(const Certificate& old);
+        Certificate(const Certificate& old);    /* never use! */
 
         X509* getX509(void);
         string str(void);
