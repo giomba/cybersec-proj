@@ -247,7 +247,23 @@ int Client::handshake(void) {
     debug(DEBUG, "[D] Client Nonce" << endl); vstrdump(DEBUG, buffer);
     Nonce clientNonce(buffer);
 
-    //delete certificate;
+    /* === M2 === */
+    /* send server's certificate */
+    buffer = cm->getCert()->str();
+    debug(DEBUG, "[D] Server Certificate" << endl); vstrdump(DEBUG, buffer);
+    connection->send(buffer);
+
+    /* generate keys */
+    Key session_key(AES128_KEY_LEN);
+    Key auth_key(HMAC_KEY_LEN);
+    Key iv(AES128_KEY_LEN);
+    debug(DEBUG, "[D] Ks" << endl); vstrdump(DEBUG, session_key.str());
+    debug(DEBUG, "[D] Ka" << endl); vstrdump(DEBUG, auth_key.str());
+    /* generate server's nonce */
+    Nonce serverNonce();
+
+
+
     /* if (some error) return -1; else */
     return 0;
 }

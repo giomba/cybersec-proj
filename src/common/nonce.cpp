@@ -1,11 +1,7 @@
 #include "nonce.h"
 
 Nonce::Nonce(void) {
-    if (! RAND_status()) {
-        if (RAND_poll() != 1) throw ExRandom("can not RAND_poll()");
-    }
-
-    if (RAND_bytes((unsigned char*)&(this->nonce), sizeof(this->nonce)) != 1) throw ExRandom("can not RAND_bytes()");
+    cybRand((char*)&(this->nonce), sizeof(this->nonce));
 }
 
 Nonce::Nonce(string buffer) {

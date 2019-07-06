@@ -1,13 +1,11 @@
 #ifndef NONCE_H
 #define NONCE_H
 
-#include <openssl/rand.h>
 #include <string>
-#include <valgrind/memcheck.h>
+
+#include "cybrand.h"
 
 using namespace std;
-
-#include "exception.h"
 
 class Nonce {
     private:
