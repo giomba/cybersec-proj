@@ -16,13 +16,14 @@ const string CERT_PATH = "cert/";
 
 class CertManager {
     private:
-	    Certificate cert;
+	    Certificate* cert;
         X509_STORE* store;
+        vector<string> clientList;
     public:
         CertManager(string cert_name = "server");
         ~CertManager();
-        Certificate& getCert();
-        int verifyCert(Certificate&, const vector<string>&);
+        Certificate* getCert();
+        void verifyCert(Certificate*);
 };
 
 #endif

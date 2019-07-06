@@ -42,7 +42,6 @@ void send_file(string filepath, string filename, int64_t size){
 
 void recv_response(){
     char buffer[BUFFER_SIZE];
-
     int recvBytes;
     char shiftRegister[2];
 
@@ -407,7 +406,7 @@ int handshake() {
     debug(INFO, "[I] handshake with server..." << endl)
     /* === M1 === */
     /* send certificate */
-    string certificate = cm->getCert().str();
+    string certificate = cm->getCert()->str();
 
     debug(DEBUG, "[D] serialized certificate" << endl);
     vstrdump(DEBUG, certificate);
@@ -434,7 +433,7 @@ int main(int argc, char* argv[]) {
 
     try {
 		cm = new CertManager(username);
-        signer = new Signer(username);
+        //signer = new Signer(username);
         // if (!cm) { debug(FATAL, "[F] cannot create Certificate Manager" << endl); exit(1); }
 
         connection = new Connection(sv_addr.c_str(), sv_port);

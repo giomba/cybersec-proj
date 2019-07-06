@@ -1,9 +1,6 @@
 #include "server.h"
 
-//const socklen_t Server::
-
 Server::Server(const char* address, uint16_t port) {
-    sizeof_addr = sizeof(addr);
     sd = socket(AF_INET6, SOCK_STREAM, 0);
 
     memset(&addr, 0, sizeof(addr));
@@ -23,17 +20,12 @@ Server::Server(const char* address, uint16_t port) {
     debug(INFO, "listen() ok" << endl);
 
     this->cm = new CertManager("server");
-    
-    
-    //intializing the list of clients
-    clientList.push_back("barba");
-    clientList.push_back("alice");
-    clientList.push_back("tommy");
 }
 
 Connection* Server::accept() {
     struct sockaddr_in6 client_addr;
-    int client_sd = ::accept(sd, (struct sockaddr*)&client_addr, &sizeof_addr);
+    int addrlen = sizeof(client_addr);
+    int client_sd = ::accept(sd, (struct sockaddr*)&client_addr, (socklen_t*)&addrlen);
     debug(INFO, "[I] remote TCP port: " << client_addr.sin6_port << endl);
     return new Connection(client_sd, client_addr);
 }

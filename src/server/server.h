@@ -23,10 +23,8 @@ using namespace std;
 
 class Server {
     private:
-        socklen_t sizeof_addr;
         int sd;
         struct sockaddr_in6 addr;
-        vector<string> clientList;
 
         CertManager *cm;
     public:

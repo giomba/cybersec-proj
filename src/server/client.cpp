@@ -15,9 +15,11 @@ Client::~Client() {
 
 void Client::recvCmd() {
     char buffer[BUFFER_SIZE];
-//    char ciphertext;
     int recvBytes;
     char shiftRegister[2];
+
+    memset(buffer, 0, BUFFER_SIZE);
+    memset(shiftRegister, 0, 2);
 
     is.ignore(BUFFER_SIZE);
     is.clear();
@@ -240,7 +242,8 @@ int Client::handshake(void) {
     debug(DEBUG, "[D] serialized certificate" << endl);
     vstrdump(DEBUG, buffer);
 
-    Certificate certificate(buffer);
+    Certificate* certificate = new Certificate(buffer);
+    cm->verifyCert(certificate);
 
     /* if (some error) return -1; else */
     return 0;
@@ -263,7 +266,7 @@ bool Client::execute(void) {
         //handshake(session_key, auth_key, iv);
         handshake();
         this->crypto = new Crypto(sessionKey, authKey, iv);
-        this->signer = new Signer();
+        //this->signer = new Signer();
 
         for (;;) {
             /* Receive command and read first parola */

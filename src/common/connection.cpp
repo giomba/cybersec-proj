@@ -49,7 +49,7 @@ int Connection::recv(string& buffer) {
 
     buffer.assign(tmp_buffer, size);
 
-    delete tmp_buffer;
+    delete[] tmp_buffer;
 
     if (ret1 >= 0 && ret2 >= 0) return ret1 + ret2;
     else return -1;
