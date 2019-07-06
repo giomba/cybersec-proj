@@ -1,0 +1,217 @@
+{
+    ignore_libcrypto_conditional_jump_errors
+    Memcheck:Leak
+    ...
+    obj:/usr/lib/libcrypto.so.1.1
+    ...
+}
+{
+    ignore_libcrypto_conditional_jump_errors
+    Memcheck:Cond
+    ...
+    obj:/usr/lib/libcrypto.so.1.1
+    ...
+}
+{
+    ignore_libcrypto_conditional_jump_errors
+    Memcheck:Free
+    ...
+    obj:/usr/lib/libcrypto.so.1.1
+    ...
+}
+{
+    ignore_libcrypto_conditional_jump_errors
+    Memcheck:Value8
+    ...
+    obj:/usr/lib/libcrypto.so.1.1
+    ...
+}
+{
+    ignore_libcrypto_conditional_jump_errors
+    Memcheck:Param
+    socketcall.sendto(msg)
+    fun:send
+    ...
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_generate
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_instantiate
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_get0_public
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:_ZN5NonceC1Ev
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib/libcrypto.so.1.1
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_generate
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_instantiate
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_get0_public
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:_ZN5NonceC1Ev
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib/libcrypto.so.1.1
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_generate
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_instantiate
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_get0_public
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:_ZN5NonceC1Ev
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib/libcrypto.so.1.1
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_generate
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_instantiate
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_get0_public
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:_ZN5NonceC1Ev
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib/libcrypto.so.1.1
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_generate
+   fun:RAND_DRBG_bytes
+   fun:_ZN5NonceC1Ev
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib/libcrypto.so.1.1
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_generate
+   fun:RAND_DRBG_bytes
+   fun:_ZN5NonceC1Ev
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib/libcrypto.so.1.1
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_generate
+   fun:RAND_DRBG_bytes
+   fun:_ZN5NonceC1Ev
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_generate
+   fun:RAND_DRBG_bytes
+   fun:_ZN5NonceC1Ev
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib/libcrypto.so.1.1
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_generate
+   fun:RAND_DRBG_bytes
+   fun:_ZN5NonceC1Ev
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib/libcrypto.so.1.1
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_generate
+   fun:RAND_DRBG_bytes
+   fun:_ZN5NonceC1Ev
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib/libcrypto.so.1.1
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:RAND_DRBG_generate
+   fun:RAND_DRBG_bytes
+   fun:_ZN5NonceC1Ev
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   obj:/usr/lib/libcrypto.so.1.1
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:BIO_vsnprintf
+   fun:BIO_snprintf
+   fun:BIO_dump_indent_cb
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   obj:/usr/lib/libcrypto.so.1.1
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:BIO_vsnprintf
+   fun:BIO_snprintf
+   fun:BIO_dump_indent_cb
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   write(buf)
+   fun:write
+   fun:_IO_file_write@@GLIBC_2.2.5
+   fun:new_do_write
+   fun:_IO_file_xsputn@@GLIBC_2.2.5
+   fun:fwrite
+   obj:/usr/lib/libcrypto.so.1.1
+   fun:BIO_dump_indent_cb
+   fun:_Z9handshakev
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   socketcall.sendto(msg)
+   fun:send
+   fun:_ZN10Connection4sendEPKci
+   fun:_ZN10Connection4sendERNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+   fun:_Z9handshakev
+   fun:main
+}
+
