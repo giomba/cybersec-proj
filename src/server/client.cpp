@@ -27,9 +27,6 @@ void Client::recvCmd() {
 
     for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
         recvBytes = crypto->recv(connection, buffer + i, 1);
-        //recvBytes = connection->recv(&ciphertext, 1);
-        //crypto.decrypt(buffer + i, &ciphertext, 1);
-        //recvBytes = connection->recv(buffer + i, 1);
         if (recvBytes == 1) {
             shiftRegister[0] = shiftRegister[1];
             shiftRegister[1] = buffer[i];
@@ -238,14 +235,14 @@ int Client::handshake(void) {
     debug(INFO, "[I] handshake with client..." << endl);
     /* === M1 === */
     string buffer;
-    connection->recv(buffer);
 
+    connection->recv(buffer);
     debug(DEBUG, "[D] serialized certificate" << endl);
     vstrdump(DEBUG, buffer);
-
-    Certificate* certificate = new Certificate(buffer);
+    Certificate certificate(buffer);
     cm->verifyCert(certificate);
 
+    //delete certificate;
     /* if (some error) return -1; else */
     return 0;
 }

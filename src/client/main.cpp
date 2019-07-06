@@ -430,9 +430,11 @@ int main(int argc, char* argv[]) {
     string sv_addr = argv[1];
     uint16_t sv_port = atoi(argv[2]);
 	string username = argv[3];
+    vector<string> authServersList;
+    authServersList.push_back("server");
 
     try {
-		cm = new CertManager(username);
+		cm = new CertManager(username, authServersList);
         //signer = new Signer(username);
         // if (!cm) { debug(FATAL, "[F] cannot create Certificate Manager" << endl); exit(1); }
 

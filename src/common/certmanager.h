@@ -18,12 +18,12 @@ class CertManager {
     private:
 	    Certificate* cert;
         X509_STORE* store;
-        vector<string> clientList;
+        vector<string>& authPeersList;
     public:
-        CertManager(string cert_name = "server");
+        CertManager(string cert_name, vector<string>& authPeersList);
         ~CertManager();
         Certificate* getCert();
-        void verifyCert(Certificate*);
+        void verifyCert(Certificate&);
 };
 
 #endif

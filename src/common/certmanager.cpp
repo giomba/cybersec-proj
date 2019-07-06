@@ -1,6 +1,6 @@
 #include "certmanager.h"
 
-CertManager::CertManager(string cert_name){
+CertManager::CertManager(string cert_name, vector<string>& authPeersList) : authPeersList(authPeersList) {
 	// read CA certificate
 	X509* CA_cert;
 	FILE* file = fopen((CERT_PATH + "TrustedCA_cert.pem").c_str(), "r");
@@ -8,7 +8,7 @@ CertManager::CertManager(string cert_name){
     CA_cert = PEM_read_X509(file, NULL, NULL, NULL);
 	fclose(file);
     if (!CA_cert) throw ExCertificate("CertManager::CertManager(): cannot read CA_cert");
-	
+
 	// read Certificate Revocation List
 	X509_CRL* crl;
     file = fopen((CERT_PATH + "TrustedCA_crl.pem").c_str(), "r");
@@ -25,11 +25,6 @@ CertManager::CertManager(string cert_name){
     X509_STORE_set_flags(this->store, X509_V_FLAG_CRL_CHECK);
 
 	debug(INFO, "CA store created successfully" << endl);
-
-	//intializing the list of clients
-    clientList.push_back("barba");
-    clientList.push_back("alice");
-    clientList.push_back("tommy");
 
 	// read my certificate
 	X509* my_cert;
@@ -56,12 +51,12 @@ Certificate* CertManager::getCert(){
 }
 
 //Here we are also doing the client verification
-void CertManager::verifyCert(Certificate* cert) {
+void CertManager::verifyCert(Certificate& cert) {
 	// verification
     X509_STORE_CTX* ctx = X509_STORE_CTX_new();
 	if (!ctx) throw ExCertificate("CertManager::verify(): X509_STORE_CTX_new()");
 
-	bool cert_pass = (X509_STORE_CTX_init(ctx, this->store, cert->getX509(), NULL) == 1)
+	bool cert_pass = (X509_STORE_CTX_init(ctx, this->store, cert.getX509(), NULL) == 1)
 					 && (X509_verify_cert(ctx) == 1);
 
 	X509_STORE_CTX_free(ctx);
@@ -69,22 +64,24 @@ void CertManager::verifyCert(Certificate* cert) {
 	if (!cert_pass) throw ExCertificate("CertManager::verify(): invalid certificate");
 
 	bool name_pass = false;
-	if (!clientList.empty()) {
+	if (!authPeersList.empty()) {
 		// get subject name
-		X509_NAME* subject_name = X509_get_subject_name(cert->getX509());
-		string subject_name_str = string(X509_NAME_oneline(subject_name, NULL, 0));
-		
-		debug(INFO, "[I] cert belongs to " + subject_name_str << endl);
-		
-		//check if the name is in the list
-		debug(DEBUG, "[D] client list size: " << clientList.size() << endl);
-		unsigned int i = 0;
-		for(i = 0; i < clientList.size() && ((int)subject_name_str.find("CN=" + clientList[i]) == -1); i++);
-		if (i == clientList.size()){ debug(DEBUG, "[D] user not in the list" << endl);} 
-		else {name_pass = true; debug(DEBUG, "[D] " << clientList[i] << " is in the list" << endl);}
-		free(subject_name);
-	}
+		X509_NAME* subject_name = X509_get_subject_name(cert.getX509());
+		char* oneline = X509_NAME_oneline(subject_name, NULL, 0);
+		string subject_name_str = string(oneline);
+		free(oneline);
 
+		debug(INFO, "[I] cert belongs to " + subject_name_str << endl);
+
+		//check if the name is in the list
+		unsigned int i = 0;
+		for(i = 0; i < authPeersList.size() && ((int)subject_name_str.find("CN=" + authPeersList[i]) == -1); i++);
+		if (i == authPeersList.size()) { debug(DEBUG, "[D] user not in the list" << endl); }
+		else {
+			name_pass = true;
+			debug(DEBUG, "[D] " << authPeersList[i] << " is in the list" << endl);
+		}
+	}
 
 	if (!name_pass) throw ExCertificate("CertManager::verify(): unauthorized client");
 	debug(INFO, "[I] client verified successfully" << endl);
