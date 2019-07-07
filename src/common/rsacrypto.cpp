@@ -40,7 +40,7 @@ void RSACrypto::verify(string& buffer, string& signature, RSAKey& pubkey) {
 
 RSASeal RSACrypto::encrypt(string& src, RSAKey& pubkey) {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
-    if (!ctx) throw ExCrypto("RSACrypto::encrypt(): caanot create context");
+    if (!ctx) throw ExCrypto("RSACrypto::encrypt(): cannot create context");
 
     EVP_PKEY* pubkey_pointer = pubkey.getPKEY();
 
@@ -87,6 +87,54 @@ RSASeal RSACrypto::encrypt(string& src, RSAKey& pubkey) {
     return seal;
 }
 
-string RSACrypto::decrypt(RSASeal& src) {
-    assert(false);
+string RSACrypto::decrypt(RSASeal& seal) {
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if (ctx == NULL) throw ExCrypto("RSACrypto::decrypt(): cannot create context");
+
+    string eks = seal.getEK();
+    int ekl = eks.size();
+    unsigned char* ek = new unsigned char[ekl];
+    memcpy(ek, eks.data(), ekl);
+
+    string ps = seal.getPayload();
+    int cipherlen = ps.size();
+    unsigned char* ciphertext = new unsigned char[cipherlen];
+    memcpy(ciphertext, ps.data(), cipherlen);
+
+    unsigned char* plaintext = new unsigned char[cipherlen];
+    memset(plaintext, 0, cipherlen);
+
+    unsigned char iv[AES128_KEY_LEN];
+    memset(iv, 0, AES128_KEY_LEN);
+
+    int outlen = 0, plainlen = 0;
+
+    bool pass = true;
+
+    if (EVP_OpenInit(ctx, EVP_aes_128_cfb8(), ek, ekl, iv, privkey.getPKEY()) == 0) {
+        openssl_perror();
+        pass = false;
+    }
+    if (EVP_OpenUpdate(ctx, plaintext, &outlen, ciphertext, cipherlen) != 1) {
+        openssl_perror();
+        pass = false;
+    }
+    plainlen = outlen;
+    if (EVP_OpenFinal(ctx, plaintext + plainlen, &outlen) != 1) {
+        openssl_perror();
+        pass = false;
+    }
+    plainlen += outlen;
+
+    string ret;
+    ret.assign((char*)plaintext, plainlen);
+
+    EVP_CIPHER_CTX_free(ctx);
+    delete[] plaintext;
+    delete[] ciphertext;
+    delete[] ek;
+
+    if (! pass) throw ExCryptoComputation("RSACrypto::decrypt(): EVP_Open()");
+
+    return ret;
 }

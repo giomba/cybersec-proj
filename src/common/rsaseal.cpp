@@ -18,6 +18,13 @@ void RSASeal::fromString(string& buffer) {
     this->payload.assign(buffer.data() + sizeof(uint32_t) + el + sizeof(uint32_t), pl);
 }
 
+string RSASeal::getEK(void) {
+    return this->ek;
+}
+string RSASeal::getPayload(void) {
+    return this->payload;
+}
+
 string RSASeal::str(void) {
     assert(! ek.empty() && ! payload.empty());
     string buffer;

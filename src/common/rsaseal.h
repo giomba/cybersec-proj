@@ -14,6 +14,8 @@ class RSASeal {
         //RSASeal(void);
         void fromEKPayload(string& ek, string& payload);
         void fromString(string& buffer);
+        string getEK(void);
+        string getPayload(void);
         string str(void);
 };
 

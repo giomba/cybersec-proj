@@ -445,13 +445,8 @@ int handshake() {
     debug(DEBUG, "[D] server's signature is valid" << endl);
 
     /* decrypt symmetric session+auth keys */
-
-
-    // check server's certificate
-    // receive blobbone
-    // receive signature of blobbone
-    // check signature
-    // decrypt keys
+    Key session_key(rsacrypto.decrypt(encrypted_session_key_seal));
+    Key auth_key(rsacrypto.decrypt(encrypted_auth_key_seal));
 
     /* === M3 === */
     // sign server's nonce
