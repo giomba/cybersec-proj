@@ -307,7 +307,6 @@ bool Client::execute(void) {
         //handshake(session_key, auth_key, iv);
         handshake();
         this->crypto = new Crypto(sessionKey, authKey, iv);
-        //this->signer = new Signer();
 
         for (;;) {
             /* Receive command and read first parola */

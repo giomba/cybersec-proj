@@ -451,7 +451,6 @@ int main(int argc, char* argv[]) {
 
     try {
 		cm = new CertManager(username, authServersList);
-        //signer = new Signer(username);
         // if (!cm) { debug(FATAL, "[F] cannot create Certificate Manager" << endl); exit(1); }
 
         connection = new Connection(sv_addr.c_str(), sv_port);
