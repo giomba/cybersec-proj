@@ -3,10 +3,9 @@
 const string SERVER_ROOT = "root";
 
 Client::Client(Connection* c, CertManager* cm) {
-    memset(this, 0, sizeof(Client));
     this->connection = c;
     this->cm = cm;
-    this->crypto = 0;
+    this->crypto = NULL;
 }
 
 Client::~Client() {
