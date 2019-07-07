@@ -14,7 +14,7 @@ void SpaceCraft::ntohl(){
     this->sequence_number = ::ntohl(sequence_number);
 }
 
-void SpaceCraft::computehmac(string auth_key, const string payload){
+void SpaceCraft::computehmac(string auth_key, const string& payload){
     unsigned int len;
 
     HMAC_CTX* ctx = HMAC_CTX_new();
@@ -33,7 +33,7 @@ void SpaceCraft::computehmac(string auth_key, const string payload){
     return;
 }
 
-void SpaceCraft::verify(string auth_key, uint32_t expected_seq_num, const string payload){
+void SpaceCraft::verify(string auth_key, uint32_t expected_seq_num, const string& payload){
     string received_hmac((const char*)&this->hmac, HMAC_LEN);
     this->computehmac(auth_key, payload);
 

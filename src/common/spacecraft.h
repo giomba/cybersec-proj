@@ -17,8 +17,8 @@ class SpaceCraft {
         void htonl();
         void ntohl();
 
-        void computehmac(string, const string);
-        void verify(string, uint32_t, const string);
+        void computehmac(string, const string&);
+        void verify(string, uint32_t, const string&);
 };
 
 #endif
