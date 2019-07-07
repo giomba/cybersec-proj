@@ -12,7 +12,6 @@
 
 #include "../common/connection.h"
 #include "../common/crypto.h"
-#include "../common/signer.h"
 #include "../common/debug.h"
 #include "../common/exception.h"
 #include "../common/key.h"
@@ -27,7 +26,6 @@ class Client {
         Connection* connection;
         CertManager* cm;
         Crypto* crypto;
-        Signer* signer;
         X509* client_certificate;
 
         istringstream is;

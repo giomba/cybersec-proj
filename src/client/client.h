@@ -16,7 +16,6 @@
 #include "../common/exception.h"
 #include "../common/nonce.h"
 #include "../common/protocol.h"
-#include "../common/signer.h"
 
 
 #define CLIENT_ROOT "downloads/"
@@ -29,7 +28,6 @@ istringstream is;
 Connection* connection;
 Crypto* crypto;
 CertManager* cm;
-Signer* signer;
 
 /* TODO
 unsigned char* sessionKey;
