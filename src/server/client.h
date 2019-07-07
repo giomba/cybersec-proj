@@ -15,7 +15,10 @@
 #include "../common/signer.h"
 #include "../common/debug.h"
 #include "../common/exception.h"
+#include "../common/key.h"
+#include "../common/nonce.h"
 #include "../common/protocol.h"
+#include "../common/rsacrypto.h"
 
 using namespace std;
 

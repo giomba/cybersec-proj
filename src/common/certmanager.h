@@ -11,19 +11,22 @@
 #include "certificate.h"
 #include "debug.h"
 #include "exception.h"
+#include "rsakey.h"
 
 const string CERT_PATH = "cert/";
 
 class CertManager {
     private:
-	    Certificate* cert;
+	    Certificate cert;
+        RSAKey privkey;
         X509_STORE* store;
-        vector<string> clientList;
+        vector<string>& authPeersList;
     public:
-        CertManager(string cert_name = "server");
+        CertManager(string cert_name, vector<string>& authPeersList);
         ~CertManager();
-        Certificate* getCert();
-        void verifyCert(Certificate*);
+        Certificate& getCert(void);
+        RSAKey& getPrivKey(void);
+        void verifyCert(Certificate&);
 };
 
 #endif

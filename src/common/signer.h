@@ -10,7 +10,7 @@
 #include "debug.h"
 #include "exception.h"
 
-const string KEY_PATH = "cert/";
+//const string KEY_PATH = "cert/";
 class Signer {
     private:
         /* TODO -- what does it need? */

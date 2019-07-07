@@ -403,15 +403,31 @@ void cmd_unknown(string cmd){
 }
 
 int handshake() {
+    string buffer;
     debug(INFO, "[I] handshake with server..." << endl)
+
     /* === M1 === */
     /* send certificate */
-    string certificate = cm->getCert()->str();
+    buffer = cm->getCert().str();
+    debug(DEBUG, "[D] Client Certificate" << endl); vstrdump(DEBUG, buffer);
+    connection->send(buffer);
+    /* generate and send nonce */
+    Nonce nonceClient;
+    buffer = nonceClient.str();
+    debug(DEBUG, "[D] Client Nonce" << endl); vstrdump(DEBUG, buffer);
+    connection->send(buffer);
 
-    debug(DEBUG, "[D] serialized certificate" << endl);
-    vstrdump(DEBUG, certificate);
+    /* === M2 === */
+    connection->recv(buffer); // receive server's certificate -- now you have to decode/deserialize
+    // check server's certificate
+    // receive blobbone
+    // receive signature of blobbone
+    // check signature
+    // decrypt keys
 
-    connection->send(certificate);
+    /* === M3 === */
+    // sign server's nonce
+    // send signature back
 
     return 0;   /* all ok */
 }
@@ -430,9 +446,11 @@ int main(int argc, char* argv[]) {
     string sv_addr = argv[1];
     uint16_t sv_port = atoi(argv[2]);
 	string username = argv[3];
+    vector<string> authServersList;
+    authServersList.push_back("server");
 
     try {
-		cm = new CertManager(username);
+		cm = new CertManager(username, authServersList);
         //signer = new Signer(username);
         // if (!cm) { debug(FATAL, "[F] cannot create Certificate Manager" << endl); exit(1); }
 

@@ -25,8 +25,8 @@ class Server {
     private:
         int sd;
         struct sockaddr_in6 addr;
-
         CertManager *cm;
+        vector<string> authClientList;
     public:
         Server(const char* address, uint16_t port);
         Connection* accept(void);

@@ -4,11 +4,11 @@ Certificate::Certificate(void) {
     this->cert = NULL;
 }
 
-Certificate::Certificate(X509* cert) {
+void Certificate::fromX509(X509* cert) {
     this->cert = cert;
 }
 
-Certificate::Certificate(string buffer) {
+void Certificate::fromString(string buffer) {
     const char* tmpstr = buffer.c_str();
     this->cert = d2i_X509(NULL, (const unsigned char**)&tmpstr, buffer.size());
     if (this->cert == NULL) {
@@ -22,11 +22,13 @@ Certificate::~Certificate(void) {
     if (this->cert) X509_free(this->cert);
 }
 
-X509* Certificate::getX509(void) {
+X509* Certificate::getX509(void) {  // TODO DEBUG assert
+    assert(this->cert != NULL);
     return this->cert;
 }
 
 string Certificate::str() {
+    assert(this->cert != NULL); // TODO DEBUG assert
     int len;
     unsigned char* serialized_certificate = NULL;
 

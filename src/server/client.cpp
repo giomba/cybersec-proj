@@ -27,9 +27,6 @@ void Client::recvCmd() {
 
     for (int i = 0; i < BUFFER_SIZE - 1; ++i) {
         recvBytes = crypto->recv(connection, buffer + i, 1);
-        //recvBytes = connection->recv(&ciphertext, 1);
-        //crypto.decrypt(buffer + i, &ciphertext, 1);
-        //recvBytes = connection->recv(buffer + i, 1);
         if (recvBytes == 1) {
             shiftRegister[0] = shiftRegister[1];
             shiftRegister[1] = buffer[i];
@@ -235,18 +232,61 @@ void Client::cmd_unknown(void) {
 }
 
 int Client::handshake(void) {
-    debug(INFO, "[I] handshake with client..." << endl);
-    /* === M1 === */
     string buffer;
+    debug(INFO, "[I] handshake with client..." << endl);
+
+    /* === M1 === */
+    /* receive client's certificate */
     connection->recv(buffer);
+    debug(DEBUG, "[D] Client Certificate" << endl); vstrdump(DEBUG, buffer);
+    Certificate client_certificate; client_certificate.fromString(buffer);
+    cm->verifyCert(client_certificate);
 
-    debug(DEBUG, "[D] serialized certificate" << endl);
-    vstrdump(DEBUG, buffer);
+    /* receive client's nonce */
+    connection->recv(buffer);
+    debug(DEBUG, "[D] Client Nonce" << endl); vstrdump(DEBUG, buffer);
+    Nonce clientNonce(buffer);
 
-    Certificate* certificate = new Certificate(buffer);
-    cm->verifyCert(certificate);
+    /* === M2 === */
+    /* initialize RSA Crypto */
+    RSACrypto(cm->getCert(), cm->getPrivKey());
+    /* send server's certificate */
+    buffer = cm->getCert().str();
+    debug(DEBUG, "[D] Server Certificate" << endl); vstrdump(DEBUG, buffer);
+    connection->send(buffer);
 
-    /* if (some error) return -1; else */
+    /* generate keys and initialization vector */
+    Key session_key(AES128_KEY_LEN);
+    Key auth_key(HMAC_KEY_LEN);
+    Key iv(AES128_KEY_LEN);
+    debug(DEBUG, "[D] Ks" << endl); vstrdump(DEBUG, session_key.str());
+    debug(DEBUG, "[D] Ka" << endl); vstrdump(DEBUG, auth_key.str());
+    debug(DEBUG, "[D] IV" << endl); vstrdump(DEBUG, iv.str());
+    /* generate server's nonce */
+    Nonce serverNonce();
+
+    /* encrypt keys */
+    RSAKey client_pubkey; client_pubkey.fromCertificate(client_certificate);
+    RSACrypto rsacrypto(cm->getCert(), cm->getPrivKey());
+    string session_key_serialized = session_key.str();
+    string auth_key_serialized = auth_key.str();
+
+    RSASeal encrypted_session_key = rsacrypto.encrypt(session_key_serialized, client_pubkey);
+    RSASeal encrypted_auth_key = rsacrypto.encrypt(auth_key_serialized, client_pubkey);
+
+    // concatenate all encrypted_*_key.str() + iv.str() + NonceClient
+    // send concatenation
+    // sign everything
+    // send signature
+    // send NonceServer
+
+    /* === M3 === */
+    // receive my nonce (signed by the client)
+    // ... todo ...
+
+
+
+    /* if (some error) return -1; else -- TODO is this really needed? if some error, then exceptions everywhere!!! */
     return 0;
 }
 

@@ -19,7 +19,12 @@ Server::Server(const char* address, uint16_t port) {
     }
     debug(INFO, "listen() ok" << endl);
 
-    this->cm = new CertManager("server");
+    //intializing the list of clients // TODO -- read it from file
+    authClientList.push_back("barba");
+    authClientList.push_back("alice");
+    authClientList.push_back("tommy");
+
+    this->cm = new CertManager("server", authClientList);
 }
 
 Connection* Server::accept() {

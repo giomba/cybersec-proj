@@ -9,12 +9,13 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
+#include "../common/certmanager.h"
 #include "../common/connection.h"
+#include "../common/crypto.h"
 #include "../common/debug.h"
 #include "../common/exception.h"
+#include "../common/nonce.h"
 #include "../common/protocol.h"
-#include "../common/crypto.h"
-#include "../common/certmanager.h"
 #include "../common/signer.h"
 
 
@@ -30,7 +31,7 @@ Crypto* crypto;
 CertManager* cm;
 Signer* signer;
 
-/* TODO 
+/* TODO
 unsigned char* sessionKey;
 unsigned char* authKey;
 unsigned char* iv;

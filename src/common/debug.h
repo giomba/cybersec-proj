@@ -27,7 +27,9 @@ enum DebugType {
 #else
     #define debug(level, x)
     #define hexdump(level, buffer, size)
+    #define vhexdump(level, buffer, size)
     #define strdump(level, buffer)
+    #define vstrdump(level, buffer)
 #endif
 
 #endif
