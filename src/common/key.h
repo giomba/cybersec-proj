@@ -12,7 +12,8 @@ class Key {
     public:
         Key(int);
         Key(string);
-        Key(const Key& old);    /* never use! */
+        Key(const Key& old);
+        Key& operator=(const Key& other);
         ~Key();
 
         string str(void);

@@ -11,9 +11,9 @@ Crypto::Crypto(Key& session_key, Key& auth_key, const string iv) : auth_key(auth
     EVP_DecryptInit(ctx_d, EVP_aes_128_cfb8(), (const unsigned char*)session_key.str().c_str(), (const unsigned char*)iv.c_str());
 
     debug(DEBUG, "session_key + auth_key" << endl);
-    hexdump(DEBUG, (const char*)session_key.str().c_str(), AES128_KEY_LEN);
-    hexdump(DEBUG, (const char*)auth_key.str().c_str(), HMAC_LEN);
-    hexdump(DEBUG, (const char*)iv.c_str(), AES128_KEY_LEN);
+    hexdump(DEBUG, (const char*)session_key.str().data(), AES128_KEY_LEN);
+    hexdump(DEBUG, (const char*)auth_key.str().data(), HMAC_LEN);
+    hexdump(DEBUG, (const char*)iv.data(), AES128_KEY_LEN);
 
     sequence_number_i = sequence_number_o = 0;
 }
@@ -40,7 +40,7 @@ int Crypto::decrypt(char* dest, const char* source, int size){
 	return r;
 }
 
-int Crypto::send(Connection* connection, const char* plaintext, int size) { 
+int Crypto::send(Connection* connection, const char* plaintext, int size) {
     char encrypted_payload[BUFFER_SIZE];
     encrypt(encrypted_payload, plaintext, size);    /* Payload encryption */
 

@@ -12,6 +12,12 @@ Key::Key(string buffer) {
     memcpy(this->key, buffer.c_str(), buffer.size());
 }
 
+Key::Key(const Key& old) {
+    this->len = old.len;
+    this->key = new char[this->len];
+    memcpy(this->key, old.key, this->len);
+}
+
 Key::~Key() {
     delete[] this->key;
 }
