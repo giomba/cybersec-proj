@@ -17,7 +17,7 @@ class RSACrypto {
         RSACrypto(Certificate& certificate, RSAKey& privkey);
 
         void sign(string& buffer, string& signature);
-        int verify(string& buffer, string& signature, EVP_PKEY* pubkey);
+        void verify(string& buffer, string& signature, EVP_PKEY* pubkey);
 
         RSASeal encrypt(string& src, RSAKey& pubkey);
         string decrypt(string& src);

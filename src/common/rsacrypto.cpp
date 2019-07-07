@@ -1,41 +1,43 @@
 #include "rsacrypto.h"
 
-RSACrypto::RSACrypto(Certificate& certificate, RSAKey& privkey) : certificate(certificate), privkey(privkey){
-    ;
-}
+RSACrypto::RSACrypto(Certificate& certificate, RSAKey& privkey) : certificate(certificate), privkey(privkey){}
 
 void RSACrypto::sign(string& buffer, string& signature) {
 	EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    if (!ctx) throw ExSignature("RSACrypto::sign(): cannot create context");
+
     signature.reserve(EVP_PKEY_size(privkey.getPKEY()));
     int signatureLen = 0;
-	bool pass = true;
 
-    pass = EVP_SignInit(ctx, EVP_sha256())
-           && EVP_SignUpdate(ctx, (unsigned char*)buffer.c_str(), buffer.size())
-           && EVP_SignFinal(ctx, (unsigned char*)signature.c_str(), (unsigned int*)&signatureLen, privkey.getPKEY());
-    if (!pass) throw ExSignature("EVP_Sign()");
-
-    signature.resize(signatureLen);
+    bool pass = EVP_SignInit(ctx, EVP_sha256())
+                && EVP_SignUpdate(ctx, (unsigned char*)buffer.c_str(), buffer.size())
+                && EVP_SignFinal(ctx, (unsigned char*)signature.c_str(), (unsigned int*)&signatureLen, privkey.getPKEY());
 
     EVP_MD_CTX_free(ctx);
+
+    if (!pass) throw ExSignature("RSACrypto::sign(): EVP_Sign()");
+    signature.resize(signatureLen);
 }
 
-int RSACrypto::verify(string& buffer, string& signature, EVP_PKEY* pubkey) {
+void RSACrypto::verify(string& buffer, string& signature, EVP_PKEY* pubkey) {
     EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    if (!ctx) throw ExSignature("RSACrypto::verify(): cannot create context");
 
-    EVP_VerifyInit(ctx, EVP_sha256());
-    EVP_VerifyUpdate(ctx, buffer.c_str(), buffer.size());
-    if ( EVP_VerifyFinal(ctx, (const unsigned char*)signature.c_str(), signature.size(), pubkey) != 1) {
-        throw ExSignature("EVP_Verify()");
-    }
+    bool pass = EVP_VerifyInit(ctx, EVP_sha256())
+                && EVP_VerifyUpdate(ctx, buffer.c_str(), buffer.size())
+                && EVP_VerifyFinal(ctx, (const unsigned char*)signature.c_str(), signature.size(), pubkey);
 
     EVP_MD_CTX_free(ctx);
 
-    return 0;
+    if (!pass) throw ExSignature("RSACrypto::verify(): EVP_Verify()");
+
+    return;
 }
 
 RSASeal RSACrypto::encrypt(string& src, RSAKey& pubkey) {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if (!ctx) throw ExCrypto("RSACrypto::encrypt(): caanot create context");
+
     EVP_PKEY* pubkey_pointer = pubkey.getPKEY();
 
     unsigned char iv[AES128_KEY_LEN];
@@ -50,7 +52,7 @@ RSASeal RSACrypto::encrypt(string& src, RSAKey& pubkey) {
 
     string outs, eks;
 
-    int pass = true;
+    bool pass = true;
 
     if (EVP_SealInit(ctx, EVP_aes_128_cbc(), &ek, &ekl, iv, &pubkey_pointer, 1) != 1) {
         openssl_perror();
@@ -75,7 +77,7 @@ RSASeal RSACrypto::encrypt(string& src, RSAKey& pubkey) {
     delete[] out;
     EVP_CIPHER_CTX_free(ctx);
 
-    if (! pass) throw ExCryptoComputation("can not RSA Encrypt Seal()");
+    if (! pass) throw ExCryptoComputation("RSACrypto::encrypt(): EVP_Seal()");
 
     return seal;
 }

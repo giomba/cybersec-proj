@@ -19,14 +19,15 @@ RSAKey& RSAKey::operator=(const RSAKey& other) {
 
 void RSAKey::fromUserName(string username) {
     FILE *file = fopen((KEY_PATH + username + "_key.pem").c_str(), "r");
-    if (!file) throw ExCertificate("cannot open private key");
+    if (!file) throw ExCertificate("RSAKey::fromUserName(): cannot open private key");
 	this->key = PEM_read_PrivateKey(file, NULL, NULL, NULL);
 	fclose(file);
-	if (! this->key) throw ExCertificate("can not read my private key");
+	if (! this->key) throw ExCertificate("RSAKey::fromUserName(): can not read my private key");
 }
 
 void RSAKey::fromCertificate(Certificate& certificate) {
     this->key = X509_get_pubkey(certificate.getX509());
+    if (!this->key) throw ExCertificate("RSAKey::fromCertificate(): cannot read public key");
 }
 
 void RSAKey::fromString(string buffer) {
