@@ -14,10 +14,11 @@
 #include "../common/crypto.h"
 #include "../common/debug.h"
 #include "../common/exception.h"
+#include "../common/key.h"
 #include "../common/nonce.h"
 #include "../common/protocol.h"
-#include "../common/key.h"
-
+#include "../common/rsacrypto.h"
+#include "../common/rsaseal.h"
 
 #define CLIENT_ROOT "downloads/"
 

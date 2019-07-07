@@ -35,12 +35,6 @@ CertManager::CertManager(string username, vector<string>& authPeersList) : authP
     if (my_cert == NULL) throw ExCertificate("can not parse PEM certificate");
 	this->cert.fromX509(my_cert);
 
-	// read my private key
-	/* file = fopen((CERT_PATH + username + "_key.pem").c_str(), "r");
-	if (!file) throw ExCertificate("can not open PEM file: private key");
-	EVP_PKEY* privkey = PEM_read_PrivateKey(file, NULL, NULL, NULL);
-	fclose(file);
-	if (privkey == NULL) throw ExCertificate("can not parse PEM private key"); */
 	this->privkey.fromUserName(username);
 
 	X509_free(CA_cert);
@@ -94,7 +88,7 @@ void CertManager::verifyCert(Certificate& cert) {
 	}
 
 	if (!name_pass) throw ExCertificate("CertManager::verify(): unauthorized client");
-	debug(INFO, "[I] client verified successfully" << endl);
+	debug(DEBUG, "[D] peer's certificate valid" << endl);
 
 	return;
 }

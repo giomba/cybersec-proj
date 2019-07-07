@@ -2,6 +2,7 @@
 #define RSA_SEAL_H
 
 #include <arpa/inet.h>
+#include <cassert>
 #include <string>
 using namespace std;
 
@@ -10,8 +11,9 @@ class RSASeal {
         string ek;
         string payload;
     public:
-        RSASeal(string ek, string payload);
-        RSASeal(string buffer);
+        //RSASeal(void);
+        void fromEKPayload(string& ek, string& payload);
+        void fromString(string& buffer);
         string str(void);
 };
 

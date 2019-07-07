@@ -418,7 +418,35 @@ int handshake() {
     connection->send(buffer);
 
     /* === M2 === */
-    connection->recv(buffer); // receive server's certificate -- now you have to decode/deserialize
+    /* receive and verify server's certificate */
+    connection->recv(buffer);
+    Certificate server_certificate; server_certificate.fromString(buffer);
+    cm->verifyCert(server_certificate);
+
+    /* receive encrypted keys, IVs and their signature, and server's nonce */
+    connection->recv(buffer);
+    RSASeal encrypted_session_key_seal; encrypted_session_key_seal.fromString(buffer);
+    connection->recv(buffer);
+    RSASeal encrypted_auth_key_seal; encrypted_auth_key_seal.fromString(buffer);
+    connection->recv(buffer);
+    Key iv(buffer); // TODO -- improve and uniform like fromString() functions
+    connection->recv(buffer);
+    string signature = buffer;
+    connection->recv(buffer);
+    Nonce nonceServer(buffer);
+
+    /* create asymmetric key cryptosystem */
+    RSACrypto rsacrypto(cm->getCert(), cm->getPrivKey());
+
+    /* verify server's signature */
+    string what_to_verify = encrypted_session_key_seal.str() + encrypted_auth_key_seal.str() + iv.str() + nonceClient.str();
+    RSAKey server_public_key; server_public_key.fromCertificate(server_certificate);
+    rsacrypto.verify(what_to_verify, signature, server_public_key);
+    debug(DEBUG, "[D] server's signature is valid" << endl);
+
+    /* decrypt symmetric session+auth keys */
+
+
     // check server's certificate
     // receive blobbone
     // receive signature of blobbone
@@ -482,11 +510,10 @@ int main(int argc, char* argv[]) {
                 parse_cmd();
             }
         }
-    } catch(ExRecv e) {
-        cout << "error: Unable to connect to server" << endl;
-        cout << "info: You have been disconnected" << endl;
+    } catch(ExNetwork e) {
+        cerr << "[E] network: " << e << endl;
     } catch (Ex e) {
-        cerr << e << endl;
+        cerr << "[E] exception: " << e << endl;
     }
 
     quit();

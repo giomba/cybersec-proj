@@ -31,10 +31,11 @@ void RSAKey::fromCertificate(Certificate& certificate) {
 }
 
 void RSAKey::fromString(string buffer) {
+    assert(false);
     // TODO -- init me
 }
 
-EVP_PKEY* RSAKey::getPKEY(void) {   // TODO DEBUG ME
+EVP_PKEY* RSAKey::getPKEY(void) {
     assert(this->key != NULL);
     return this->key;
 }

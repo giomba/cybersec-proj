@@ -18,17 +18,21 @@ void Certificate::fromString(string buffer) {
     }
 }
 
+Certificate::Certificate(const Certificate& old) {
+    assert(false);
+}
+
 Certificate::~Certificate(void) {
     if (this->cert) X509_free(this->cert);
 }
 
-X509* Certificate::getX509(void) {  // TODO DEBUG assert
+X509* Certificate::getX509(void) {
     assert(this->cert != NULL);
     return this->cert;
 }
 
 string Certificate::str() {
-    assert(this->cert != NULL); // TODO DEBUG assert
+    assert(this->cert != NULL);
     int len;
     unsigned char* serialized_certificate = NULL;
 
@@ -37,8 +41,6 @@ string Certificate::str() {
         debug(ERROR, "[E] cannot serialize certificate" << endl);
         throw ExCertificate("Certificate::str(): cannot serialize certificate");
     }
-
-    //vhexdump(DEBUG, (const char*)serialized_certificate, len);
 
     string ret = string((const char*)serialized_certificate, len);
 

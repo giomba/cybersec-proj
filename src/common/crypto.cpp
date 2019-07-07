@@ -13,7 +13,7 @@ Crypto::Crypto(Key& session_key, Key& auth_key, Key& iv) : auth_key(auth_key) {
     debug(DEBUG, "session_key + auth_key" << endl);
     hexdump(DEBUG, (const char*)session_key.str().data(), AES128_KEY_LEN);
     hexdump(DEBUG, (const char*)auth_key.str().data(), HMAC_LEN);
-    hexdump(DEBUG, (const char*)iv.data(), AES128_KEY_LEN);
+    hexdump(DEBUG, (const char*)iv.str().data(), AES128_KEY_LEN);
 
     sequence_number_i = sequence_number_o = 0;
 }

@@ -2,30 +2,34 @@
 
 RSACrypto::RSACrypto(Certificate& certificate, RSAKey& privkey) : certificate(certificate), privkey(privkey){}
 
-void RSACrypto::sign(string& buffer, string& signature) {
+string RSACrypto::sign(string& buffer) {
 	EVP_MD_CTX* ctx = EVP_MD_CTX_new();
     if (!ctx) throw ExSignature("RSACrypto::sign(): cannot create context");
 
-    signature.reserve(EVP_PKEY_size(privkey.getPKEY()));
+    unsigned char* signature = new unsigned char[EVP_PKEY_size(privkey.getPKEY())];
     int signatureLen = 0;
 
     bool pass = EVP_SignInit(ctx, EVP_sha256())
-                && EVP_SignUpdate(ctx, (unsigned char*)buffer.c_str(), buffer.size())
-                && EVP_SignFinal(ctx, (unsigned char*)signature.c_str(), (unsigned int*)&signatureLen, privkey.getPKEY());
+                && EVP_SignUpdate(ctx, (unsigned char*)buffer.data(), buffer.size())
+                && EVP_SignFinal(ctx, signature, (unsigned int*)&signatureLen, privkey.getPKEY());
 
     EVP_MD_CTX_free(ctx);
 
+    string signatureString((char*)signature, signatureLen);
+    delete[] signature;
+
     if (!pass) throw ExSignature("RSACrypto::sign(): EVP_Sign()");
-    signature.resize(signatureLen);
+
+    return signatureString;
 }
 
-void RSACrypto::verify(string& buffer, string& signature, EVP_PKEY* pubkey) {
+void RSACrypto::verify(string& buffer, string& signature, RSAKey& pubkey) {
     EVP_MD_CTX* ctx = EVP_MD_CTX_new();
     if (!ctx) throw ExSignature("RSACrypto::verify(): cannot create context");
 
     bool pass = EVP_VerifyInit(ctx, EVP_sha256())
-                && EVP_VerifyUpdate(ctx, buffer.c_str(), buffer.size())
-                && EVP_VerifyFinal(ctx, (const unsigned char*)signature.c_str(), signature.size(), pubkey);
+                && EVP_VerifyUpdate(ctx, buffer.data(), buffer.size())
+                && EVP_VerifyFinal(ctx, (const unsigned char*)signature.data(), signature.size(), pubkey.getPKEY());
 
     EVP_MD_CTX_free(ctx);
 
@@ -71,7 +75,8 @@ RSASeal RSACrypto::encrypt(string& src, RSAKey& pubkey) {
     cipherlen += outl;
     outs.assign((char*)out, cipherlen);
 
-    RSASeal seal(eks, outs);
+    RSASeal seal;
+    seal.fromEKPayload(eks, outs);
 
     delete[] ek;
     delete[] out;
@@ -82,6 +87,6 @@ RSASeal RSACrypto::encrypt(string& src, RSAKey& pubkey) {
     return seal;
 }
 
-string RSACrypto::decrypt(string& src) {
+string RSACrypto::decrypt(RSASeal& src) {
     assert(false);
 }

@@ -9,7 +9,7 @@ Key::Key(int len) {
 Key::Key(string buffer) {
     this->len = buffer.size();
     this->key = new char[buffer.size()];
-    memcpy(this->key, buffer.c_str(), buffer.size());
+    memcpy(this->key, buffer.data(), buffer.size());
 }
 
 Key::Key(const Key& old) {

@@ -245,15 +245,14 @@ int Client::handshake(void) {
     /* receive client's nonce */
     connection->recv(buffer);
     debug(DEBUG, "[D] Client Nonce" << endl); vstrdump(DEBUG, buffer);
-    Nonce clientNonce(buffer);
+    Nonce nonceClient(buffer);
 
     /* === M2 === */
     /* initialize RSA Crypto */
     RSACrypto(cm->getCert(), cm->getPrivKey());
-    /* send server's certificate */
-    buffer = cm->getCert().str();
-    debug(DEBUG, "[D] Server Certificate" << endl); vstrdump(DEBUG, buffer);
-    connection->send(buffer);
+    /* prepare server's certificate */
+    Certificate& server_certificate = cm->getCert();
+    debug(DEBUG, "[D] Server Certificate" << endl); vstrdump(DEBUG, server_certificate.str());
 
     /* generate keys and initialization vector */
     Key session_key(AES128_KEY_LEN);
@@ -263,7 +262,7 @@ int Client::handshake(void) {
     debug(DEBUG, "[D] Ka" << endl); vstrdump(DEBUG, auth_key.str());
     debug(DEBUG, "[D] IV" << endl); vstrdump(DEBUG, iv.str());
     /* generate server's nonce */
-    Nonce serverNonce();
+    Nonce nonceServer;
 
     /* encrypt keys */
     RSAKey client_pubkey; client_pubkey.fromCertificate(client_certificate);
@@ -271,8 +270,21 @@ int Client::handshake(void) {
     string session_key_serialized = session_key.str();
     string auth_key_serialized = auth_key.str();
 
-    RSASeal encrypted_session_key = rsacrypto.encrypt(session_key_serialized, client_pubkey);
-    RSASeal encrypted_auth_key = rsacrypto.encrypt(auth_key_serialized, client_pubkey);
+    RSASeal encrypted_session_key_seal = rsacrypto.encrypt(session_key_serialized, client_pubkey);
+    RSASeal encrypted_auth_key_seal = rsacrypto.encrypt(auth_key_serialized, client_pubkey);
+
+    /* sign message */
+    string what_to_sign = encrypted_session_key_seal.str() + encrypted_auth_key_seal.str() + iv.str() + nonceClient.str();
+    string signature = rsacrypto.sign(what_to_sign);
+
+    /* send everything */
+    buffer = server_certificate.str();          connection->send(buffer);
+    buffer = encrypted_session_key_seal.str();  connection->send(buffer);
+    buffer = encrypted_auth_key_seal.str();     connection->send(buffer);
+    buffer = iv.str();                          connection->send(buffer);
+    buffer = signature;                         connection->send(buffer);
+    buffer = nonceServer.str();                 connection->send(buffer);
+
 
     // concatenate all encrypted_*_key.str() + iv.str() + NonceClient
     // send concatenation
@@ -292,11 +304,6 @@ int Client::handshake(void) {
 
 bool Client::execute(void) {
     string cmd;
-    /* TODO
-    unsigned char* sessionKey;
-    unsigned char* authKey;
-    unsigned char* iv;
-    */
 
     Key sessionKey("1230000000000321");
     Key authKey("0123456789abcdef9876543210abcdef");

@@ -16,11 +16,11 @@ class RSACrypto {
     public:
         RSACrypto(Certificate& certificate, RSAKey& privkey);
 
-        void sign(string& buffer, string& signature);
-        void verify(string& buffer, string& signature, EVP_PKEY* pubkey);
+        string sign(string& buffer);
+        void verify(string& buffer, string& signature, RSAKey& pubkey);
 
         RSASeal encrypt(string& src, RSAKey& pubkey);
-        string decrypt(string& src);
+        string decrypt(RSASeal& src);
 };
 
 #endif
