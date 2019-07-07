@@ -25,7 +25,7 @@ private:
 	int decrypt(char*, const char*, int);
 
 public:
-	Crypto(Key&, Key&, const string);
+	Crypto(Key& session_key, Key& auth_key, Key& iv);
     ~Crypto();
 
     int send(Connection*, const char*, int);

@@ -300,7 +300,7 @@ bool Client::execute(void) {
 
     Key sessionKey("1230000000000321");
     Key authKey("0123456789abcdef9876543210abcdef");
-    string iv = "0000000000000000";
+    Key iv("0000000000000000");
 
     try {
         /* key exchange handshake */

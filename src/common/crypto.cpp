@@ -2,13 +2,13 @@
 
 using namespace std;
 
-Crypto::Crypto(Key& session_key, Key& auth_key, const string iv) : auth_key(auth_key) {
+Crypto::Crypto(Key& session_key, Key& auth_key, Key& iv) : auth_key(auth_key) {
     //create and initialize context for encryption and decryption
 	ctx_e = EVP_CIPHER_CTX_new();
-	EVP_EncryptInit(ctx_e, EVP_aes_128_cfb8(), (const unsigned char*)session_key.str().c_str(), (const unsigned char*)iv.c_str());
+	EVP_EncryptInit(ctx_e, EVP_aes_128_cfb8(), (const unsigned char*)session_key.str().c_str(), (const unsigned char*)iv.str().data());
 
     ctx_d = EVP_CIPHER_CTX_new();
-    EVP_DecryptInit(ctx_d, EVP_aes_128_cfb8(), (const unsigned char*)session_key.str().c_str(), (const unsigned char*)iv.c_str());
+    EVP_DecryptInit(ctx_d, EVP_aes_128_cfb8(), (const unsigned char*)session_key.str().c_str(), (const unsigned char*)iv.str().data());
 
     debug(DEBUG, "session_key + auth_key" << endl);
     hexdump(DEBUG, (const char*)session_key.str().data(), AES128_KEY_LEN);
