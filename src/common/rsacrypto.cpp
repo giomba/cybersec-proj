@@ -54,7 +54,7 @@ RSASeal RSACrypto::encrypt(string& src, RSAKey& pubkey) {
 
     bool pass = true;
 
-    if (EVP_SealInit(ctx, EVP_aes_128_cbc(), &ek, &ekl, iv, &pubkey_pointer, 1) != 1) {
+    if (EVP_SealInit(ctx, EVP_aes_128_cfb8(), &ek, &ekl, iv, &pubkey_pointer, 1) != 1) {
         openssl_perror();
         pass = false;
     }
