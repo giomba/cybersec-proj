@@ -284,6 +284,7 @@ vector<Key> Client::handshake(void) {
     buffer = iv.str();                          connection->send(buffer);
     buffer = signature;                         connection->send(buffer);
     buffer = nonceServer.str();                 connection->send(buffer);
+    /* TODO -- send client nonce */
 
 
     // concatenate all encrypted_*_key.str() + iv.str() + NonceClient

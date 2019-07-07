@@ -448,9 +448,11 @@ vector<Key> handshake(void) {
     Key session_key(rsacrypto.decrypt(encrypted_session_key_seal));
     Key auth_key(rsacrypto.decrypt(encrypted_auth_key_seal));
 
+    /* TODO -- verify nonce */
+
     vector<Key> keys;
     keys.push_back(session_key);
-    keys.push_back(auth_key);
+    keys.push_back(auth_key); 
     keys.push_back(iv);
 
     /* === M3 === */

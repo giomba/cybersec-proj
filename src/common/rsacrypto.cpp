@@ -44,17 +44,16 @@ RSASeal RSACrypto::encrypt(string& src, RSAKey& pubkey) {
 
     EVP_PKEY* pubkey_pointer = pubkey.getPKEY();
 
-    unsigned char iv[AES128_KEY_LEN];
-    memset(iv, 0, AES128_KEY_LEN);
-
     unsigned char* ek = new unsigned char[EVP_PKEY_size(pubkey_pointer)];
     int ekl = 0;
+
+    unsigned char iv[AES128_KEY_LEN];
 
     unsigned char* out = new unsigned char[src.size() + AES128_BLOCK_LEN];
     int outl = 0;
     int cipherlen = 0;
 
-    string outs, eks;
+    string outs, eks, ivs;
 
     bool pass = true;
 
@@ -63,6 +62,8 @@ RSASeal RSACrypto::encrypt(string& src, RSAKey& pubkey) {
         pass = false;
     }
     eks.assign((char*)ek, ekl);
+    ivs.assign((char*)iv, AES128_KEY_LEN);
+
     if (EVP_SealUpdate(ctx, out, &outl, (unsigned char*)src.data(), src.size()) != 1) {
         openssl_perror();
         pass = false;
@@ -76,7 +77,7 @@ RSASeal RSACrypto::encrypt(string& src, RSAKey& pubkey) {
     outs.assign((char*)out, cipherlen);
 
     RSASeal seal;
-    seal.fromEKPayload(eks, outs);
+    seal.fromEKPayloadIV(eks, outs, ivs);
 
     delete[] ek;
     delete[] out;
@@ -101,11 +102,13 @@ string RSACrypto::decrypt(RSASeal& seal) {
     unsigned char* ciphertext = new unsigned char[cipherlen];
     memcpy(ciphertext, ps.data(), cipherlen);
 
+    string ivs = seal.getIV();
+    int ivl = ivs.size();
+    unsigned char* iv = new unsigned char[ivl];
+    memcpy(iv, ivs.data(), ivl);
+
     unsigned char* plaintext = new unsigned char[cipherlen];
     memset(plaintext, 0, cipherlen);
-
-    unsigned char iv[AES128_KEY_LEN];
-    memset(iv, 0, AES128_KEY_LEN);
 
     int outlen = 0, plainlen = 0;
 
@@ -133,6 +136,7 @@ string RSACrypto::decrypt(RSASeal& seal) {
     delete[] plaintext;
     delete[] ciphertext;
     delete[] ek;
+    delete[] iv;
 
     if (! pass) throw ExCryptoComputation("RSACrypto::decrypt(): EVP_Open()");
 
