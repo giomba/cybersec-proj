@@ -4,11 +4,11 @@ Certificate::Certificate(void) {
     this->cert = NULL;
 }
 
-Certificate::Certificate(X509* cert) {
+void Certificate::fromX509(X509* cert) {
     this->cert = cert;
 }
 
-Certificate::Certificate(string buffer) {
+void Certificate::fromString(string buffer) {
     const char* tmpstr = buffer.c_str();
     this->cert = d2i_X509(NULL, (const unsigned char**)&tmpstr, buffer.size());
     if (this->cert == NULL) {
@@ -19,24 +19,26 @@ Certificate::Certificate(string buffer) {
 }
 
 Certificate::~Certificate(void) {
-    X509_free(this->cert);
+    if (this->cert) X509_free(this->cert);
 }
 
-X509* Certificate::getX509(void) {
+X509* Certificate::getX509(void) {  // TODO DEBUG assert
+    assert(this->cert != NULL);
     return this->cert;
 }
 
 string Certificate::str() {
+    assert(this->cert != NULL); // TODO DEBUG assert
     int len;
     unsigned char* serialized_certificate = NULL;
 
-    if ((len = i2d_X509(this->cert, &serialized_certificate)) < 0) {
+    len = i2d_X509(this->cert, &serialized_certificate);
+    if (len < 0) {
         debug(ERROR, "[E] cannot serialize certificate" << endl);
-        openssl_perror();
-        throw ExCertificate("cannot serialize certificate");
+        throw ExCertificate("Certificate::str(): cannot serialize certificate");
     }
 
-    vhexdump(DEBUG, (const char*)serialized_certificate, len);
+    //vhexdump(DEBUG, (const char*)serialized_certificate, len);
 
     string ret = string((const char*)serialized_certificate, len);
 
