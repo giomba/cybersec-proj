@@ -239,8 +239,8 @@ int Client::handshake(void) {
     /* receive client's certificate */
     connection->recv(buffer);
     debug(DEBUG, "[D] Client Certificate" << endl); vstrdump(DEBUG, buffer);
-    Certificate certificate(buffer);
-    cm->verifyCert(certificate);
+    Certificate client_certificate; client_certificate.fromString(buffer);
+    cm->verifyCert(client_certificate);
 
     /* receive client's nonce */
     connection->recv(buffer);
@@ -248,23 +248,45 @@ int Client::handshake(void) {
     Nonce clientNonce(buffer);
 
     /* === M2 === */
+    /* initialize RSA Crypto */
+    RSACrypto(cm->getCert(), cm->getPrivKey());
     /* send server's certificate */
-    buffer = cm->getCert()->str();
+    buffer = cm->getCert().str();
     debug(DEBUG, "[D] Server Certificate" << endl); vstrdump(DEBUG, buffer);
     connection->send(buffer);
 
-    /* generate keys */
+    /* generate keys and initialization vector */
     Key session_key(AES128_KEY_LEN);
     Key auth_key(HMAC_KEY_LEN);
     Key iv(AES128_KEY_LEN);
     debug(DEBUG, "[D] Ks" << endl); vstrdump(DEBUG, session_key.str());
     debug(DEBUG, "[D] Ka" << endl); vstrdump(DEBUG, auth_key.str());
+    debug(DEBUG, "[D] IV" << endl); vstrdump(DEBUG, iv.str());
     /* generate server's nonce */
     Nonce serverNonce();
 
+    /* encrypt keys */
+    RSAKey client_pubkey; client_pubkey.fromCertificate(client_certificate);
+    RSACrypto rsacrypto(cm->getCert(), cm->getPrivKey());
+    string session_key_serialized = session_key.str();
+    string auth_key_serialized = auth_key.str();
+
+    RSASeal encrypted_session_key = rsacrypto.encrypt(session_key_serialized, client_pubkey);
+    RSASeal encrypted_auth_key = rsacrypto.encrypt(auth_key_serialized, client_pubkey);
+
+    // concatenate all encrypted_*_key.str() + iv.str() + NonceClient
+    // send concatenation
+    // sign everything
+    // send signature
+    // send NonceServer
+
+    /* === M3 === */
+    // receive my nonce (signed by the client)
+    // ... todo ...
 
 
-    /* if (some error) return -1; else */
+
+    /* if (some error) return -1; else -- TODO is this really needed? if some error, then exceptions everywhere!!! */
     return 0;
 }
 

@@ -408,7 +408,7 @@ int handshake() {
 
     /* === M1 === */
     /* send certificate */
-    buffer = cm->getCert()->str();
+    buffer = cm->getCert().str();
     debug(DEBUG, "[D] Client Certificate" << endl); vstrdump(DEBUG, buffer);
     connection->send(buffer);
     /* generate and send nonce */
@@ -417,6 +417,17 @@ int handshake() {
     debug(DEBUG, "[D] Client Nonce" << endl); vstrdump(DEBUG, buffer);
     connection->send(buffer);
 
+    /* === M2 === */
+    connection->recv(buffer); // receive server's certificate -- now you have to decode/deserialize
+    // check server's certificate
+    // receive blobbone
+    // receive signature of blobbone
+    // check signature
+    // decrypt keys
+
+    /* === M3 === */
+    // sign server's nonce
+    // send signature back
 
     return 0;   /* all ok */
 }

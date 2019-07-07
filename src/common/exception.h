@@ -36,14 +36,13 @@ class ExCryptoComputation : public ExCrypto { using ExCrypto::ExCrypto; };
 class ExBadSeqNum : public ExCrypto { using ExCrypto::ExCrypto; };
 class ExBadHMAC : public ExCrypto { using ExCrypto::ExCrypto; };
 class ExBadProtocol : public ExCrypto { using ExCrypto::ExCrypto; };
+class ExCertificate : public ExCrypto { using ExCrypto::ExCrypto; };
 class ExRandom : public ExCrypto { using ExCrypto::ExCrypto; };
+class ExSignature : public ExCrypto { using ExCrypto::ExCrypto; };
 
 /* Protocol exceptions */
 class ExProtocol : public Ex { using Ex::Ex; };
 class ExTooBig : public ExProtocol { using ExProtocol::ExProtocol; };
 class ExNonce : public ExProtocol { using ExProtocol::ExProtocol; };
-
-/* Certificate Exceptions */
-class ExCertificate : public Ex { using Ex::Ex; };
 
 #endif

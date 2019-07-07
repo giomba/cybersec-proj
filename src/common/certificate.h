@@ -1,6 +1,7 @@
 #ifndef CERTIFICATE_H
 #define CERTIFICATE_H
 
+#include <cassert>
 #include <iostream>
 #include <openssl/x509.h>
 #include <string>
@@ -14,10 +15,11 @@ class Certificate {
         X509* cert;
     public:
         Certificate(void);
-        Certificate(X509*);
-        Certificate(string);
         ~Certificate(void);
         Certificate(const Certificate& old);    /* never use! */
+
+        void fromX509(X509*);
+        void fromString(string);
 
         X509* getX509(void);
         string str(void);

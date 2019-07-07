@@ -1,6 +1,6 @@
 #include "certmanager.h"
 
-CertManager::CertManager(string cert_name, vector<string>& authPeersList) : authPeersList(authPeersList) {
+CertManager::CertManager(string username, vector<string>& authPeersList) : authPeersList(authPeersList) {
 	// read CA certificate
 	X509* CA_cert;
 	FILE* file = fopen((CERT_PATH + "TrustedCA_cert.pem").c_str(), "r");
@@ -28,13 +28,20 @@ CertManager::CertManager(string cert_name, vector<string>& authPeersList) : auth
 
 	// read my certificate
 	X509* my_cert;
-	file = fopen((CERT_PATH + cert_name + "_cert.pem").c_str(), "r");
-    if (!file) { debug(FATAL, "cannot open " + cert_name + ".pem" << endl); throw ExCertificate(); }
+	file = fopen((CERT_PATH + username + "_cert.pem").c_str(), "r");
+    if (!file) throw ExCertificate("can not open PEM file: certificate");
     my_cert = PEM_read_X509(file, NULL, NULL, NULL);
 	fclose(file);
-    if (my_cert == NULL) { debug(FATAL, "can not read my certificate" << endl); throw ExCertificate(); }
+    if (my_cert == NULL) throw ExCertificate("can not parse PEM certificate");
+	this->cert.fromX509(my_cert);
 
-	this->cert = new Certificate(my_cert);
+	// read my private key
+	/* file = fopen((CERT_PATH + username + "_key.pem").c_str(), "r");
+	if (!file) throw ExCertificate("can not open PEM file: private key");
+	EVP_PKEY* privkey = PEM_read_PrivateKey(file, NULL, NULL, NULL);
+	fclose(file);
+	if (privkey == NULL) throw ExCertificate("can not parse PEM private key"); */
+	this->privkey.fromUserName(username);
 
 	X509_free(CA_cert);
 	X509_CRL_free(crl);
@@ -42,12 +49,15 @@ CertManager::CertManager(string cert_name, vector<string>& authPeersList) : auth
 
 CertManager::~CertManager(){
 	X509_STORE_free(this->store);
-	delete this->cert;
-	debug(INFO, "[I] destroying CA store and certificate" << endl);
+	debug(DEBUG, "[D] destroying Cert Manager" << endl);
 }
 
-Certificate* CertManager::getCert(){
+Certificate& CertManager::getCert(){
 	return this->cert;
+}
+
+RSAKey& CertManager::getPrivKey() {
+	return this->privkey;
 }
 
 //Here we are also doing the client verification
