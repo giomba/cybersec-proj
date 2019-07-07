@@ -231,7 +231,7 @@ void Client::cmd_unknown(void) {
     sendCmd();
 }
 
-int Client::handshake(void) {
+vector<Key> Client::handshake(void) {
     string buffer;
     debug(INFO, "[I] handshake with client..." << endl);
 
@@ -299,21 +299,21 @@ int Client::handshake(void) {
 
 
     /* if (some error) return -1; else -- TODO is this really needed? if some error, then exceptions everywhere!!! */
-    return 0;
+    vector<Key> keys;
+    keys.push_back(session_key);
+    keys.push_back(auth_key);
+    keys.push_back(iv);
+    return keys;
 }
 
 bool Client::execute(void) {
     string cmd;
 
-    Key sessionKey("1230000000000321");
-    Key authKey("0123456789abcdef9876543210abcdef");
-    Key iv("0000000000000000");
-
     try {
         /* key exchange handshake */
-        //handshake(session_key, auth_key, iv);
-        handshake();
-        this->crypto = new Crypto(sessionKey, authKey, iv);
+        vector<Key> keys = handshake();
+        /* session_key, auth_key, iv */
+        this->crypto = new Crypto(keys.at(0), keys.at(1), keys.at(2));
 
         for (;;) {
             /* Receive command and read first parola */

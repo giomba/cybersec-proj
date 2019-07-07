@@ -31,11 +31,7 @@ class Client {
         istringstream is;
         ostringstream os;
 
-        //int handshake(unsigned char*&, unsigned char*&, unsigned char*&); // TODO
-        int handshake(void);
-/*         int receiveM1(X509*&);
-        int sendM2(X509*, unsigned char*&, unsigned char*&, unsigned char*&);
-        int receiveM3(void); */
+        vector<Key> handshake(void);
 
         void recvCmd();
         int  recvBodyFragment(char *, int len);

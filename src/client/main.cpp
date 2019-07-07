@@ -402,7 +402,7 @@ void cmd_unknown(string cmd){
     cout << "error: '" << cmd << "' is an invalid command" << endl;
 }
 
-int handshake() {
+vector<Key> handshake(void) {
     string buffer;
     debug(INFO, "[I] handshake with server..." << endl)
 
@@ -448,11 +448,16 @@ int handshake() {
     Key session_key(rsacrypto.decrypt(encrypted_session_key_seal));
     Key auth_key(rsacrypto.decrypt(encrypted_auth_key_seal));
 
+    vector<Key> keys;
+    keys.push_back(session_key);
+    keys.push_back(auth_key);
+    keys.push_back(iv);
+
     /* === M3 === */
     // sign server's nonce
     // send signature back
 
-    return 0;   /* all ok */
+    return keys;
 }
 
 /****************************************/
@@ -474,18 +479,13 @@ int main(int argc, char* argv[]) {
 
     try {
 		cm = new CertManager(username, authServersList);
-        // if (!cm) { debug(FATAL, "[F] cannot create Certificate Manager" << endl); exit(1); }
 
         connection = new Connection(sv_addr.c_str(), sv_port);
-        // if (!connection) { debug(FATAL, "[F] cannot create Connection" << endl); exit(1); }
 
         // handshake with server
-        if (handshake() == -1) {
-            cout << "handshake error: Unable to connect to the server" << endl;
-            exit(-1);
-        }
+        vector<Key> keys = handshake();
 
-        crypto = new Crypto(sessionKey, authKey, iv);
+        crypto = new Crypto(keys.at(0), keys.at(1), keys.at(2));
 
         while(1){
             // clear line, stringstream and input stream
