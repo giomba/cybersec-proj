@@ -5,18 +5,18 @@ const string SERVER_ROOT = "root";
 Client::Client(Connection* c, CertManager* cm) {
     this->connection = c;
     this->cm = cm;
-    this->crypto = 0;
+    this->crypto = NULL;
 }
 
 Client::~Client() {
-    if (this->connection) delete connection;
-    if (this->crypto) delete crypto;
+    if (this->connection != NULL) delete connection;
+    if (this->crypto != NULL) delete crypto;
 }
 
 
 void Client::recvCmd() {
     char buffer[BUFFER_SIZE];
-    int recvBytes;
+    int recvBytes = 0;
     char shiftRegister[2];
 
     memset(buffer, 0, BUFFER_SIZE);
