@@ -21,14 +21,14 @@ int Rocket::getPayloadSize(){
     return this->payload_size;
 }
 
-void Rocket::computehmac(string auth_key){
+void Rocket::computehmac(Key& auth_key){
     unsigned int len;
 
     HMAC_CTX* ctx = HMAC_CTX_new();
     if (!ctx) throw ExCryptoComputation("Rocket::hmac(): out of memory");
 
     bool pass =
-        HMAC_Init_ex(ctx, (const char*)auth_key.c_str(), HMAC_LEN, EVP_sha256(), NULL)
+        HMAC_Init_ex(ctx, (const char*)auth_key.str().c_str(), HMAC_LEN, EVP_sha256(), NULL)
         && HMAC_Update(ctx, (const unsigned char*)&this->payload_size, sizeof(this->payload_size))
         && HMAC_Update(ctx, (const unsigned char*)&this->sequence_number, sizeof(this->sequence_number)) 
         && HMAC_Final(ctx, (unsigned char*)&this->hmac, &len);
@@ -40,7 +40,7 @@ void Rocket::computehmac(string auth_key){
     return;
 }
 
-void Rocket::verify(string auth_key, uint32_t expected_seq_num){
+void Rocket::verify(Key& auth_key, uint32_t expected_seq_num){
     string received_hmac((const char*)&this->hmac, HMAC_LEN);
     this->computehmac(auth_key);
 

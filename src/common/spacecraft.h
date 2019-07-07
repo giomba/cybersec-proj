@@ -5,6 +5,7 @@
 
 #include "exception.h"
 #include "protocol.h"
+#include "key.h"
 
 class SpaceCraft {
     private:
@@ -17,8 +18,8 @@ class SpaceCraft {
         void htonl();
         void ntohl();
 
-        void computehmac(string, const string&);
-        void verify(string, uint32_t, const string&);
+        void computehmac(Key&, const string&);
+        void verify(Key&, uint32_t, const string&);
 };
 
 #endif

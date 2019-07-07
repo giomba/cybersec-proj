@@ -11,12 +11,13 @@
 #include "protocol.h"
 #include "rocket.h"
 #include "spacecraft.h"
+#include "key.h"
 
 class Crypto {
 private:
     EVP_CIPHER_CTX* ctx_e;    /* context will be the same for all session */
     EVP_CIPHER_CTX* ctx_d;
-    const string auth_key;
+    Key auth_key;
     uint32_t sequence_number_i = 0;
     uint32_t sequence_number_o = 0;
 
@@ -24,7 +25,7 @@ private:
 	int decrypt(char*, const char*, int);
 
 public:
-	Crypto(const string, const string, const string);
+	Crypto(Key&, Key&, const string);
     ~Crypto();
 
     int send(Connection*, const char*, int);

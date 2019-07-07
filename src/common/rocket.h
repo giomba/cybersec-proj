@@ -5,6 +5,7 @@
 
 #include "exception.h"
 #include "protocol.h"
+#include "key.h"
 
 class Rocket {
     private:
@@ -19,8 +20,8 @@ class Rocket {
         void ntohl();
         int getPayloadSize();
 
-        void computehmac(string);
-        void verify(string, uint32_t);
+        void computehmac(Key&);
+        void verify(Key&, uint32_t);
 };
 
 #endif

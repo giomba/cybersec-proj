@@ -2,17 +2,17 @@
 
 using namespace std;
 
-Crypto::Crypto(const string session_key, const string auth_key, const string iv) : auth_key(auth_key) {
+Crypto::Crypto(Key& session_key, Key& auth_key, const string iv) : auth_key(auth_key) {
     //create and initialize context for encryption and decryption
 	ctx_e = EVP_CIPHER_CTX_new();
-	EVP_EncryptInit(ctx_e, EVP_aes_128_cfb8(), (const unsigned char*)session_key.c_str(), (const unsigned char*)iv.c_str());
+	EVP_EncryptInit(ctx_e, EVP_aes_128_cfb8(), (const unsigned char*)session_key.str().c_str(), (const unsigned char*)iv.c_str());
 
     ctx_d = EVP_CIPHER_CTX_new();
-    EVP_DecryptInit(ctx_d, EVP_aes_128_cfb8(), (const unsigned char*)session_key.c_str(), (const unsigned char*)iv.c_str());
+    EVP_DecryptInit(ctx_d, EVP_aes_128_cfb8(), (const unsigned char*)session_key.str().c_str(), (const unsigned char*)iv.c_str());
 
     debug(DEBUG, "session_key + auth_key" << endl);
-    hexdump(DEBUG, (const char*)session_key.c_str(), AES128_KEY_LEN);
-    hexdump(DEBUG, (const char*)auth_key.c_str(), HMAC_LEN);
+    hexdump(DEBUG, (const char*)session_key.str().c_str(), AES128_KEY_LEN);
+    hexdump(DEBUG, (const char*)auth_key.str().c_str(), HMAC_LEN);
     hexdump(DEBUG, (const char*)iv.c_str(), AES128_KEY_LEN);
 
     sequence_number_i = sequence_number_o = 0;

@@ -16,6 +16,7 @@
 #include "../common/exception.h"
 #include "../common/nonce.h"
 #include "../common/protocol.h"
+#include "../common/key.h"
 
 
 #define CLIENT_ROOT "downloads/"
@@ -35,8 +36,8 @@ unsigned char* authKey;
 unsigned char* iv;
 */
 
-string sessionKey = "1230000000000321";
-string authKey = "0123456789abcdef9876543210abcdef";
+Key sessionKey("1230000000000321");
+Key authKey("0123456789abcdef9876543210abcdef");
 string iv = "0000000000000000";
 
 enum CommandType {

@@ -14,14 +14,14 @@ void SpaceCraft::ntohl(){
     this->sequence_number = ::ntohl(sequence_number);
 }
 
-void SpaceCraft::computehmac(string auth_key, const string& payload){
+void SpaceCraft::computehmac(Key& auth_key, const string& payload){
     unsigned int len;
 
     HMAC_CTX* ctx = HMAC_CTX_new();
     if (!ctx) throw ExCryptoComputation("SpaceCraft::hmac() out of memory");
 
     bool pass =
-        HMAC_Init_ex(ctx, (const char*)auth_key.c_str(), HMAC_LEN, EVP_sha256(), NULL)
+        HMAC_Init_ex(ctx, (const char*)auth_key.str().c_str(), HMAC_LEN, EVP_sha256(), NULL)
         && HMAC_Update(ctx, (const unsigned char*)&this->sequence_number, sizeof(this->sequence_number))
         && HMAC_Update(ctx, (const unsigned char*)payload.c_str(), payload.size())
         && HMAC_Final(ctx, this->hmac, &len);
@@ -33,7 +33,7 @@ void SpaceCraft::computehmac(string auth_key, const string& payload){
     return;
 }
 
-void SpaceCraft::verify(string auth_key, uint32_t expected_seq_num, const string& payload){
+void SpaceCraft::verify(Key& auth_key, uint32_t expected_seq_num, const string& payload){
     string received_hmac((const char*)&this->hmac, HMAC_LEN);
     this->computehmac(auth_key, payload);
 
