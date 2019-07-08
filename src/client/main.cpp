@@ -1,12 +1,8 @@
-#include "client.h"
-
-using namespace std;
-
+#include "main.h"
 
 /****************************************/
 /*              SEND/RECV               */
 /****************************************/
-
 void send_cmd(string cmd){
     crypto->send(connection, cmd.c_str(), cmd.size());
 }

@@ -26,6 +26,8 @@
 #define greetings   "Bye :("
 #define error       "Something went wrong"
 
+using namespace std;
+
 istringstream is;
 Connection* connection;
 Crypto* crypto;
