@@ -349,6 +349,9 @@ bool Client::execute(void) {
     catch (Ex e) {
         cerr << "[E] " << e << endl;
     }
+    catch (bad_alloc e) {
+        cerr << "[E] bad_alloc: out of memory" << endl;
+    }
 
     delete this;
 
