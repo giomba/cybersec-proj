@@ -1,6 +1,6 @@
 #include "server.h"
 const int backlog = 10;
-const string nameList = "client/list.txt";
+const string nameList = "conf/authorized_clients.txt";
 
 Server::Server(const char* address, uint16_t port) {
     sd = socket(AF_INET6, SOCK_STREAM, 0);

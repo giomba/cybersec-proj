@@ -192,24 +192,40 @@ Client's shell accepts the following, self explaining, commands:
 \projectname{}'s repository is organized in directories:
 \begin{itemize}
   \item \texttt{bin} contains the \texttt{client} and \texttt{server} executable files;
-  \item \texttt{cert} contains all the certificates:
-  \begin{itemize}
-    \item \texttt{\emph{username}\_cert.pem} and \texttt{\emph{username}\_key.pem} contains \emph{username}'s certificate and private key, respectively, in PEM format;
-    \item \texttt{TrustedCA\_cert.pem} and \texttt{TrustedCA\_crl.pem} contains the trusted public certification authority's certificate and certificate revocation list, in PEM format;
-  \end{itemize}
-  Note that, if the application's server is run on the same host as the client, then this folder can be shared.
-  \item \texttt{client} contains client's list;
+  \item \texttt{cert} contains all the certificates; if the application's server is run on the same host as the client, then this directory can be shared.
+  \item \texttt{conf} contains server configuration, eg. a file with authorized clients list;
   \item \texttt{debug} contains some useful commands and configuration files for some common debugging tools like \emph{valgrind} and \emph{gdb};
   \item \texttt{doc} contains the \LaTeX source code of this document;
   \item \texttt{downloads} is the default location for files downloaded from the server by the client;
   \item \texttt{obj} contains object files before their linking;
   \item \texttt{root} is the default and only location allowed for files uploaded to the server;
-  \item \texttt{src} contains the source code of:
-  \begin{itemize}
-    \item \texttt{client} contains client's application source code;
-    \item \texttt{common} contains application's utilities and interface layer for OpenSSL;
-    \item \texttt{server} containts server's application soruce code;
-  \end{itemize}
+  \item \texttt{src} contains the application's source code;
+\end{itemize}
+
+\subsubsection{\texttt{cert} directory}
+\begin{itemize}
+    \item \texttt{\emph{username}\_cert.pem} and \texttt{\emph{username}\_key.pem} contains \emph{username}'s certificate and private key, respectively, in PEM format;
+    \item \texttt{TrustedCA\_cert.pem} and \texttt{TrustedCA\_crl.pem} contains the trusted public certification authority's certificate and certificate revocation list, in PEM format;
+\end{itemize}
+
+Repository contains a basic configuration with an example \texttt{TrustedCA\_cert.pem} and \texttt{TrustedCA\_crl.pem} certificate and certificate revocation list, and the following user's certificates:
+\begin{figure}[H]
+\centering
+\begin{tabular}{| l | c | c | c |}\hline
+username  & signed by TrustedCA & revoked & authorized user \\ \hline
+alice     & yes                 & no      & yes             \\ \hline
+bob       & yes                 & no      & no              \\ \hline
+charlie   & yes                 & yes     & yes             \\ \hline
+server    & yes                 & no      & no              \\ \hline
+trudy     & no                  & --      & no              \\ \hline
+\end{tabular}
+\end{figure}
+
+\subsubsection{\texttt{src} directory}
+\begin{itemize}
+  \item \texttt{client} contains client's application source code;
+  \item \texttt{common} contains application's utilities modules and interface layer for OpenSSL;
+  \item \texttt{server} containts server's application soruce code;
 \end{itemize}
 
 \subsection{Debug mode}
