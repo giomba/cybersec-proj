@@ -24,7 +24,7 @@
 
 #define cursor      "> "
 #define greetings   "Bye :("
-#define error       "Something went wrong. Please retry later."
+#define error       "Something went wrong"
 
 istringstream is;
 Connection* connection;

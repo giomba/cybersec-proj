@@ -292,7 +292,7 @@ vector<Key> Client::handshake(void) {
     rsacrypto.verify(what_to_verify, signature, client_public_key);
 
     /* if execution arrives here without any exception thrown, then handshake is finished well! */
-    debug(DEBUG, "[D] Succesfull handshake!" << endl);
+    debug(DEBUG, "[D] Successfull handshake!" << endl);
 
     /* return generated session keys */
     vector<Key> keys;

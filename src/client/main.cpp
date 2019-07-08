@@ -8,10 +8,7 @@ using namespace std;
 /****************************************/
 
 void send_cmd(string cmd){
-    int size = strlen(cmd.c_str());
-
-    crypto->send(connection, cmd.c_str(), size);
-
+    crypto->send(connection, cmd.c_str(), cmd.size());
 }
 
 void send_fragment(const char *buffer, const int len){
@@ -498,8 +495,8 @@ int main(int argc, char* argv[]) {
 
             cout << cursor << flush;
             // waiting for command
-            if (!getline(cin, line))
-				line = "q";
+            getline(cin, line);
+            if (!cin) line = "q";
 
             is.str(line);
 
@@ -508,10 +505,11 @@ int main(int argc, char* argv[]) {
             }
         }
     } catch(ExNetwork e) {
-        cerr << "[E] network: " << e << endl;
+        debug(ERROR, "[E] network: " << e << endl);
     } catch (Ex e) {
-        cerr << "[E] exception: " << e << endl;
+        debug(ERROR, "[E] exception: " << e << endl);
     }
 
+    cerr << error << endl;
     quit();
 }
