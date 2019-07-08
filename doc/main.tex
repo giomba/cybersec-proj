@@ -264,12 +264,12 @@ where
   \item \emph{Connection module} provides a human usable C++ interface with send/receive API for Unix sockets;
 \end{itemize}
 
-Since \emph{Connection} module and \emph{Crypto} module provide the same send/receive API to their upper layers, the \emph{Crypto} module can be entirely removed with minor changes to the \emph{File transfer application}.
+Since \emph{Connection} module and \emph{Crypto} module provide the same send/receive API to their upper layers, the \emph{Crypto} module can be entirely added, or removed, with only minor changes to the \emph{File transfer application}, to make an application that works in the clear.
 
 \emph{OpenSSL interface} layer is used by the \emph{Crypto} module to manage the session's security, and by the \emph{File transfer application} module to perform the initial handshake.
 
 \section{Network protocol overview}
-\projectname{}'s network protocol is organized with the following layers.
+\projectname{}'s network stack is organized as shown in Figure~\ref{img:protocol}.
 
 \begin{figure}[H]
   \centering
@@ -539,7 +539,7 @@ Correctness of the above handshake protocol can be proved using BAN logic.
 \end{align}
 
 \begin{align}
-\frac{A \believes \fresh{certB}}{A \believes CA \believes certB} \tag*{postulate 2}
+\frac{A \believes \fresh{certB}, A \believes CA \oncesaid cert_B}{A \believes CA \believes certB} \tag*{postulate 2}
 \end{align}
 $\fresh{certB}$ is guaranteed by its non-before and not-after range.
 
