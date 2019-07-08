@@ -1,16 +1,13 @@
 .POSIX:
 CXX=g++
-CXXFLAGS=-Wall -Wextra -std=c++11 -g -O0
+CXXFLAGS=-Wall -Wextra -std=c++11
 LDFLAGS=-lpthread -lcrypto
 
-# To debug add
-# 	DBGFLAGS=-DdebugLevel=x
-# where x is
-# 	FATAL	0
-# 	ERROR	1
-# 	WARNING	2
-# 	INFO	3
-# 	DEBUG	4
+# To build debug version:
+#	$ make DEBUG=true
+ifdef DEBUG
+	CXXFLAGS+=-g -O0 -DDEBUGPRINT
+endif
 
 # Header files
 CXX_S_HDR=$(wildcard src/server/*.h)

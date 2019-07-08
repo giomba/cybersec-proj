@@ -465,7 +465,7 @@ vector<Key> handshake(void) {
 
 int main(int argc, char* argv[]) {
     if (argc < 4){
-        cout << "./bin/client <ipserver> <serverport> <username>" << endl;
+        clog << "./bin/client <ipserver> <serverport> <username> [DEBUG]" << endl;
         exit(0);
     }
 
@@ -475,6 +475,9 @@ int main(int argc, char* argv[]) {
 	string username = argv[3];
     vector<string> authServersList;
     authServersList.push_back("server");
+
+    /* enable debug output */
+    if (argc == 5) debugenable(argv[4]);
 
     try {
 		cm = new CertManager(username, authServersList);

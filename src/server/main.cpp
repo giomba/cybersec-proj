@@ -23,10 +23,15 @@ using namespace std;
 int main(int argc, char** argv) {
 
     try {
+        /* check for a valid number of arguments */
+        if (argc != 2 && argc != 3) throw ExUserInput("invalid number of arguments");
 
-        if (argc != 2) throw ExUserInput("invalid number of arguments");
+        /* parse and check port validity -- TODO */
         uint16_t port = atoi(argv[1]);
         if (! checkPort(port)) throw ExUserInput("invalid port number");
+
+        /* enable debug output */
+        if (argc == 3) debugenable(argv[2]);
 
         Server server = Server("::0", atoi(argv[1]));
 
