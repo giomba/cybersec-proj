@@ -26,7 +26,7 @@ void send_file(string filepath, string filename, int64_t size){
             remainingBytes -= fragment;
             show_progress((double)(size-remainingBytes)/size);
         }
-        cout << "File '" << filename << "' stored successfully" << endl;
+        clog << "File '" << filename << "' stored successfully" << endl;
         file.close();
     } else {
         cerr << error << endl;
@@ -84,14 +84,14 @@ void recv_list(){
         is >> tag;
 
         if (tag != "Size:"){
-            cerr << error << endl;
+            cerr << "[E] protocol error" << endl;
             return;
         }
 
         is >> msg_len;
 
         if (msg_len < 0){
-            cerr << error << endl;
+            cerr << "[E] protocol error" << endl;
             return;
         }
 
@@ -109,7 +109,7 @@ void recv_list(){
             }
         }
     } else {
-        cerr << error << endl;
+        cerr << "[E] protocol error" << endl;
     }
 }
 
@@ -127,14 +127,14 @@ void recv_file(string filename){
         is >> tag;
 
         if (tag != "Size:"){
-            cerr << error << endl;
+            cerr << "[E] protocol error" << endl;
             return;
         }
 
         is >> filesize;
 
         if (filesize < 0){
-            cerr << error << endl;
+            cerr << "[E] protocol error" << endl;
             return;
         }
 
@@ -154,12 +154,12 @@ void recv_file(string filename){
                 show_progress((double)recvBytes/filesize);
             }
             file.close();
-            cout << "File '" << filename << "' saved successfully in " << CLIENT_ROOT << endl;
+            clog << "File '" << filename << "' saved successfully in " << CLIENT_ROOT << endl;
         } else {
-            cout << "error: dir '" << CLIENT_ROOT << "' does not exist" << endl;
+            cerr << "error: dir '" << CLIENT_ROOT << "' does not exist" << endl;
         }
     } else if (response == BAD_FILE) {
-        cout << filename << ": No such file" << endl;
+        cerr << filename << ": No such file" << endl;
     } else
         cerr << error << endl;
 }
@@ -181,7 +181,7 @@ CommandType str2cmd(string str){
 
 void show_progress(double ratio){
     ostringstream os;
-    cout << "\b\b\b\b\b\b\b";
+    clog << "\b\b\b\b\b\b\b";
 
     int perc = ratio * 100.0;
     os << perc << "%";
@@ -197,7 +197,7 @@ void show_progress(double ratio){
 	}
 	os << "]";
     }
-    cout << os.str() << flush;
+    clog << os.str() << flush;
 }
 
 void parse_cmd(){
@@ -226,7 +226,7 @@ bool is_file(string file){
 
 bool check_and_get_file_size(string filename, int64_t &size){
     if (!is_file(filename)){
-        cout << filename << ": No such file" << endl;
+        cerr << filename << ": No such file" << endl;
         return false;
     }
 
@@ -238,13 +238,13 @@ bool check_and_get_file_size(string filename, int64_t &size){
         size = file.tellg();
 
         if (size > MAX_FILE_SIZE){
-            cout << filename << ": exceeded maximum dimension (4 GB)" << endl;
+            cerr << filename << ": exceeded maximum dimension (4 GB)" << endl;
             return false;
         }
 
         file.close();
     } else {
-        cout << filename << ": Unable to open" << endl;
+        cerr << filename << ": Unable to open" << endl;
         return false;
     }
     return true;
@@ -255,7 +255,7 @@ void quit(){
 	delete connection;
 	delete crypto;
 
-	cout << greetings << endl;
+	clog << greetings << endl;
     exit(0);
 }
 
@@ -264,19 +264,19 @@ void quit(){
 /********************************/
 
 void cmd_help(){
-    cout << endl;
+    clog << endl;
 
-    cout << "sftp: secure file transfer for file up to 4 GB" << endl;
-    cout << "Usage:" << endl;
-    cout << " help           -- show this content" << endl;
-    cout << " rls            -- list all files on the remote server" << endl;
-    cout << " lls [<path>]   -- list local files at the specified path" << endl;
-    cout << " q              -- quit" << endl;
-    cout << " get <filename> -- download the specified file" << endl;
-    cout << " put <filename> -- upload the specified file" << endl;
-    cout << " rm <filename>  -- remove the specified file" << endl;
+    clog << "sftp: secure file transfer for file up to 4 GB" << endl;
+    clog << "Usage:" << endl;
+    clog << " help           -- show this content" << endl;
+    clog << " rls            -- list all files on the remote server" << endl;
+    clog << " lls [<path>]   -- list local files at the specified path" << endl;
+    clog << " q              -- quit" << endl;
+    clog << " get <filename> -- download the specified file" << endl;
+    clog << " put <filename> -- upload the specified file" << endl;
+    clog << " rm <filename>  -- remove the specified file" << endl;
 
-    cout << endl;
+    clog << endl;
 }
 
 void cmd_local_list(string path){
@@ -301,7 +301,7 @@ void cmd_local_list(string path){
         closedir(dd);
         cout << fileList.str();
     } else {
-        cout << path << ": No such directory" << endl;
+        cerr << path << ": No such directory" << endl;
     }
 }
 
@@ -323,7 +323,7 @@ void cmd_quit(){
 
 void cmd_retr(string filename){
     if ( filename.empty() ){
-        cout << "usage: get <filename>" << endl;
+        cerr << "usage: get <filename>" << endl;
         return;
     }
     string cmd = "RETR " + filename + "\n\n";
@@ -335,7 +335,7 @@ void cmd_retr(string filename){
 
 void cmd_stor(string filepath){
     if ( filepath.empty() ){
-        cout << "usage: put <filename>" << endl;
+        cerr << "usage: put <filename>" << endl;
         return;
     }
 
@@ -372,7 +372,7 @@ void cmd_stor(string filepath){
 
 void cmd_dele(string filename){
     if ( filename.empty() ){
-        cout << "usage: rm <filename>" << endl;
+        cerr << "usage: rm <filename>" << endl;
         return;
     }
     string cmd = "DELE " + filename + "\n\n";
@@ -383,16 +383,16 @@ void cmd_dele(string filename){
     int response;
     is >> response;
     if (response == OK){
-        cout << "File '" << filename << "' deleted successfully" << endl;
+        clog << "File '" << filename << "' deleted successfully" << endl;
     } else if (response == BAD_FILE) {
-        cout << filename << ": No such file on the server" << endl;
+        cerr << filename << ": No such file on the server" << endl;
     } else {
         cerr << error << endl;
     }
 }
 
 void cmd_unknown(string cmd){
-    cout << "error: '" << cmd << "' is an invalid command" << endl;
+    cerr << "error: '" << cmd << "' is an invalid command" << endl;
 }
 
 vector<Key> handshake(void) {
@@ -492,7 +492,7 @@ int main(int argc, char* argv[]) {
             is.str("");
             cin.clear();
 
-            cout << cursor << flush;
+            clog << cursor << flush;
             // waiting for command
             getline(cin, line);
             if (!cin) line = "q";
@@ -504,9 +504,9 @@ int main(int argc, char* argv[]) {
             }
         }
     } catch(ExNetwork e) {
-        debug(ERROR, "[E] network: " << e << endl);
+        cerr << "[E] network: " << e << endl;
     } catch (Ex e) {
-        debug(ERROR, "[E] exception: " << e << endl);
+        cerr << "[E] exception: " << e << endl;
     }
 
     cerr << error << endl;
