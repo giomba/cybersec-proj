@@ -20,10 +20,13 @@ Server::Server(const char* address, uint16_t port) {
     debug(INFO, "listen() ok" << endl);
 
     //intializing the list of clients // TODO -- read it from file
-    authClientList.push_back("barba");
-    authClientList.push_back("alice");
-    authClientList.push_back("tommy");
-
+	string clientFile = "client/list.txt";
+	string clientName;
+    ifstream out("note.txt");
+    while(getline(out, clientName)) {
+        authClientList.push_back(clientName);
+    }
+    out.close();
     this->cm = new CertManager("server", authClientList);
 }
 
