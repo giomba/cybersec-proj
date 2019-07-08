@@ -426,7 +426,7 @@ vector<Key> handshake(void) {
     connection->recv(buffer);
     RSASeal encrypted_auth_key_seal; encrypted_auth_key_seal.fromString(buffer);
     connection->recv(buffer);
-    Key iv(buffer); // TODO -- improve and uniform like fromString() functions
+    Key iv(buffer);
     connection->recv(buffer);
     string signature = buffer;
     connection->recv(buffer);

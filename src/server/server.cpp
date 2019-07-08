@@ -16,7 +16,7 @@ Server::Server(const char* address, uint16_t port) {
     }
     debug(INFO, "bind() ok" << endl);
 
-    if ( ::listen(sd, backlog) != 0 ) {    
+    if ( ::listen(sd, backlog) != 0 ) {
         throw ExListen("listen()");
     }
     debug(INFO, "listen() ok" << endl);
@@ -40,7 +40,6 @@ Connection* Server::accept() {
 }
 
 Server::~Server() {
-    // TODO -- is there any other thing to do in this destructor?
     delete this->cm;
 }
 

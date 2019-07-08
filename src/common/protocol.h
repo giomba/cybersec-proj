@@ -33,26 +33,4 @@ extern regex parola;
 #define AES128_KEY_LEN      16
 #define AES128_BLOCK_LEN    16
 
-/* messages -- TODO -- probably we have to throw them away */
-struct M1 {
-    uint32_t certLen;
-    uint32_t signLen;
-    uint32_t nonceC;
-};  /* and then the actual certificate */
-
-struct M2 {
-    uint32_t certLen;
-    uint32_t signLen;
-    uint32_t encryptedSymmetricKeyLen;
-    uint32_t ivLen;
-    uint32_t keyblobLen;
-    uint32_t nonceS;
-    uint32_t nonceC;
-};  /* and then the actual certificate, and the actual signature */
-
-struct M3 {
-    uint32_t signLen;
-    uint32_t nonceS;
-};  /* and then the actual signature */
-
 #endif
