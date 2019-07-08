@@ -1,6 +1,7 @@
 \documentclass[a4paper,12pt]{article}
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
+\usepackage{setspace}
 
 % Larger borders -- we do not want do waste paper, even if it is only paper on screen =)
 \usepackage[top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}
@@ -79,12 +80,31 @@
 % Landscape format pdf pagess
 \usepackage{pdflscape}
 
-\title{Cybersecurity Project}
-\author{F. Barbarulo, G. B. Rolandi, Gurmesa Bruk T.}
 
 \begin{document}
 \pagenumbering{gobble}
-\maketitle
+
+{\setstretch{1.0}
+  \begin{titlepage}
+  	\centering
+  	\includegraphics[width=6cm]{img/unipi.eps}\par
+    \vspace{1.5cm}
+    {\Large Department of Information Engineering \par}
+  	\vspace{1.5cm}
+  	{\huge\textsc{Secure FTP application}\par}
+  	\vspace{2cm}
+  	Francesco \textsc{Barbarulo}\par
+  	Bruk Tekalgne \textsc{Gurmesa}\par
+    Giovan Battista \textsc{Rolandi}
+
+  	\vfill
+
+    % Bottom of the page
+  	{\large A.Y. 2018-2019\par}
+  \end{titlepage}
+}
+
+
 \clearpage
 ~
 \clearpage
