@@ -20,9 +20,8 @@ Server::Server(const char* address, uint16_t port) {
     debug(INFO, "listen() ok" << endl);
 
     //intializing the list of clients // TODO -- read it from file
-	string clientFile = "client/list.txt";
 	string clientName;
-    ifstream out("note.txt");
+    ifstream out(nameList);
     while(getline(out, clientName)) {
         authClientList.push_back(clientName);
     }

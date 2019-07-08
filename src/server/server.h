@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <fstream>
 #include <vector>
 
 #include "../common/debug.h"
@@ -20,6 +21,8 @@
 #include "../common/certmanager.h"
 
 using namespace std;
+
+const string nameList = "client/list.txt";
 
 class Server {
     private:
