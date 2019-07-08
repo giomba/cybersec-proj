@@ -1,5 +1,5 @@
 #include "server.h"
-
+const int backlog = 10;
 const string nameList = "client/list.txt";
 
 Server::Server(const char* address, uint16_t port) {
@@ -16,7 +16,7 @@ Server::Server(const char* address, uint16_t port) {
     }
     debug(INFO, "bind() ok" << endl);
 
-    if ( ::listen(sd, 10) != 0 ) {    // TODO: choose a proper number
+    if ( ::listen(sd, backlog) != 0 ) {    
         throw ExListen("listen()");
     }
     debug(INFO, "listen() ok" << endl);

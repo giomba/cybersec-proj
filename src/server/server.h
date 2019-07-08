@@ -23,6 +23,7 @@
 using namespace std;
 
 extern const string nameList;
+extern const int backlog;
 
 class Server {
     private:
