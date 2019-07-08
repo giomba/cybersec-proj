@@ -260,8 +260,8 @@ struct Rocket {
 where
 
 \begin{itemize}
-  \item \texttt{hmac} is used to authenticate Rocket's content;
-  \item \texttt{length} is the size, in bytes, of the variable length payload and it is used to allocate data at receiver's endpoint;
+  \item \texttt{hmac} is used to authenticate Rocket's content; the hash is computed using the $K_a$ key exchange during the initial handshake;
+  \item \texttt{length} is the size, in bytes, of the variable length payload, and it is used to allocate data at receiver's endpoint;
   \item \texttt{sequence\_number} is used to protect against replay attacks;
 \end{itemize}
 
@@ -281,7 +281,7 @@ struct SpaceCraft {
 where
 
 \begin{itemize}
-  \item \texttt{hmac[]} is used to authenticate SpaceCraft's content;
+  \item \texttt{hmac[]} is used to authenticate SpaceCraft's content, and the encrypted payload;
   \item \texttt{sequence\_number} is used to protect against replay attacks;
 \end{itemize}
 
@@ -290,16 +290,10 @@ Finally, the encrypted payload follows the \texttt{SpaceCraft}.
 
 The encrypted payload can be of any length between $0$ and $2^{32}$ bytes, even if in our implementation it has a practical limitation of $4k$ bytes.
 
-The payload is encrypted using AES128 in CFB mode, using a \emph{session key} and an \emph{initialization vector} that are exchanged during the initial handshake.
+The payload is encrypted using AES128 in CFB mode as a stream cipher, in a manner that no padding is required;
+encryption is performed using $K_s$ and \emph{iv} exchanged during the initial handshake.
 
-// TODO
-
-\begin{itemize}
-  \item \texttt{session\_key}
-  \item \texttt{iv}
-\end{itemize}
-
-\section{Key exchange protocol}
+\section{Handshake (key exchange protocol)}
 A 3 way handshake is needed in order to establish the secure session.
 
 \begin{figure}[H]
@@ -308,10 +302,24 @@ A 3 way handshake is needed in order to establish the secure session.
 \caption{Key exchange protocol overview}
 \end{figure}
 
+where
+
+\begin{itemize}
+  \item \emph{certA} is the Client's certificate; it is signed by a known public trusted certification authority.
+  \item $n_a$ is the Client's nonce to challenge the server and protect the communication against replay attacks;
+  \item \emph{certB} is the Server's certificate; it is signed by a known public trusted certification authority;
+  \item $K_s$, $K_a$ are the two symmetric keys used during the session, to encrypt and to authenticate the data, respectively; they are transmitted encrypted in an RSA~Seal with Client's public key $A^{+}$;
+  \item \emph{iv} is the initialization vector used in conjunction with $K_s$ to initialize the CFB stream cipher, that will be used to encrypt the session;
+  \item the encrypted $K_s$, $K_a$, and \emph{iv} and $n_a$, are digitally signed with the Server's private key $B^{-}$;
+  \item $n_b$ is the Server's nonce to challenge the client and protect the communication against replay attacks;
+  \item italic $n_a$ and $n_b$ in Figure~\ref{img:key-exchange-protocol} indicate that there is no need to actually transmit them on the network, but only their signature is needed;
+\end{itemize}
+
+Correctness of the above handshake protocol can be proved using BAN logic.
+
 \subsection{Objectives}
 
 \[A \believes A \sharekey{k_s} B \]
-%\[B \believes A \sharekey{k_s} B \]
 \[A \believes \fresh{A \sharekey{k_s} B} \]
 
 \subsection{Assumptions}
@@ -341,6 +349,11 @@ A 3 way handshake is needed in order to establish the secure session.
 \end{align}
 
 \begin{align}
+\frac{A \believes \fresh{certB}}{A \believes CA \believes certB} \tag*{postulate 2}
+\end{align}
+$\fresh{certB}$ is guaranteed by its non-before and not-after range.
+
+\begin{align}
 \frac{A \believes CA \believes cert_B, A \believes CA \controls cert_B}{A \believes cert_B} \tag*{postulate 3}
 \end{align}
 
@@ -351,10 +364,10 @@ $A \believes cert_B$ means that $A \believes \pubkey{B^+} B$, since $\pubkey{B+}
 \end{align}
 
 \begin{align}
-\frac{A \believes \fresh{payload_{M2}, A \believes B \oncesaid payload_{M2}}}{A \believes B \believes payload_{M2}} \tag*{postulate 2}
+\frac{A \believes \fresh{payload_{M2}}, A \believes B \oncesaid payload_{M2}}{A \believes B \believes payload_{M2}} \tag*{postulate 2}
 \end{align}
 
-$\fresh{payload_{M2}}$ is due to the fact that it contains $R_A$, that is known to be fresh.
+$\fresh{payload_{M2}}$ is due to the fact that it contains $\fresh{R_A}$.
 
 \begin{align}
 \frac{A \believes B \believes payload_{M2}, A \believes B \controls payload_{M2}}{A \believes payload_{M2}} \tag*{postulate 3}
