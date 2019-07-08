@@ -22,7 +22,7 @@
 
 using namespace std;
 
-const string nameList = "client/list.txt";
+extern const string nameList;
 
 class Server {
     private:

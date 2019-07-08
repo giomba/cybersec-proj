@@ -1,5 +1,7 @@
 #include "server.h"
 
+const string nameList = "client/list.txt";
+
 Server::Server(const char* address, uint16_t port) {
     sd = socket(AF_INET6, SOCK_STREAM, 0);
 
@@ -19,13 +21,13 @@ Server::Server(const char* address, uint16_t port) {
     }
     debug(INFO, "listen() ok" << endl);
 
-    //intializing the list of clients // TODO -- read it from file
+    //intializing the list of clients
 	string clientName;
-    ifstream out(nameList);
-    while(getline(out, clientName)) {
+    ifstream in(nameList);
+    while(getline(in, clientName)) {
         authClientList.push_back(clientName);
     }
-    out.close();
+    in.close();
     this->cm = new CertManager("server", authClientList);
 }
 

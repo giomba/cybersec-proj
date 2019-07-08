@@ -13,7 +13,7 @@
 #include "exception.h"
 #include "rsakey.h"
 
-const string CERT_PATH = "cert/";
+extern const string CERT_PATH;
 
 class CertManager {
     private:
