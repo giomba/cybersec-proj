@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
         /* check for a valid number of arguments */
         if (argc != 2 && argc != 3) throw ExUserInput("invalid number of arguments");
 
-        /* parse and check port validity -- TODO */
+        /* parse port */
         uint16_t port = atoi(argv[1]);
 
         /* enable debug output */
