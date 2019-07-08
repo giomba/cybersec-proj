@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
 
             t.detach();
 
-            /* client will delete itself when finished */
+            /* Client will delete itself on its own when its execution finishes */
         }
     } catch (ExNetwork e) {
         cerr << "[E] network: " << e << endl;
