@@ -215,17 +215,20 @@ Client's shell accepts the following, self explaining, commands:
 \subsection{Debug mode}
 To compile application with debug symbols and log, run:
 
-% TODO -- put a valid make command here
+\begin{verbatim}
+  $ make DEBUG=true
+\end{verbatim}
 
-where
+and then run the executables passing one of these magic words as the last parameter:
+
 \begin{itemize}
-  \item \texttt{0} and \texttt{1} show only fatal errors;
-  \item \texttt{2} shows also warnings, useful to exploit unexpected behaviors or detect intrusion attempts;
-  \item \texttt{3} shows a lot of verbose information to deeply inspect application's flow;
-  \item \texttt{4} shows even the less significant piece of information;
+  \item \texttt{FATAL} or \texttt{ERROR}: show only fatal errors;
+  \item \texttt{WARNING}: shows also warnings, useful to exploit unexpected behaviors or detect intrusion attempts;
+  \item \texttt{INFO}: shows a lot of verbose information to deeply inspect application's flow;
+  \item \texttt{DEBUG}: shows almost every information;
 \end{itemize}
 
-Warning: use of debug level 4 leads to sensitive data leaks, such as session keys!
+Warning: use of debug level \texttt{DEBUG} leads to sensitive data leaks, such as session keys!
 
 \subsection{Modules}
 Application is organized in the following modules.
