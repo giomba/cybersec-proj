@@ -24,7 +24,7 @@ CertManager::CertManager(string username, vector<string>& authPeersList) : authP
     if (X509_STORE_add_crl(this->store, crl) != 1) throw ExCertificate("CertManager::CertManager(): cannot add crl to store");
     X509_STORE_set_flags(this->store, X509_V_FLAG_CRL_CHECK);
 
-	debug(INFO, "CA store created successfully" << endl);
+	debug(INFO, "[I] CA store created successfully" << endl);
 
 	// read my certificate
 	X509* my_cert;
