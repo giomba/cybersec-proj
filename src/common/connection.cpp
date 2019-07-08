@@ -67,10 +67,11 @@ int Connection::send(const char* buffer, int len) {
 }
 
 int Connection::recv(char* buffer, int len) {
-    int ret = ::recv(this->sd, (void*)buffer, len, 0);
+    int ret = ::recv(this->sd, (void*)buffer, len, MSG_WAITALL);
     if (ret <= 0) {
         throw ExRecv("can not recv()");
     }
+
     return ret;
 }
 
