@@ -12,7 +12,7 @@ void Certificate::fromString(string buffer) {
     const char* tmpstr = buffer.c_str();
     this->cert = d2i_X509(NULL, (const unsigned char**)&tmpstr, buffer.size());
     if (this->cert == NULL) {
-        debug(ERROR, "[E] cannot deserialize certificate" << endl);
+        debug(WARNING, "[W] cannot deserialize certificate" << endl);
         openssl_perror();
         throw ExCertificate("cannot deserialize certificate");
     }
@@ -34,7 +34,7 @@ string Certificate::str() {
 
     len = i2d_X509(this->cert, &serialized_certificate);
     if (len < 0) {
-        debug(ERROR, "[E] cannot serialize certificate" << endl);
+        debug(WARNING, "[W] cannot serialize certificate" << endl);
         throw ExCertificate("Certificate::str(): cannot serialize certificate");
     }
 

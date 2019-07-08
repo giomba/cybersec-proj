@@ -10,7 +10,7 @@ Crypto::Crypto(Key& session_key, Key& auth_key, Key& iv) : auth_key(auth_key) {
     ctx_d = EVP_CIPHER_CTX_new();
     EVP_DecryptInit(ctx_d, EVP_aes_128_cfb8(), (const unsigned char*)session_key.str().c_str(), (const unsigned char*)iv.str().data());
 
-    debug(DEBUG, "session_key + auth_key + iv" << endl);
+    debug(DEBUG, "[D] session_key + auth_key + iv" << endl);
     hexdump(DEBUG, (const char*)session_key.str().data(), AES128_KEY_LEN);
     hexdump(DEBUG, (const char*)auth_key.str().data(), HMAC_LEN);
     hexdump(DEBUG, (const char*)iv.str().data(), AES128_KEY_LEN);

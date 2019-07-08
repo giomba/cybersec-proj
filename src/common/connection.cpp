@@ -56,7 +56,7 @@ int Connection::recv(string& buffer) {
 }
 
 int Connection::send(const char* buffer, int len) {
-    debug(DEBUG, "=== Connection::send()" << endl);
+    debug(DEBUG, "[D] === Connection::send()" << endl);
     hexdump(DEBUG, buffer, len);
 
     int ret = ::send(this->sd, (void*)buffer, len, MSG_NOSIGNAL);

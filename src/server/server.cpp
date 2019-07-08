@@ -14,12 +14,12 @@ Server::Server(const char* address, uint16_t port) {
     if ( ::bind(sd, (struct sockaddr*)&addr, sizeof(addr)) != 0 ) {
         throw ExBind("server creation", errno);
     }
-    debug(INFO, "bind() ok" << endl);
+    debug(INFO, "[I] bind() ok" << endl);
 
     if ( ::listen(sd, backlog) != 0 ) {
         throw ExListen("listen()");
     }
-    debug(INFO, "listen() ok" << endl);
+    debug(INFO, "[I] listen() ok" << endl);
 
     //intializing the list of clients
 	string clientName;
