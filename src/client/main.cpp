@@ -320,6 +320,7 @@ void cmd_remote_list(){
 void cmd_quit(){
     string cmd = "QUIT\n\n";
     send_cmd(cmd);
+    recv_response();
 	quit();
 }
 
