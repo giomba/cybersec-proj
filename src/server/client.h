@@ -48,7 +48,7 @@ class Client {
     public:
         Client(Connection*, CertManager*);
         ~Client();
-        bool execute(void);
+        void execute(void);
 };
 
 #endif

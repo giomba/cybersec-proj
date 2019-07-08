@@ -307,7 +307,7 @@ vector<Key> Client::handshake(void) {
     return keys;
 }
 
-bool Client::execute(void) {
+void Client::execute(void) {
     string cmd;
 
     try {
@@ -353,7 +353,8 @@ bool Client::execute(void) {
         cerr << "[E] bad_alloc: out of memory" << endl;
     }
 
+    /* This member function is executing as a thread, and this Client has
+        no reason to stay alive after this function terminates its execution, so
+        «as long as we are careful, it is fine to commit suicide» */
     delete this;
-
-    return true;
 }
