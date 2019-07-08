@@ -265,13 +265,13 @@ vector<Key> Client::handshake(void) {
     Nonce nonceServer;
 
     /* encrypt keys */
-    RSAKey client_pubkey; client_pubkey.fromCertificate(client_certificate);
+    RSAKey client_public_key; client_public_key.fromCertificate(client_certificate);
     RSACrypto rsacrypto(cm->getCert(), cm->getPrivKey());
     string session_key_serialized = session_key.str();
     string auth_key_serialized = auth_key.str();
 
-    RSASeal encrypted_session_key_seal = rsacrypto.encrypt(session_key_serialized, client_pubkey);
-    RSASeal encrypted_auth_key_seal = rsacrypto.encrypt(auth_key_serialized, client_pubkey);
+    RSASeal encrypted_session_key_seal = rsacrypto.encrypt(session_key_serialized, client_public_key);
+    RSASeal encrypted_auth_key_seal = rsacrypto.encrypt(auth_key_serialized, client_public_key);
 
     /* sign message */
     string what_to_sign = encrypted_session_key_seal.str() + encrypted_auth_key_seal.str() + iv.str() + nonceClient.str();
@@ -284,22 +284,17 @@ vector<Key> Client::handshake(void) {
     buffer = iv.str();                          connection->send(buffer);
     buffer = signature;                         connection->send(buffer);
     buffer = nonceServer.str();                 connection->send(buffer);
-    /* TODO -- send client nonce */
-
-
-    // concatenate all encrypted_*_key.str() + iv.str() + NonceClient
-    // send concatenation
-    // sign everything
-    // send signature
-    // send NonceServer
 
     /* === M3 === */
-    // receive my nonce (signed by the client)
-    // ... todo ...
+    /* receive server's nonce's signature, and verify */
+    connection->recv(signature);
+    string what_to_verify = nonceServer.str();
+    rsacrypto.verify(what_to_verify, signature, client_public_key);
 
+    /* if execution arrives here without any exception thrown, then handshake is finished well! */
+    debug(DEBUG, "[D] Succesfull handshake!" << endl);
 
-
-    /* if (some error) return -1; else -- TODO is this really needed? if some error, then exceptions everywhere!!! */
+    /* return generated session keys */
     vector<Key> keys;
     keys.push_back(session_key);
     keys.push_back(auth_key);
