@@ -91,6 +91,144 @@
 \section{Introduction}
 \projectname{} is a client-server application which allows to download and upload files on a server in a secure manner.
 
+\section{Application}
+\subsection{Requirements}
+\begin{itemize}
+  \item a Unix-like environment;
+  \item the GNU Compiler Collection Toolchain, any C++11 compliant version;
+  \item GNU make;
+  \item OpenSSL 1.1.1;
+  \item LaTeX suite (optional, for documentation);
+\end{itemize}
+
+\subsection{Compile}
+To compile the application, just run:
+\begin{verbatim}
+  $ cd $REPO
+  $ make
+\end{verbatim}
+
+Application's two executables, \texttt{client} and \texttt{server}, will be found in the \texttt{bin} directory.
+For simplicity, it is suggested to run them from the repository's root directory.
+
+To compile this documentation, just run:
+\begin{verbatim}
+  $ cd $REPO/doc
+  $ make
+\end{verbatim}
+
+\subsection{Run}
+To run the application just type the following commands in your shell.
+
+To run the server's executable:
+\begin{verbatim}
+  $ bin/server <port>
+\end{verbatim}
+where
+\begin{itemize}
+  \item \texttt{port} is the TCP port you want the server to listen for client's connections;
+\end{itemize}
+
+To run the client's executable:
+\begin{verbatim}
+  $ bin/client <IPv6> <port> <username>
+\end{verbatim}
+where
+\begin{itemize}
+  \item \texttt{IPv6} is the server's IP address, in IPv6 form; examples of valid addresses are:
+  \begin{itemize}
+    \item \texttt{::1}
+    \item \texttt{2001:470:c844:20::1}
+    \item \texttt{::193.70.88.212}
+  \end{itemize}
+  \item \texttt{port} is the server's TCP port it listens for client's connections;
+  \item \texttt{username} is the user name, that must match the certificate's name in \texttt{cert} directory;
+\end{itemize}
+
+\subsection{Usage}
+To get a list of usable commands on the client's shell, just type:
+\begin{verbatim}
+> help
+\end{verbatim}
+
+Client's shell accepts the following, self explaining, commands:
+\begin{verbatim}
+ help           -- show this content
+ rls            -- list remote files
+ lls [<path>]   -- list local files
+ get <filename> -- download the specified remote file
+ put <filename> -- upload the specified local file
+ rm <filename>  -- remove the specified remote file
+ q              -- quit
+\end{verbatim}
+
+\subsection{Repository}
+\projectname{}'s repository is organized in directories:
+\begin{itemize}
+  \item \texttt{bin} contains the \texttt{client} and \texttt{server} executable files;
+  \item \texttt{cert} contains all the certificates:
+  \begin{itemize}
+    \item \texttt{\emph{username}\_cert.pem} and \texttt{\emph{username}\_key.pem} contains \emph{username}'s certificate and private key, respectively, in PEM format;
+    \item \texttt{TrustedCA\_cert.pem} and \texttt{TrustedCA\_crl.pem} contains the trusted public certification authority's certificate and certificate revocation list, in PEM format;
+  \end{itemize}
+  Note that, if the application's server is run on the same host as the client, then this folder can be shared.
+  \item \texttt{client} contains client's list;
+  \item \texttt{debug} contains some useful commands and configuration files for some common debugging tools like \emph{valgrind} and \emph{gdb};
+  \item \texttt{doc} contains the \LaTeX source code of this document;
+  \item \texttt{downloads} is the default location for files downloaded from the server by the client;
+  \item \texttt{obj} contains object files before their linking;
+  \item \texttt{root} is the default and only location allowed for files uploaded to the server;
+  \item \texttt{src} contains the source code of:
+  \begin{itemize}
+    \item \texttt{client} contains client's application source code;
+    \item \texttt{common} contains application's utilities and interface layer for OpenSSL;
+    \item \texttt{server} containts server's application soruce code;
+  \end{itemize}
+\end{itemize}
+
+\subsection{Debug mode}
+To compile application with debug symbols and log, run:
+
+% TODO -- put a valid make command here
+
+where
+\begin{itemize}
+  \item \texttt{0} and \texttt{1} show only fatal errors;
+  \item \texttt{2} shows also warnings, useful to exploit unexpected behaviors or detect intrusion attempts;
+  \item \texttt{3} shows a lot of verbose information to deeply inspect application's flow;
+  \item \texttt{4} shows even the less significant piece of information;
+\end{itemize}
+
+Warning: use of debug level 4 leads to sensitive data leaks, such as session keys!
+
+\subsection{Modules}
+Application is organized in the following modules.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics{img/modules.pdf}
+\end{figure}
+
+where
+\begin{itemize}
+  \item \emph{file transfer application} is the actual application which manages file transfers;
+  \item \emph{crypto module} provides send/receive API, and manages traffic security during the session;
+  \item \emph{OpenSSL interface layer} provides a human usable C++ interface to OpenSSL's plain C API;
+  \item \emph{Connection module} provides a human usable C++ interface with send/receive API for Unix sockets;
+\end{itemize}
+
+Since \emph{connection module} and \emph{crypto module} provide the same send/receive API to their upper layers, the \emph{crypto layer} can be entirely removed with minor changes to the \emph{file transfer application}.
+
+\emph{OpenSSL interface layer} is used by the \emph{crypto module} to manage the session's security, and by the \emph{file transfer application module} to perform the initial handshake.
+
+\section{Network protocol overview}
+\projectname{}'s network protocol is organized with the following layers.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics{img/protocol.pdf}
+\end{figure}
+
 \section{Application layer protocol}
 Application layer manages its input/output data as continuos infinite stream of bytes.
 
