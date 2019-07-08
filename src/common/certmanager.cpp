@@ -1,5 +1,7 @@
 #include "certmanager.h"
 
+const string CERT_PATH = "cert/";
+
 CertManager::CertManager(string username, vector<string>& authPeersList) : authPeersList(authPeersList) {
 	// read CA certificate
 	X509* CA_cert;

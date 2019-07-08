@@ -1,4 +1,6 @@
 #include "server.h"
+const int backlog = 10;
+const string nameList = "client/list.txt";
 
 Server::Server(const char* address, uint16_t port) {
     sd = socket(AF_INET6, SOCK_STREAM, 0);
@@ -14,16 +16,18 @@ Server::Server(const char* address, uint16_t port) {
     }
     debug(INFO, "bind() ok" << endl);
 
-    if ( ::listen(sd, 10) != 0 ) {    // TODO: choose a proper number
+    if ( ::listen(sd, backlog) != 0 ) {    
         throw ExListen("listen()");
     }
     debug(INFO, "listen() ok" << endl);
 
-    //intializing the list of clients // TODO -- read it from file
-    authClientList.push_back("barba");
-    authClientList.push_back("alice");
-    authClientList.push_back("tommy");
-
+    //intializing the list of clients
+	string clientName;
+    ifstream in(nameList);
+    while(getline(in, clientName)) {
+        authClientList.push_back(clientName);
+    }
+    in.close();
     this->cm = new CertManager("server", authClientList);
 }
 
