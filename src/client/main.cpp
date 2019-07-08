@@ -367,7 +367,6 @@ void cmd_stor(string filepath){
 
     int response;
     is >> response;
-    response = OK;
     if (response == OK){
         send_file(filepath, filename, filesize);
     } else {
