@@ -242,15 +242,15 @@ Application is organized in the following modules.
 
 where
 \begin{itemize}
-  \item \emph{file transfer application} is the actual application which manages file transfers;
-  \item \emph{crypto module} provides send/receive API, and manages traffic security during the session;
+  \item \emph{File transfer application} is the actual application which manages file transfers;
+  \item \emph{Crypto module} provides send/receive API, and manages traffic security during the session;
   \item \emph{OpenSSL interface layer} provides a human usable C++ interface to OpenSSL's plain C API;
   \item \emph{Connection module} provides a human usable C++ interface with send/receive API for Unix sockets;
 \end{itemize}
 
-Since \emph{connection module} and \emph{crypto module} provide the same send/receive API to their upper layers, the \emph{crypto layer} can be entirely removed with minor changes to the \emph{file transfer application}.
+Since \emph{Connection} module and \emph{Crypto} module provide the same send/receive API to their upper layers, the \emph{Crypto} module can be entirely removed with minor changes to the \emph{File transfer application}.
 
-\emph{OpenSSL interface layer} is used by the \emph{crypto module} to manage the session's security, and by the \emph{file transfer application module} to perform the initial handshake.
+\emph{OpenSSL interface} layer is used by the \emph{Crypto} module to manage the session's security, and by the \emph{File transfer application} module to perform the initial handshake.
 
 \section{Network protocol overview}
 \projectname{}'s network protocol is organized with the following layers.
