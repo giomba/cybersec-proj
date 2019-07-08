@@ -14,7 +14,6 @@
 #include "../common/connection.h"
 #include "../common/debug.h"
 #include "../common/exception.h"
-#include "check.h"
 #include "client.h"
 #include "server.h"
 
@@ -28,12 +27,11 @@ int main(int argc, char** argv) {
 
         /* parse and check port validity -- TODO */
         uint16_t port = atoi(argv[1]);
-        if (! checkPort(port)) throw ExUserInput("invalid port number");
 
         /* enable debug output */
         if (argc == 3) debugenable(argv[2]);
 
-        Server server = Server("::0", atoi(argv[1]));
+        Server server = Server("::0", port);
 
         Client* client = NULL;
 
