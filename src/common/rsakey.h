@@ -15,15 +15,15 @@ extern const string KEY_PATH;
 class RSAKey {
     private:
         EVP_PKEY* key;
+
+        RSAKey(const RSAKey& old);              /* never copy nor assign */
+        RSAKey& operator=(const RSAKey& other);
     public:
         RSAKey();
-        RSAKey(const RSAKey& old);
-        RSAKey& operator=(const RSAKey& other);
         ~RSAKey();
 
         void fromUserName(string);
         void fromCertificate(Certificate&);
-        void fromString(string);
         EVP_PKEY* getPKEY();
 };
 

@@ -19,7 +19,7 @@ void RSASeal::fromString(string& buffer) {
     this->payload.assign(buffer.data() + sizeof(uint32_t) + el + sizeof(uint32_t), pl);
 
     uint32_t ivl = ntohl(*(uint32_t*)((char*)buffer.data() + sizeof(uint32_t) + el + sizeof(uint32_t) + pl));
-    this->iv.assign(buffer.data() + sizeof(uint32_t) + el + sizeof(uint32_t) + pl + sizeof(uint32_t));
+    this->iv.assign(buffer.data() + sizeof(uint32_t) + el + sizeof(uint32_t) + pl + sizeof(uint32_t), ivl);
 }
 
 string RSASeal::getEK(void) {

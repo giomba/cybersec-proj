@@ -10,13 +10,6 @@ RSAKey::~RSAKey() {
     if (this->key != NULL) EVP_PKEY_free(this->key);
 }
 
-RSAKey::RSAKey(const RSAKey& old) {
-    assert(false);
-}
-RSAKey& RSAKey::operator=(const RSAKey& other) {
-    assert(false);
-}
-
 void RSAKey::fromUserName(string username) {
     FILE *file = fopen((KEY_PATH + username + "_key.pem").c_str(), "r");
     if (!file) throw ExCertificate("RSAKey::fromUserName(): cannot open private key");
@@ -28,11 +21,6 @@ void RSAKey::fromUserName(string username) {
 void RSAKey::fromCertificate(Certificate& certificate) {
     this->key = X509_get_pubkey(certificate.getX509());
     if (!this->key) throw ExCertificate("RSAKey::fromCertificate(): cannot read public key");
-}
-
-void RSAKey::fromString(string buffer) {
-    assert(false);
-    // TODO -- init me
 }
 
 EVP_PKEY* RSAKey::getPKEY(void) {

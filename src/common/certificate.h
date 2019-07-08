@@ -13,10 +13,11 @@ using namespace std;
 class Certificate {
     private:
         X509* cert;
+
+        Certificate(const Certificate& old);    /* never copy */
     public:
         Certificate(void);
         ~Certificate(void);
-        Certificate(const Certificate& old);    /* never use! */
 
         void fromX509(X509*);
         void fromString(string);

@@ -18,10 +18,6 @@ void Certificate::fromString(string buffer) {
     }
 }
 
-Certificate::Certificate(const Certificate& old) {
-    assert(false);
-}
-
 Certificate::~Certificate(void) {
     if (this->cert) X509_free(this->cert);
 }
