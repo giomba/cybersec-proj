@@ -373,9 +373,9 @@ body
 
 \paragraph{STOR}
 \begin{verbatim}
-STOR filename
-Size: filesize
-
+STOR filename\n
+Size: filesize\n
+\n
 body
 \end{verbatim}
 
@@ -389,6 +389,7 @@ Store a file on the remote server, possibly overwriting an existing one.
 Reply status:
 \begin{itemize}
   \item \texttt{200}: ok
+  \item \texttt{452}: bad file
 \end{itemize}
 
 \subsection{Generic return values}
