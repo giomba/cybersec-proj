@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "../common/connection.h"
+#include "../common/certmanager.h"
 #include "../common/crypto.h"
 #include "../common/debug.h"
 #include "../common/exception.h"

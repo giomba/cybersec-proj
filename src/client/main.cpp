@@ -224,12 +224,13 @@ bool is_file(string file){
     return S_ISREG(stats.st_mode);
 }
 
-bool check_and_get_file_size(string filename, int64_t &size){
+bool check_and_get_file_size(string filename, int64_t& size){
     if (!is_file(filename)){
         cerr << filename << ": No such file" << endl;
         return false;
     }
 
+    string err_msg;
     ifstream file;
     file.open(filename, ios::in | ios::binary | ios::ate);
 
@@ -238,15 +239,19 @@ bool check_and_get_file_size(string filename, int64_t &size){
         size = file.tellg();
 
         if (size > MAX_FILE_SIZE){
-            cerr << filename << ": exceeded maximum dimension (4 GB)" << endl;
-            return false;
+            err_msg = filename + ": exceeded maximum dimension (4 GiB)";
         }
 
         file.close();
     } else {
-        cerr << filename << ": Unable to open" << endl;
+        err_msg = filename + ": Unable to open";
+    }
+
+    if (!err_msg.empty()){
+        cerr << err_msg << endl;
         return false;
     }
+
     return true;
 }
 

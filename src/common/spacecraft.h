@@ -1,6 +1,7 @@
 #ifndef SPACECRAFT_H
 #define SPACECRAFT_H
 
+#include <arpa/inet.h>
 #include <openssl/hmac.h>
 
 #include "exception.h"

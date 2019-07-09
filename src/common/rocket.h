@@ -1,6 +1,7 @@
 #ifndef ROCKET_H
 #define ROCKET_H
 
+#include <arpa/inet.h>
 #include <openssl/hmac.h>
 
 #include "exception.h"

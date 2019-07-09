@@ -3,9 +3,6 @@
 
 #include <regex>
 
-#include "certmanager.h"
-#include "connection.h"
-
 using namespace std;
 
 /* protocol status */
