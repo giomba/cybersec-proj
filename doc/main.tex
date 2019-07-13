@@ -509,8 +509,9 @@ Correctness of the above handshake protocol is proved using BAN logic in the nex
 
 \subsection{Objectives}
 
+The objective of the protocol is the key authentication:
+
 \[A \believes A \sharekey{k_s, k_a} B \]
-\[A \believes \fresh{A \sharekey{k_s, k_a} B} \]
 
 \subsection{Assumptions}
 
@@ -530,7 +531,13 @@ Correctness of the above handshake protocol is proved using BAN logic in the nex
 
 \[A \believes \fresh{N_A} \]
 \[B \believes \fresh{N_B} \]
-\[B \controls \fresh{A \sharekey{k_s, k_a} B} \]
+\[A \believes \fresh{A \sharekey{k_s, k_a} B} \]
+
+\subsection{Idealization}
+
+Since the first message is in clear and the third one is only a challenge response not useful to prove the correctness of the protocol, we will take in account only the second message $M2$ which has the following idealized form:
+
+\[ M2: B \rightarrow A: \{cert_B\}_{CA^-}, \{IV, N_A, \fresh{A \sharekey{k_s, k_a} B}, \{A \sharekey{k_s, k_a} B\}_{A^+}\}_{B^-} \]
 
 \subsection{Proof}
 
@@ -553,17 +560,15 @@ $A \believes cert_B$ means that $A \believes \pubkey{B^+} B$, since $\pubkey{B+}
 \frac{A \believes \pubkey{B^+} B, A \sees \encrypt{payload_{M2}}{B^-}}{A \believes B \oncesaid payload_{M2}} \tag*{postulate 1}
 \end{align}
 
-\begin{align}
-\frac{A \believes \fresh{payload_{M2}}, A \believes B \oncesaid payload_{M2}}{A \believes B \believes payload_{M2}} \tag*{postulate 2}
-\end{align}
-
-$\fresh{payload_{M2}}$ is due to the fact that it contains $\fresh{N_A}$.
+If $A \believes B \oncesaid payload_{M2}$, $A \believes B \oncesaid A \sharekey{k_s, k_a} B$ too beacuse the payload contains the keys.
 
 \begin{align}
-\frac{A \believes B \believes payload_{M2}, A \believes B \controls payload_{M2}}{A \believes payload_{M2}} \tag*{postulate 3}
+\frac{A \believes \fresh{A \sharekey{k_s, k_a} B}, A \believes B \oncesaid A \sharekey{k_s, k_a} B}{A \believes B \believes A \sharekey{k_s, k_a} B} \tag*{postulate 2}
 \end{align}
 
-Since $A \believes payload_{M2}$, $A \believes A \sharekey{k_s, k_a} B$ because $k_s$ and $k_a$ are part of the payload.
+\begin{align}
+\frac{A \believes B \believes A \sharekey{k_s, k_a} B, A \believes B \controls A \sharekey{k_s, k_a} B}{A \believes A \sharekey{k_s, k_a} B} \tag*{postulate 3}
+\end{align}
 
 \section{Attack resistance}
 
