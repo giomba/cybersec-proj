@@ -509,9 +509,10 @@ Correctness of the above handshake protocol is proved using BAN logic in the nex
 
 \subsection{Objectives}
 
-The objective of the protocol is the key authentication:
+The objectives of the protocol are the key authentication and freshness of the keys:
 
 \[A \believes A \sharekey{k_s, k_a} B \]
+\[A \believes \fresh{A \sharekey{k_s, k_a} B} \]
 
 \subsection{Assumptions}
 
@@ -519,6 +520,7 @@ The objective of the protocol is the key authentication:
 
 \[A \believes \pubkey{CA^+} CA \]
 \[B \believes \pubkey{CA^+} CA \]
+\[B \believes A \sharekey{k_s, k_a} B \]
 
 \paragraph{Trust}
 
@@ -531,7 +533,7 @@ The objective of the protocol is the key authentication:
 
 \[A \believes \fresh{N_A} \]
 \[B \believes \fresh{N_B} \]
-\[A \believes \fresh{A \sharekey{k_s, k_a} B} \]
+\[B \believes \fresh{A \sharekey{k_s, k_a} B} \]
 
 \subsection{Idealization}
 
@@ -560,14 +562,20 @@ $A \believes cert_B$ means that $A \believes \pubkey{B^+} B$, since $\pubkey{B+}
 \frac{A \believes \pubkey{B^+} B, A \sees \encrypt{payload_{M2}}{B^-}}{A \believes B \oncesaid payload_{M2}} \tag*{postulate 1}
 \end{align}
 
-If $A \believes B \oncesaid payload_{M2}$, $A \believes B \oncesaid A \sharekey{k_s, k_a} B$ too beacuse the payload contains the keys.
-
 \begin{align}
-\frac{A \believes \fresh{A \sharekey{k_s, k_a} B}, A \believes B \oncesaid A \sharekey{k_s, k_a} B}{A \believes B \believes A \sharekey{k_s, k_a} B} \tag*{postulate 2}
+\frac{A \believes \fresh{payload_{M2}}, A \believes B \oncesaid payload_{M2}}{A \believes B \believes payload_{M2}} \tag*{postulate 2}
 \end{align}
+
+Freshness of $payload_{M2}$ is guaranteed by $N_A$.
+
+Since $payload_{M2}$ contains $A \sharekey{k_s, k_a} B$ and $\fresh{A \sharekey{k_s, k_a} B}$, we can state that $A \believes B \believes A \sharekey{k_s, k_a} B$ and $A \believes B \believes \fresh{A \sharekey{k_s, k_a} B}$
 
 \begin{align}
 \frac{A \believes B \believes A \sharekey{k_s, k_a} B, A \believes B \controls A \sharekey{k_s, k_a} B}{A \believes A \sharekey{k_s, k_a} B} \tag*{postulate 3}
+\end{align}
+
+\begin{align}
+\frac{A \believes B \believes \fresh{A \sharekey{k_s, k_a} B}, A \believes B \controls \fresh{A \sharekey{k_s, k_a} B}}{A \believes \fresh{A \sharekey{k_s, k_a} B}} \tag*{postulate 3}
 \end{align}
 
 \section{Attack resistance}
