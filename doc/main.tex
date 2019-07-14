@@ -580,11 +580,11 @@ Since $payload_{M2}$ contains $A \sharekey{k_s, k_a} B$ and $\fresh{A \sharekey{
 
 \section{Attack resistance}
 
-The application has been designed to avoid eavesdropping, tampering and message replay attacks. Even the bruteforce attack is not feasible for a nowdays strong attacker.
+The application has been designed to avoid eavesdropping, tampering and message replay attacks. Even the bruteforce attack is not feasible for a nowdays strong adversary.
 
 \subsection{Eavesdropping}
-An attacker could want to spy on the client-server conversation. In our implementation the conversation is confidential since we encrypt every message using AES-128-CFB algorithm (shown in Figure~\ref{img:cfb-enc-mode}) offered by OpenSSL library.
-Even if the attacker would store every encrypted message, he is not able to decrypt them without knowing the session key.
+An adversary could want to spy on the client-server conversation. In our implementation the conversation is confidential since we encrypt every message using AES-128-CFB algorithm (shown in Figure~\ref{img:cfb-enc-mode}) offered by OpenSSL library.
+Even if the adversary would store every encrypted message, he is not able to decrypt them without knowing the session key.
 
 \begin{figure}[H]
 \centering
@@ -597,16 +597,16 @@ Even if the attacker would store every encrypted message, he is not able to decr
 
 \subsection{Tampering}
 
-An attacker could want to tamper with messages for making the client send unwanted commands such as removing an important file on the server. Fortunately, every session message is authenticated through HMAC which is considered secure. The HMAC is fed with the authentication key, exchanged in the handshake phase, and an attacker can not generate a valid HMAC tag without it. 
+An adversary could want to tamper with messages for making the client send unwanted commands such as removing an important file on the server. Fortunately, every session message is authenticated through HMAC which is considered secure. The HMAC is fed with the authentication key, exchanged in the handshake phase, and an adversary can not generate a valid HMAC tag without it. 
 
 \subsection{Message replay}
 
-An attacker could store some messages sent from client A to server B and send them again to make server B think that it is actually talking with client A. This type of attack could make the server act in an expected way. Our application foresees that every message is marked with a sequence number. If the expected sequence number does not coinced with the message one, the connection is closed.
+An adversary could store some messages sent from client A to server B and send them again to make server B think that it is actually talking with client A. This type of attack could make the server act in an unexpected way. Our application foresees that every message is marked with a sequence number. If the expected sequence number does not match the message one, the connection is closed.
 
 Since the sequence number ranges from $0$ to $2^{32} - 1$ it will wrap around after a period of $2^{32}$. As soon as this happens, the parties are not able to distinguish fresh messages from the replay ones anymore. Thus, we force the disconnection from the current session suggesting the reconnection for exchanging new session and authentication keys. 
 
 \subsection{Bruteforce attack}
-The last hope for an attacker is represented by the bruteforce attack. The aim of this attack is to find the session key once some plaintext-ciphertext pairs are stored.
-Unfortunately for the attacker, the bruteforce attack as a complexity of $O(2^{128})$ for the session key and $O(2^{256})$ for the authentication key.
+The last hope for an adversary is represented by the bruteforce attack. The aim of this attack is to find the session key once some plaintext-ciphertext pairs are stored.
+Unfortunately for the adversary, the bruteforce attack as a complexity of $O(2^{128})$ for the session key and $O(2^{256})$ for the authentication key.
 
 \end{document}
