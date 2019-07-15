@@ -570,7 +570,7 @@ $A \believes cert_B$ means that $A \believes \pubkey{B^+} B$, since $\pubkey{B+}
 
 Freshness of $payload_{M2}$ is guaranteed by $N_A$.
 
-Since $payload_{M2}$ contains $A \sharekey{k_s, k_a} B$ and $\fresh{A \sharekey{k_s, k_a} B}$, we can state that $A \believes B \believes A \sharekey{k_s, k_a} B$ and $A \believes B \believes \fresh{A \sharekey{k_s, k_a} B}$
+Since $payload_{M2}$ contains $A \sharekey{k_s, k_a} B$ and $\fresh{A \sharekey{k_s, k_a} B}$, we can state that $A \believes B \believes A \sharekey{k_s, k_a} B$ and $A \believes B \believes \fresh{A \sharekey{k_s, k_a} B}$.
 
 \begin{align}
 \frac{A \believes B \believes A \sharekey{k_s, k_a} B, A \believes B \controls A \sharekey{k_s, k_a} B}{A \believes A \sharekey{k_s, k_a} B} \tag*{postulate 3}
@@ -579,6 +579,19 @@ Since $payload_{M2}$ contains $A \sharekey{k_s, k_a} B$ and $\fresh{A \sharekey{
 \begin{align}
 \frac{A \believes B \believes \fresh{A \sharekey{k_s, k_a} B}, A \believes B \controls \fresh{A \sharekey{k_s, k_a} B}}{A \believes \fresh{A \sharekey{k_s, k_a} B}} \tag*{postulate 3}
 \end{align}
+
+Q.E.D.
+
+\subsection{Implementation}
+In \projectname{} implementation, every object in the OpenSSL interface layer implements at least two methods:
+\begin{itemize}
+  \item \texttt{str()}, serializes the object as a string of bytes, in such a way that it can be transmitted over the network;
+  \item \texttt{fromString()}, builds back the object starting from a serialized string;
+\end{itemize}
+
+Thus, every object exchanged during the handshake, being it a key, a signature, or wathever, is serialized as a string of bytes and sent over the network.
+
+String of bytes are sent on the network precedeed by a 32~bit integer, in network byte order, which represents its length.
 
 \section{Attack resistance}
 
