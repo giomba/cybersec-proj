@@ -91,7 +91,9 @@
     \vspace{1.5cm}
     {\Large Department of Information Engineering \par}
   	\vspace{1.5cm}
-  	{\huge\textsc{Secure FTP application}\par}
+  	{\huge\textsc{\projectname{}}\par}
+    \vspace{1cm}
+    {\Large Cybersecurity \par}
   	\vspace{2cm}
   	Francesco \textsc{Barbarulo}\par
   	Bruk Tekalgne \textsc{Gurmesa}\par
@@ -477,7 +479,7 @@ where
 \subsection{Encrypted Payload}
 Finally, the encrypted payload follows the \texttt{SpaceCraft}.
 
-The encrypted payload can be of any length between $0$ and $2^{32}$ bytes, even if in our implementation it has a practical limitation of $4k$ bytes.
+The encrypted payload can be of any length between $0$ and $2^{32}$ bytes, even if in our implementation it has a practical limitation of 4~KiB.
 
 The payload is encrypted using AES128 in CFB mode stream cipher, in a manner that no padding is required;
 encryption is performed using $K_s$ and \emph{iv} exchanged during the initial handshake.
@@ -568,7 +570,7 @@ $A \believes cert_B$ means that $A \believes \pubkey{B^+} B$, since $\pubkey{B+}
 
 Freshness of $payload_{M2}$ is guaranteed by $N_A$.
 
-Since $payload_{M2}$ contains $A \sharekey{k_s, k_a} B$ and $\fresh{A \sharekey{k_s, k_a} B}$, we can state that $A \believes B \believes A \sharekey{k_s, k_a} B$ and $A \believes B \believes \fresh{A \sharekey{k_s, k_a} B}$
+Since $payload_{M2}$ contains $A \sharekey{k_s, k_a} B$ and $\fresh{A \sharekey{k_s, k_a} B}$, we can state that $A \believes B \believes A \sharekey{k_s, k_a} B$ and $A \believes B \believes \fresh{A \sharekey{k_s, k_a} B}$.
 
 \begin{align}
 \frac{A \believes B \believes A \sharekey{k_s, k_a} B, A \believes B \controls A \sharekey{k_s, k_a} B}{A \believes A \sharekey{k_s, k_a} B} \tag*{postulate 3}
@@ -578,13 +580,26 @@ Since $payload_{M2}$ contains $A \sharekey{k_s, k_a} B$ and $\fresh{A \sharekey{
 \frac{A \believes B \believes \fresh{A \sharekey{k_s, k_a} B}, A \believes B \controls \fresh{A \sharekey{k_s, k_a} B}}{A \believes \fresh{A \sharekey{k_s, k_a} B}} \tag*{postulate 3}
 \end{align}
 
+Q.E.D.
+
+\subsection{Implementation}
+In \projectname{} implementation, every object in the OpenSSL interface layer implements at least two methods:
+\begin{itemize}
+  \item \texttt{str()}, serializes the object as a string of bytes, in such a way that it can be transmitted over the network;
+  \item \texttt{fromString()}, builds back the object starting from a serialized string;
+\end{itemize}
+
+Thus, every object exchanged during the handshake, being it a key, a signature, or wathever, is serialized as a string of bytes and sent over the network.
+
+String of bytes are sent on the network precedeed by a 32~bit integer, in network byte order, which represents its length.
+
 \section{Attack resistance}
 
 The application has been designed to avoid eavesdropping, tampering and message replay attacks. Even the bruteforce attack is not feasible for a nowdays strong adversary.
 
 \subsection{Eavesdropping}
-An adversary could want to spy on the client-server conversation. In our implementation the conversation is confidential since we encrypt every message using AES-128-CFB algorithm (shown in Figure~\ref{img:cfb-enc-mode}) offered by OpenSSL library.
-Even if the adversary would store every encrypted message, he is not able to decrypt them without knowing the session key.
+An adversary could want to spy on the client-server conversation. In our implementation the conversation is confidential since we encrypt every message using AES-128 algorithm in Cipher Feedback mode (CFB) (shown in Figure~\ref{img:cfb-enc-mode}) provided by OpenSSL library.
+Even if the adversary stores every encrypted message, he would not be able to decrypt them without knowing the session key.
 
 \begin{figure}[H]
 \centering
@@ -593,20 +608,43 @@ Even if the adversary would store every encrypted message, he is not able to dec
 \label{img:cfb-enc-mode}
 \end{figure}
 
-% TODO -- if we want to say something more about CFB...
+CFB mode is used because it allows to create a stream cipher out of a block cipher;
+originally, this feature was useful because the application layer expects a bytewise stream.
+
+\subsection{Oracle attack}
+Let's suppose that the application layer is expecting a command (or a reply) from the other peer.
+It could receive one byte at time and decrypt it, searching for a trailing \verb+\n\n+ sequence.
+Acting this way leads to behavior changes on the receiver's side due to specific features of this application protocol, that could be detected by the other peer.
+Thus, the receiver could be subject to oracle attacks.
+
+This situation can be incurred by decrypting the message before authenticating it.
+
+In order to avoid oracle attacks, messages are first authenticated and only then decrypted.
+This is done using the \texttt{Rocket} and \texttt{SpaceCraft} structures.
+
+The use of these special secure packets, that protect chunks of bytes, reduces the advantages of the stream cipher, that was anyhow maintained for retrocompatibility and also because in this way we can save some extra bytes that otherwise would have been necessary for padding.
 
 \subsection{Tampering}
+An adversary could want to tamper with messages for making one of the peers send unwanted commands (or replies).
+This is avoided since every session message is authenticated through HMAC.
+The HMAC algorithm is given the authentication key in input, exchanged in the handshake phase, and an adversary can not generate a valid HMAC signature without it.
 
-An adversary could want to tamper with messages for making the client send unwanted commands such as removing an important file on the server. Fortunately, every session message is authenticated through HMAC which is considered secure. The HMAC is fed with the authentication key, exchanged in the handshake phase, and an adversary can not generate a valid HMAC tag without it. 
+\subsection{Replay attack}
+An adversary could store some legitimate messages sent from one of the peers, and then send them again to make the receiver think that it is actually talking with its legitimate peer.
+In \projectname{} application every message is marked with a sequence number.
+If the expected sequence number does not match the message one, then the connection is closed.
 
-\subsection{Message replay}
+Since the sequence number ranges from $0$ to $2^{32} - 1$ it will wrap around after that $2^{31}$ \texttt{Rocket}--\texttt{SpaceCraft} pairs have been sent.
+As soon as this happens, the parties are not able to distinguish fresh messages from the replayed ones anymore.
+Thus, we force the disconnection from the current session suggesting the reconnection for exchanging new session and authentication keys.
 
-An adversary could store some messages sent from client A to server B and send them again to make server B think that it is actually talking with client A. This type of attack could make the server act in an unexpected way. Our application foresees that every message is marked with a sequence number. If the expected sequence number does not match the message one, the connection is closed.
-
-Since the sequence number ranges from $0$ to $2^{32} - 1$ it will wrap around after a period of $2^{32}$. As soon as this happens, the parties are not able to distinguish fresh messages from the replay ones anymore. Thus, the application forces disconnection from the current session suggesting the reconnection for exchanging new session and authentication keys. 
+The amount of data that can be transmitted can be tied to the sequence number, and we can compute this value in two cases.
+In the worst case, every secure packet holds just one byte, thus this amount is $ 2^{31} \times 1 = 2^{31} = $ 2~GiB;
+in the best case, every secure packet is filled with 4~KiB of data, thus this amount is: $ 2^{31} \times 2^{12} = 2^{43} = $ 8~TiB.
 
 \subsection{Bruteforce attack}
-The last hope for an adversary is represented by the bruteforce attack. The aim of this attack is to find the session key once some plaintext-ciphertext pairs are stored.
-Unfortunately for the adversary, the bruteforce attack as a complexity of $O(2^{128})$ for the session key and $O(2^{256})$ for the authentication key.
+The last hope for an adversary is represented by the bruteforce attack.
+The aim of this attack is to find the session key once some plaintext-ciphertext pairs are stored.
+Unfortunately for the adversary, the bruteforce attack has a complexity of $O(2^{128})$ for the session key and $O(2^{256})$ for the authentication key.
 
 \end{document}

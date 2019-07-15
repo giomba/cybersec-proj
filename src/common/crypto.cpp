@@ -69,6 +69,12 @@ int Crypto::send(Connection* connection, const char* plaintext, int size) {
     r2 = connection->send((const char*)&spacecraft, sizeof(SpaceCraft));
     r3 = connection->send(encrypted_payload, size);
 
+    /* check if the sequence number is wrapped around */
+    if (sequence_number_o == 0){
+        debug(DEBUG, "seq_num_o: " << sequence_number_o << endl);
+        throw ExSeqNumOverflow("Crypto::send(): sequence number overflow");
+    }
+
     if (r1 >= 0 && r2 >= 0 && r3 >= 0) return r1 + r2 + r3;
     else throw ExSend("can not Crypto::send()");
 }
@@ -111,6 +117,12 @@ int Crypto::recv(Connection* connection, char* buffer, int size) {
 
         remaining = rocket.getPayloadSize();
         index = 0;
+
+        /* check if the sequence number is wrapped around */
+        if (sequence_number_i == 0){
+            debug(DEBUG, "seq_num_i: " << sequence_number_i << endl);
+            throw ExSeqNumOverflow("Crypto::recv(): sequence number overflow");
+        }
     }
 
     int r = (remaining < size) ? remaining : size;
@@ -125,8 +137,6 @@ Crypto::~Crypto() {
         EVP_EncryptFinal(ctx_e, ...);
         EVP_DecryptFinal(ctx_d, ...);
     */
-
-    //delete[] auth_key;
 
     EVP_CIPHER_CTX_free(ctx_e);
 	EVP_CIPHER_CTX_free(ctx_d);
