@@ -39,6 +39,7 @@ class ExBadProtocol : public ExCrypto { using ExCrypto::ExCrypto; };
 class ExCertificate : public ExCrypto { using ExCrypto::ExCrypto; };
 class ExRandom : public ExCrypto { using ExCrypto::ExCrypto; };
 class ExSignature : public ExCrypto { using ExCrypto::ExCrypto; };
+class ExSeqNumOverflow : public ExCrypto { using ExCrypto::ExCrypto; };
 
 /* Protocol exceptions */
 class ExProtocol : public Ex { using Ex::Ex; };
