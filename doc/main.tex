@@ -269,6 +269,49 @@ where
 Since \emph{Connection} module and \emph{Crypto} module provide the same send/receive API to their upper layers, the \emph{Crypto} module can be entirely added, or removed, with only minor changes to the \emph{File transfer application}, to make an application which works in the clear.
 
 \emph{OpenSSL interface} layer is used by the \emph{Crypto} module to manage the session's security, and by the \emph{File transfer application} module to perform the initial handshake.
+\\
+\\
+Inside modules, the following symbols are defined:
+
+\begin{itemize}
+  \item File transfer application module
+  \begin{itemize}
+    \item client executable
+    \begin{itemize}
+      \item \texttt{main}, runs the finite state machine to handle the user interface and server requests and replies;
+    \end{itemize}
+    \item server executable
+    \begin{itemize}
+      \item \texttt{main}, creates a new thread for every client;
+      \item \texttt{server} class, accepts incoming connections from clients;
+      \item \texttt{client} class, runs the finite state machine to handle client requests and replies;
+    \end{itemize}
+  \end{itemize}
+  \item Crypto module
+  \begin{itemize}
+    \item \texttt{crypto} class, creates a symmetric stream cipher to encrypt and decrypt the session;
+    \item \texttt{rocket} class, manages the \texttt{Rocket} struct;
+    \item \texttt{spacecraft} class, manages the \texttt{SpaceCraft} struct (more details in Section~\ref{sec:secure-layer-session-protocol});
+  \end{itemize}
+  \item OpenSSL interface layer module
+  \begin{itemize}
+    \item \texttt{certificate} class, represents an X509 standard compliant certificate;
+    \item \texttt{certmanager} class, manages a peer's network of trust: its own certificate, its private and public keys, the certificate authority's certificate;
+    \item \texttt{cybrand} function, generates truly random numbers;
+    \item \texttt{key} class, represents a symmetric key;
+    \item \texttt{nonce} class, represents a 32-bit nonce;
+    \item \texttt{rsacrypto} class, provides methods for asymmetric encryption and decryption, and for digital signature and verification with RSA;
+    \item \texttt{rsakey} class, represents an RSA asymmetric key (being it private or public);
+    \item \texttt{rsaseal} class, represents a secret encrypted in an RSA seal, along with the encrypted symmetric key and initialization vector;
+  \end{itemize}
+  \item Connection Module
+  \begin{itemize}
+    \item \texttt{connection} class, manages TCP/IP connections, and sends and receives buffers and strings;
+    \item \texttt{protocol}, declares structures and constants for correct protocol execution;
+  \end{itemize}
+\end{itemize}
+
+Finally, two source files, \texttt{debug} and \texttt{exception}, provide the code to manage debugging messages and exceptions types, respectively.
 
 \section{Network protocol overview}
 \projectname{}'s network stack is organized as shown in Figure~\ref{img:protocol}.
@@ -422,6 +465,7 @@ Reply status:
 \end{itemize}
 
 \section{Secure layer session protocol}
+\label{sec:secure-layer-session-protocol}
 Every time that the application layer calls the secure layer with new data to send to the other party, a special secure layer packet is created; the receiver then expects to receive the same kind of packet, and extracts data from it to pass to the application level.
 
 Receiver's side transparently checks these packet's validity, and then unfolds them and passes them to the application layer as a stream of bytes.
