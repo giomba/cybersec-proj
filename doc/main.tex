@@ -133,7 +133,7 @@
 To compile the application, just run:
 \begin{verbatim}
   $ cd $REPO
-  $ make
+  $ make -j$(nproc)
 \end{verbatim}
 
 Application's two executables, \texttt{client} and \texttt{server}, will be found in the \texttt{bin} directory.
