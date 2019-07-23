@@ -154,7 +154,7 @@ To run the server's executable:
 \end{verbatim}
 where
 \begin{itemize}
-  \item \texttt{port} is the TCP port you want the server to listen for client's connections;
+  \item \texttt{port} is the TCP port you want the server to listen for client's connections.
 \end{itemize}
 
 To run the client's executable:
@@ -170,7 +170,7 @@ where
     \item \texttt{::ffff:193.70.88.212}
   \end{itemize}
   \item \texttt{port} is the server's TCP port it listens for client's connections;
-  \item \texttt{username} is the user name, that must match the certificate's name in \texttt{cert} directory;
+  \item \texttt{username} is the user name, that must match the certificate's name in \texttt{cert} directory.
 \end{itemize}
 
 \subsection{Usage}
@@ -201,13 +201,13 @@ Client's shell accepts the following, self explaining, commands:
   \item \texttt{downloads} is the default location for files downloaded from the server by the client;
   \item \texttt{obj} contains object files before their linking;
   \item \texttt{root} is the default and only location allowed for files uploaded to the server;
-  \item \texttt{src} contains the application's source code;
+  \item \texttt{src} contains the application's source code.
 \end{itemize}
 
 \subsubsection{\texttt{cert} directory}
 \begin{itemize}
     \item \texttt{\emph{username}\_cert.pem} and \texttt{\emph{username}\_key.pem} contains \emph{username}'s certificate and private key, respectively, in PEM format;
-    \item \texttt{TrustedCA\_cert.pem} and \texttt{TrustedCA\_crl.pem} contains the trusted public certification authority's certificate and certificate revocation list, in PEM format;
+    \item \texttt{TrustedCA\_cert.pem} and \texttt{TrustedCA\_crl.pem} contains the trusted public certification authority's certificate and certificate revocation list, in PEM format.
 \end{itemize}
 
 Repository contains a basic configuration with an example \texttt{TrustedCA\_cert.pem} and \texttt{TrustedCA\_crl.pem} certificate and certificate revocation list, and the following user's certificates:
@@ -227,7 +227,7 @@ trudy     & no                  & --      & no              \\ \hline
 \begin{itemize}
   \item \texttt{client} contains client's application source code;
   \item \texttt{common} contains application's utilities modules and interface layer for OpenSSL;
-  \item \texttt{server} containts server's application soruce code;
+  \item \texttt{server} containts server's application soruce code.
 \end{itemize}
 
 \subsection{Debug mode}
@@ -243,7 +243,7 @@ and then run the executables passing one of these magic words as the last parame
   \item \texttt{FATAL} or \texttt{ERROR}: show only fatal errors;
   \item \texttt{WARNING}: shows also warnings, useful to exploit unexpected behaviors or detect intrusion attempts;
   \item \texttt{INFO}: shows a lot of verbose information to deeply inspect application's flow;
-  \item \texttt{DEBUG}: shows almost every information;
+  \item \texttt{DEBUG}: shows almost every information.
 \end{itemize}
 
 Warning: use of debug level \texttt{DEBUG} leads to sensitive data leaks, such as session keys!
@@ -263,7 +263,7 @@ where
   \item \emph{File transfer application} is the actual application which manages file transfers;
   \item \emph{Crypto module} provides send/receive API, and manages traffic security during the session;
   \item \emph{OpenSSL interface layer} provides a layman usable C++ interface to OpenSSL's plain C API;
-  \item \emph{Connection module} provides a layman usable C++ interface with send/receive API for Unix sockets;
+  \item \emph{Connection module} provides a layman usable C++ interface with send/receive API for Unix sockets.
 \end{itemize}
 
 Since \emph{Connection} module and \emph{Crypto} module provide the same send/receive API to their upper layers, the \emph{Crypto} module can be entirely added, or removed, with only minor changes to the \emph{File transfer application}, to make an application which works in the clear.
@@ -284,14 +284,14 @@ Inside modules, the following symbols are defined:
     \begin{itemize}
       \item \texttt{main}, creates a new thread for every client;
       \item \texttt{server} class, accepts incoming connections from clients;
-      \item \texttt{client} class, runs the finite state machine to handle client requests and replies;
+      \item \texttt{client} class, runs the finite state machine to handle client requests and replies.
     \end{itemize}
   \end{itemize}
   \item Crypto module
   \begin{itemize}
     \item \texttt{crypto} class, creates a symmetric stream cipher to encrypt and decrypt the session;
     \item \texttt{rocket} class, manages the \texttt{Rocket} struct;
-    \item \texttt{spacecraft} class, manages the \texttt{SpaceCraft} struct (more details in Section~\ref{sec:secure-layer-session-protocol});
+    \item \texttt{spacecraft} class, manages the \texttt{SpaceCraft} struct (more details in Section~\ref{sec:secure-layer-session-protocol}).
   \end{itemize}
   \item OpenSSL interface layer module
   \begin{itemize}
@@ -302,12 +302,12 @@ Inside modules, the following symbols are defined:
     \item \texttt{nonce} class, represents a 32-bit nonce;
     \item \texttt{rsacrypto} class, provides methods for asymmetric encryption and decryption, and for digital signature and verification with RSA;
     \item \texttt{rsakey} class, represents an RSA asymmetric key (being it private or public);
-    \item \texttt{rsaseal} class, represents a secret encrypted in an RSA seal, along with the encrypted symmetric key and initialization vector;
+    \item \texttt{rsaseal} class, represents a secret encrypted in an RSA seal, along with the encrypted symmetric key and initialization vector.
   \end{itemize}
   \item Connection Module
   \begin{itemize}
     \item \texttt{connection} class, manages TCP/IP connections, and sends and receives buffers and strings;
-    \item \texttt{protocol}, declares structures and constants for correct protocol execution;
+    \item \texttt{protocol}, declares structures and constants for correct protocol execution.
   \end{itemize}
 \end{itemize}
 
@@ -359,7 +359,7 @@ A command is composed by the following parts:
   Depending on the specific command type, use of a filename is mandatory or forbidden;
   \item \texttt{tag: value} is a pair of two \texttt{parola}s, composed by a \texttt{parola} immediately followed by a colon, a whitespace and another \texttt{parola}.
   First \texttt{parola} represents the tag for an additional parameter of current command, while second one representes the actual value for the parameter; depending on the specific command, one or more parameters may be mandatory or forbidden;
-  \item \texttt{body} is a stream of bytes whose length must be specified in a command parameter; depending on the specific command type, use of a body is mandatory or forbidden:
+  \item \texttt{body} is a stream of bytes whose length must be specified in a command parameter; depending on the specific command type, use of a body is mandatory or forbidden.
 \end{itemize}
 
 \subsection{Reply status}
@@ -378,7 +378,7 @@ A reply status is composed by the following parts:
 \begin{itemize}
   \item \texttt{DDD} a 3 ASCII digits number representing the state of the previous request command;
   \item \texttt{tag: value} is a pair to represent a parameter, with the same format of the request command parameter; depending on the specific command type received, one or more parameters may be mandatory or forbidden;
-  \item \texttt{body} is a stream of bytes whose length must be specified in a reply status parameter; depending on the specific command the reply refers to, a body is mandatory or forbidden;
+  \item \texttt{body} is a stream of bytes whose length must be specified in a reply status parameter; depending on the specific command the reply refers to, a body is mandatory or forbidden.
 \end{itemize}
 
 \subsection{Request commands list}
@@ -497,7 +497,7 @@ where
 \begin{itemize}
   \item \texttt{hmac} is used to authenticate \texttt{Rocket}'s content; the hash is computed using the $K_a$ key exchange during the initial handshake;
   \item \texttt{length} is the size, in bytes, of the variable length payload, and it is used to allocate data at receiver's endpoint;
-  \item \texttt{sequence\_number} is used to protect against replay attacks;
+  \item \texttt{sequence\_number} is used to protect against replay attacks.
 \end{itemize}
 
 After the \texttt{Rocket}'s content has been authenticated, its content is used to prepare the receiver's buffer.
@@ -517,7 +517,7 @@ where
 
 \begin{itemize}
   \item \texttt{hmac[]} is used to authenticate \texttt{SpaceCraft}'s content, and the encrypted payload;
-  \item \texttt{sequence\_number} is used to protect against replay attacks;
+  \item \texttt{sequence\_number} is used to protect against replay attacks.
 \end{itemize}
 
 \subsection{Encrypted Payload}
@@ -548,7 +548,7 @@ where
   \item \emph{iv} is the initialization vector used in conjunction with $K_s$ to initialize the CFB stream cipher, that will be used to encrypt the session;
   \item the encrypted $K_s$ and $K_a$ together with the not-encrypted \emph{iv} and $n_a$, are digitally signed with the Server's private key $B^{-}$;
   \item $n_b$ is the Server's nonce to challenge the client and protect the communication against replay attacks;
-  \item italic $n_a$ and $n_b$ in Figure~\ref{img:key-exchange-protocol} indicate that there is no need to actually transmit them on the network, but only their signature is needed;
+  \item italic $n_a$ and $n_b$ in Figure~\ref{img:key-exchange-protocol} indicate that there is no need to actually transmit them on the network, but only their signature is needed.
 \end{itemize}
 
 Correctness of the above handshake protocol is proved using BAN logic in the next section.
@@ -630,7 +630,7 @@ Q.E.D.
 In \projectname{} implementation, every object in the OpenSSL interface layer implements at least two methods:
 \begin{itemize}
   \item \texttt{str()}, serializes the object as a string of bytes, in such a way that it can be transmitted over the network;
-  \item \texttt{fromString()}, builds back the object starting from a serialized string;
+  \item \texttt{fromString()}, builds back the object starting from a serialized string.
 \end{itemize}
 
 Thus, every object exchanged during the handshake, being it a key, a signature, or wathever, is serialized as a string of bytes and sent over the network.
